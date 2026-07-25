@@ -1,0 +1,207 @@
+{
+	"event.enigma.play": {
+		"params": [
+			"cards"
+		],
+		"zh-CN": "恩尼格玛：本行动中轴心国公开手牌：{cards}。",
+		"en": "Enigma: the Axis hand is public for this action: {cards}."
+	},
+	"event.krim.play": {
+		"params": [],
+		"zh-CN": "克里木：本行动中对塞瓦斯托波尔的一次攻击忽略苏军要塞战斗效果。",
+		"en": "Krim: one attack on Sevastopol during this action ignores the Soviet fort's combat effects."
+	},
+	"event.panzergruppe_guderian.play": {
+		"params": [],
+		"zh-CN": "古德里安装甲集群：德国第2装甲集团军完成首次攻击后，可在全部常规战斗结束时再攻击一次；第二次战斗最多推进一格。",
+		"en": "Panzergruppe Guderian: after the German 2nd Panzer Army completes its first attack, it may attack again after all regular combats; its second combat may advance at most one space."
+	},
+	"event.patton.play": {
+		"params": [],
+		"zh-CN": "巴顿：美国第3集团军完成首次攻击后，可在常规战斗结束时再攻击一次；第二次战斗最多推进两格。",
+		"en": "Patton: after the US 3rd Army completes its first attack, it may attack again after regular combat; its second combat may advance at most two spaces."
+	},
+	"event.wacht_am_rhein.play": {
+		"params": [],
+		"zh-CN": "守望莱茵：放置4个战斗标记；本行动轮德国第5装甲集团军或第6党卫军装甲集团军参加对非苏军的攻击时+2 DRM。",
+		"en": "Wacht am Rhein: place four combat markers; during this action round, attacks against non-Soviet units receive +2 DRM when the German 5th Panzer Army or 6th SS Panzer Army participates."
+	},
+	"event.zitadelle.play": {
+		"params": [],
+		"zh-CN": "堡垒行动：放置2个战斗标记；本行动轮苏军防御射击+2 DRM。德国装甲集团军若推进占领原有至少2个LCU的苏联空间则VP+1，否则VP-1。",
+		"en": "Fall Zitadelle: place two combat markers; Soviet defensive fire receives +2 DRM this action round. Gain 1 VP if a German Panzer Army advances into a Soviet space that began with at least two LCUs; otherwise lose 1 VP."
+	},
+	"event.zitadelle.result": {
+		"params": [
+			"outcome",
+			"delta",
+			"vp"
+		],
+		"zh-CN": "堡垒行动{outcome}：VP{delta}，当前{vp}。",
+		"en": "Fall Zitadelle {outcome}: VP {delta}; now {vp}."
+	},
+	"event.foreign_armies_east.reveal": {
+		"params": [
+			"cards"
+		],
+		"zh-CN": "东方外军处：盟军公开手中的指定牌：{cards}。",
+		"en": "Foreign Armies East: the Allied player reveals the specified cards: {cards}."
+	},
+	"event.foreign_armies_east.reveal_final": {
+		"params": [
+			"cards"
+		],
+		"zh-CN": "东方外军处：盟军在回合末再次公开未打出的指定牌：{cards}。",
+		"en": "Foreign Armies East: at the end of the turn, the Allied player again reveals the specified unplayed cards: {cards}."
+	},
+	"events.air_supply.space": {
+		"params": [],
+		"zh-CN": "空军补给：选择一个含断补轴心单位的空间。",
+		"en": "Luftwaffe Supply: choose a space containing out-of-supply Axis units."
+	},
+	"events.log.air_supply_placed": {
+		"params": ["space"],
+		"zh-CN": "空军补给标记放置在{space}；其中轴心单位本回合防御与损耗时视为有限补给。",
+		"en": "Place the Luftwaffe Supply marker in {space}; Axis units there are treated as in Limited Supply for defense and Attrition this turn."
+	},
+	"events.log.reinforcement_deployed": {
+		"params": ["side", "piece", "space"],
+		"zh-CN": "{side}将{piece}部署至{space}。",
+		"en": "{side} deploys {piece} to {space}."
+	},
+	"events.log.reinforcement_yellow_event": {
+		"params": ["card", "ops"],
+		"zh-CN": "{card}的安特卫普增援改作黄色事件，获得 {ops} OPS；不放置免费激活标记。",
+		"en": "{card}'s Antwerp reinforcement is treated as a Yellow Event for {ops} OPS; no free activation marker is placed."
+	},
+	"events.atlantic_wall.select": {
+		"params": ["count"],
+		"zh-CN": "大西洋壁垒：选择 2 个空间（{count}/2）。",
+		"en": "Atlantic Wall: choose two spaces ({count}/2)."
+	},
+	"events.banzai.select": {
+		"params": ["count"],
+		"zh-CN": "万岁冲锋：依次从地图、预备箱、已消灭单位池选择英联邦军（{count}/2）。",
+		"en": "Banzai: choose Commonwealth corps in order from the map, Reserve Box, and Eliminated Units Box ({count}/2)."
+	},
+	"events.combat_markers.place": {
+		"params": ["remaining"],
+		"zh-CN": "放置战斗标记（剩余 {remaining}）。",
+		"en": "Place Combat markers ({remaining} remaining)."
+	},
+	"events.east_wall.select": {
+		"params": ["count"],
+		"zh-CN": "东方壁垒：选择 3 个空间（{count}/3）。",
+		"en": "East Wall: choose three spaces ({count}/3)."
+	},
+	"events.final_production.select": {
+		"params": ["count"],
+		"zh-CN": "最后生产冲刺：选择 3 个减员德国装甲集团军（{count}/3）。",
+		"en": "Final Production Surge: choose three reduced German Panzer armies ({count}/3)."
+	},
+	"events.front.replace": {
+		"params": ["label"],
+		"zh-CN": "选择满编 3-3-3 苏军方面军，由{label}替换。",
+		"en": "Choose a full-strength 3-3-3 Soviet Front to be replaced by {label}."
+	},
+	"events.german_reinforcement.transfer": {
+		"params": [],
+		"zh-CN": "『德国增援』：选择一支在利比亚或埃及且有补给的德国装甲军调回预备箱。",
+		"en": "German Reinforcements: choose a supplied German Panzer corps in Libya or Egypt to return to the Reserve Box."
+	},
+	"events.hedgehogs.select": {
+		"params": ["count"],
+		"zh-CN": "刺猬阵地：选择 3 个空间（{count}/3）。",
+		"en": "Hedgehogs: choose three spaces ({count}/3)."
+	},
+	"events.invasion.advance": {
+		"params": [],
+		"zh-CN": "选择登陆推进单位。",
+		"en": "Choose invasion advance units."
+	},
+	"events.invasion.beach": {
+		"params": ["event", "marker"],
+		"zh-CN": "『{event}』：选择{marker}登陆滩。",
+		"en": "{event}: choose the {marker} invasion beach."
+	},
+	"events.invasion.mode": {
+		"params": ["event"],
+		"zh-CN": "『{event}』：选择一个盟军滩头或两个国别滩头。",
+		"en": "{event}: choose one Allied beachhead or two national beachheads."
+	},
+	"events.marker.choose": {
+		"params": ["space"],
+		"zh-CN": "为{space}选择激活标记。",
+		"en": "Choose an activation marker for {space}."
+	},
+	"events.marker.optional": {
+		"params": [],
+		"zh-CN": "可放置一个移动或战斗标记。",
+		"en": "You may place one Move or Combat marker."
+	},
+	"events.marker.space_choose": {
+		"params": ["space"],
+		"zh-CN": "{space}：选择激活标记。",
+		"en": "{space}: choose an activation marker."
+	},
+	"events.reinforcement.antwerp_1945_choice": {
+		"params": ["space", "ops"],
+		"zh-CN": "{space}：选择免费激活标记或 {ops} OPS。",
+		"en": "{space}: choose a free activation marker or {ops} OPS."
+	},
+	"events.panzer_refit.select": {
+		"params": ["count"],
+		"zh-CN": "装甲部队整补：选择 3 个有补给的减员德国装甲单位（{count}/3）。",
+		"en": "Panzer Refit: choose three supplied reduced German Panzer units ({count}/3)."
+	},
+	"events.partisan_sweep.complete": {
+		"params": [],
+		"zh-CN": "『反游击队扫荡』完成。",
+		"en": "Anti-Partisan Sweep is complete."
+	},
+	"events.partisan_sweep.remove": {
+		"params": ["remaining"],
+		"zh-CN": "『反游击队扫荡』：移除游击队（剩余 {remaining}）。",
+		"en": "Anti-Partisan Sweep: remove Partisans ({remaining} remaining)."
+	},
+	"events.reinforcement.deploy_desert": {
+		"params": ["unit"],
+		"zh-CN": "部署{unit}（亚历山大、开罗或巴士拉）。",
+		"en": "Deploy {unit} in Alexandria, Cairo, or Basra."
+	},
+	"events.reinforcement.deploy_standard": {
+		"params": ["unit"],
+		"zh-CN": "部署{unit}（本国完整补给城市或补给源）。",
+		"en": "Deploy {unit} in a friendly full-supply city or supply source."
+	},
+	"events.reinforcement.deploy_western": {
+		"params": ["unit"],
+		"zh-CN": "部署{unit}（本国入口、港口或可用滩头）。",
+		"en": "Deploy {unit} at a national entry space, port, or available beachhead."
+	},
+	"events.reserve.transfer_army": {
+		"params": [],
+		"zh-CN": "将英国第8集团军或美国第7集团军移入预备箱。",
+		"en": "Move the British 8th Army or US 7th Army to the Reserve Box."
+	},
+	"events.sorge.place": {
+		"params": ["remaining"],
+		"zh-CN": "『佐尔格』：放置激活标记（剩余 {remaining}）。",
+		"en": "Sorge: place activation markers ({remaining} remaining)."
+	},
+	"events.tito.complete": {
+		"params": [],
+		"zh-CN": "『铁托』部署完成。",
+		"en": "Tito deployment is complete."
+	},
+	"events.tito.space": {
+		"params": [],
+		"zh-CN": "『铁托』：选择南斯拉夫部署空间。",
+		"en": "Tito: choose a Yugoslav deployment space."
+	},
+	"events.transfer.deploy_neutral": {
+		"params": ["country", "piece"],
+		"zh-CN": "部署{country}单位：{piece}。",
+		"en": "Deploy a {country} unit: {piece}."
+	}
+}

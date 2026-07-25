@@ -1,0 +1,83 @@
+.scenario_info {
+	display: none;
+}
+
+.scenario_info.show {
+	display: block;
+}
+
+.settings-title {
+	margin: 1.4em 0 0.5em;
+	font-size: 1em;
+}
+
+.option-help {
+	position: relative;
+	display: inline-block;
+	margin-left: 4px;
+	vertical-align: middle;
+}
+
+.option-help-button {
+	width: 16px;
+	height: 16px;
+	padding: 0;
+	border: 1px solid #bbb;
+	border-radius: 50%;
+	background: transparent;
+	color: #777;
+	cursor: help;
+	font-size: 11px;
+	line-height: 14px;
+}
+
+.option-help-button:hover,
+.option-help-button:focus {
+	border-color: #777;
+	color: #333;
+	outline: none;
+}
+
+.option-help-popup {
+	position: absolute;
+	left: 50%;
+	bottom: calc(100% + 8px);
+	z-index: 20;
+	display: none;
+	box-sizing: border-box;
+	width: min(360px, calc(100vw - 32px));
+	padding: 8px 10px;
+	transform: translateX(-50%);
+	border: 1px solid #bbb;
+	background: #fff;
+	box-shadow: 0 2px 5px #0002;
+	color: #333;
+	font-size: 12px;
+	font-style: normal;
+	line-height: 1.5;
+	text-align: left;
+}
+
+.option-help-popup::after {
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -6px;
+	border: 6px solid transparent;
+	border-top-color: #bbb;
+	content: "";
+}
+
+.option-help:hover .option-help-popup,
+.option-help:focus-within .option-help-popup {
+	display: block;
+}
+
+.resource-list dd {
+	margin-bottom: 0.8em;
+}
+
+.resource-list ul {
+	margin: 0.25em 0 0;
+	padding-left: 1.3em;
+}

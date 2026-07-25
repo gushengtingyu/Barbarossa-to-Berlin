@@ -1,0 +1,99 @@
+<link rel="stylesheet" href="/barbarossa-to-berlin/outside.css" />
+
+<div class="scenario_info" id="Campaign">
+	<p><b data-i18n="create.campaign_name">完整战役</b><span data-i18n="create.campaign_description">：轴心国与盟军进行18回合对局，从巴巴罗萨行动开始，直到柏林战役或提前达成自动胜利。</span></p>
+</div>
+
+<p>
+	<label for="ui_locale" data-i18n="create.interface_language">界面语言（UI language）：</label>
+	<select id="ui_locale" name="ui_locale">
+		<option value="zh-CN" data-i18n="create.chinese">中文</option>
+		<option value="en">English</option>
+	</select>
+</p>
+
+<p>
+	<label for="card_language" data-i18n="create.card_language">卡牌语言：</label>
+	<select id="card_language" name="card_language">
+		<option value="CN" data-i18n="create.chinese_cards">中文卡牌</option>
+		<option value="EN">English cards</option>
+	</select>
+</p>
+
+<h3 class="settings-title" data-i18n="create.optional_rules">选规</h3>
+
+<p>
+	<label><input type="checkbox" value="true" name="allied_2_24_exclusive_1941" /> <span data-i18n="create.rule.reinforcement">1941年苏军增援限制</span></label>
+	<span class="option-help">
+		<button type="button" class="option-help-button" aria-describedby="reinforcement_rule_help" aria-label="查看苏军增援限制说明" data-i18n-aria-label="create.rule.reinforcement_help_label">?</button>
+		<span class="option-help-popup" id="reinforcement_rule_help" role="tooltip" data-i18n="create.rule.reinforcement_help">1941年内，盟军第2号与第24号苏军增援事件只能打出其中一张；另一张仍可作非事件用途使用。</span>
+	</span>
+</p>
+
+<p>
+	<label><input type="checkbox" value="true" name="no_invasions_before_summer_42" /> <span data-i18n="create.rule.invasion">1942年夏季前禁止盟军入侵</span></label>
+	<span class="option-help">
+		<button type="button" class="option-help-button" aria-describedby="early_invasion_rule_help" aria-label="查看盟军早期入侵限制说明" data-i18n-aria-label="create.rule.invasion_help_label">?</button>
+		<span class="option-help-popup" id="early_invasion_rule_help" role="tooltip" data-i18n="create.rule.invasion_help">盟军在1942年夏季回合前不得将登陆牌作为入侵事件打出。</span>
+	</span>
+</p>
+
+<p>
+	<label><input type="checkbox" value="true" name="time_of_mud" /> <span data-i18n="create.rule.mud">泥泞时节</span></label>
+	<span class="option-help">
+		<button type="button" class="option-help-button" aria-describedby="mud_rule_help" aria-label="查看泥泞时节说明" data-i18n-aria-label="create.rule.mud_help_label">?</button>
+		<span class="option-help-popup" id="mud_rule_help" role="tooltip" data-i18n="create.rule.mud_help">1941年秋季第2与第3行动轮，德国机械化单位受到选规规定的移动与战斗限制。</span>
+	</span>
+</p>
+
+<p>
+	<label><input type="checkbox" value="true" name="sunny_italy" /> <span data-i18n="create.rule.italy">意大利晴空</span></label>
+	<span class="option-help">
+		<button type="button" class="option-help-button" aria-describedby="italy_rule_help" aria-label="查看意大利晴空说明" data-i18n-aria-label="create.rule.italy_help_label">?</button>
+		<span class="option-help-popup" id="italy_rule_help" role="tooltip" data-i18n="create.rule.italy_help">秋季与冬季回合中，那不勒斯作为补给源时只提供有限补给。</span>
+	</span>
+</p>
+
+<script src="/barbarossa-to-berlin/modules/core/i18n_catalog.js"></script>
+<script src="/barbarossa-to-berlin/modules/core/i18n.js"></script>
+<script>
+	const localeControl = document.getElementById("ui_locale")
+	const readSavedLocale = () => {
+		try {
+			return localStorage.getItem("btb.ui_locale")
+		} catch {
+			return null
+		}
+	}
+	const storeLocale = (locale) => {
+		try {
+			localStorage.setItem("btb.ui_locale", locale)
+		} catch {
+			// Storage can be unavailable in privacy-restricted browser contexts.
+		}
+	}
+	const savedLocale = readSavedLocale()
+	if (savedLocale === "en" || savedLocale === "zh-CN") localeControl.value = savedLocale
+	const applyLocale = () => {
+		storeLocale(localeControl.value)
+		BTBI18N.setLocale(localeControl.value)
+		BTBI18N.translateDocument(document)
+	}
+	localeControl.addEventListener("change", () => {
+		storeLocale(localeControl.value)
+		location.reload()
+	})
+
+	const scenario = document.querySelector("select[name='scenario']")
+	if (scenario) {
+		const updateScenarioInfo = () => {
+			document.querySelectorAll(".scenario_info").forEach((element) => element.classList.remove("show"))
+			document.getElementById(scenario.value)?.classList.add("show")
+		}
+		scenario.addEventListener("change", updateScenarioInfo)
+		updateScenarioInfo()
+	} else {
+		document.getElementById("Campaign")?.classList.add("show")
+	}
+	applyLocale()
+</script>

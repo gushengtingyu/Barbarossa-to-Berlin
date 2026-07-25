@@ -1,0 +1,237 @@
+{
+	"combat.fire_summary": {
+		"params": ["strength", "table"],
+		"zh-CN": "{strength} CF（{table}）",
+		"en": "{strength} CF ({table})"
+	},
+	"combat.fire_summary.shifted": {
+		"params": ["strength", "table", "column"],
+		"zh-CN": "{strength} CF（{table}→{column}列）",
+		"en": "{strength} CF ({table}→column {column})"
+	},
+	"combat.advance.choose": {
+		"params": [],
+		"zh-CN": "选择推进单位。",
+		"en": "Choose advancing units."
+	},
+	"combat.advance.destination": {
+		"params": [],
+		"zh-CN": "选择一起推进的单位，再选择目的地。",
+		"en": "Choose units to advance together, then choose their destination."
+	},
+	"combat.attacker.cards": {
+		"params": [],
+		"zh-CN": "进攻方：打出战斗卡。",
+		"en": "Attacker: play combat cards."
+	},
+	"combat.attacker.cards_none": {
+		"params": [],
+		"zh-CN": "进攻方：打出战斗卡（无）。",
+		"en": "Attacker: play combat cards (none available)."
+	},
+	"combat.attacker.losses": {
+		"params": ["remaining"],
+		"zh-CN": "进攻方分配损失（剩余 {remaining}）。",
+		"en": "Attacker assigns losses ({remaining} remaining)."
+	},
+	"combat.confirm": {
+		"params": ["target", "attacker", "defender"],
+		"zh-CN": "确认进攻{target}：{attacker} CF VS {defender} CF。",
+		"en": "Confirm the attack on {target}: {attacker} CF vs {defender} CF."
+	},
+	"combat.confirm.empty_beachhead": {
+		"params": ["target"],
+		"zh-CN": "确认攻击{target}的空置滩头（无需掷骰）。",
+		"en": "Confirm the attack on the empty beachhead at {target} (no die roll)."
+	},
+	"combat.defender.cards": {
+		"params": [],
+		"zh-CN": "防守方：打出战斗卡。",
+		"en": "Defender: play combat cards."
+	},
+	"combat.defender.cards_none": {
+		"params": [],
+		"zh-CN": "防守方：打出战斗卡（无）。",
+		"en": "Defender: play combat cards (none available)."
+	},
+	"combat.defender.losses": {
+		"params": ["remaining"],
+		"zh-CN": "防守方分配损失（剩余 {remaining}）。",
+		"en": "Defender assigns losses ({remaining} remaining)."
+	},
+	"combat.extra_attack.confirm": {
+		"params": ["event"],
+		"zh-CN": "{event}：发动指定集团军的第二次攻击？",
+		"en": "{event}: make the designated army's second attack?"
+	},
+	"combat.extra_attack.target": {
+		"params": ["event"],
+		"zh-CN": "{event}：选择第二次攻击的目标。",
+		"en": "{event}: choose the target of the second attack."
+	},
+	"combat.log.advance": {
+		"params": ["space"],
+		"zh-CN": "推进：{space}",
+		"en": "Advance: {space}"
+	},
+	"combat.log.attacker": {
+		"params": [],
+		"zh-CN": "进攻方：",
+		"en": "Attacker:"
+	},
+	"combat.log.attacker_aborted": {
+		"params": ["space"],
+		"zh-CN": "进攻单位在战斗结算前已全部消灭，{space}的进攻中止。",
+		"en": "All attacking units were eliminated before combat resolution; abort the attack on {space}."
+	},
+	"combat.log.attacker_fire": {
+		"params": [],
+		"zh-CN": "进攻方开火：",
+		"en": "Attacker fires:"
+	},
+	"combat.log.attacker_none": {
+		"params": [],
+		"zh-CN": "进攻方：无",
+		"en": "Attacker: none"
+	},
+	"combat.log.attacker_takes_losses": {
+		"params": [],
+		"zh-CN": "进攻方承伤：",
+		"en": "Attacker losses:"
+	},
+	"combat.log.attackers": {
+		"params": ["pieces", "origin"],
+		"zh-CN": "{pieces}（{origin}）",
+		"en": "{pieces} ({origin})"
+	},
+	"combat.log.beachhead_removed": {
+		"params": [],
+		"zh-CN": "轴心国攻击空置滩头，无需掷骰即将其移除。",
+		"en": "The Axis attacks an empty beachhead and removes it without a die roll."
+	},
+	"combat.log.cards": {
+		"params": [],
+		"zh-CN": "战斗卡：",
+		"en": "Combat cards:"
+	},
+	"combat.log.card_played": {
+		"params": ["role", "card"],
+		"zh-CN": "{role}：{card}",
+		"en": "{role}: {card}"
+	},
+	"combat.log.defender": {
+		"params": [],
+		"zh-CN": "防守方：",
+		"en": "Defender:"
+	},
+	"combat.log.defender_fire": {
+		"params": [],
+		"zh-CN": "防守方开火：",
+		"en": "Defender fires:"
+	},
+	"combat.log.defender_none": {
+		"params": [],
+		"zh-CN": "防守方：无",
+		"en": "Defender: none"
+	},
+	"combat.log.defender_takes_losses": {
+		"params": [],
+		"zh-CN": "防守方承伤：",
+		"en": "Defender losses:"
+	},
+	"combat.log.defenders": {
+		"params": ["pieces"],
+		"zh-CN": "{pieces}",
+		"en": "{pieces}"
+	},
+	"combat.log.eliminated": {
+		"params": ["piece"],
+		"zh-CN": "{piece}消灭",
+		"en": "{piece} eliminated"
+	},
+	"combat.log.eliminated_permanent": {
+		"params": ["piece"],
+		"zh-CN": "{piece}永久消灭",
+		"en": "{piece} permanently eliminated"
+	},
+	"combat.log.eliminated_replaced": {
+		"params": ["piece", "replacement"],
+		"zh-CN": "{piece}消灭，由{replacement}替代",
+		"en": "{piece} eliminated and replaced by {replacement}"
+	},
+	"combat.log.eliminated_replaced_permanent": {
+		"params": ["piece", "replacement"],
+		"zh-CN": "{piece}永久消灭，由{replacement}替代",
+		"en": "{piece} permanently eliminated and replaced by {replacement}"
+	},
+	"combat.log.fire_result": {
+		"params": ["die", "column", "loss"],
+		"zh-CN": "{die} × {column}列 = {loss}",
+		"en": "{die} × column {column} = {loss}"
+	},
+	"combat.log.failed_retreat": {
+		"params": ["piece"],
+		"zh-CN": "{piece}无法完成撤退，按断补规则消灭。",
+		"en": "{piece} cannot complete its retreat and is eliminated under the out-of-supply rules."
+	},
+	"combat.log.overview": {
+		"params": ["space"],
+		"zh-CN": "战斗：{space}",
+		"en": "Combat: {space}"
+	},
+	"combat.log.panzerfaust": {
+		"params": ["piece"],
+		"zh-CN": "『铁拳』使{piece}在战斗结算前损失一个步级。",
+		"en": "Panzerfaust causes {piece} to lose one step before combat resolution."
+	},
+	"combat.log.previously_retreated_eliminated": {
+		"params": ["piece"],
+		"zh-CN": "{piece}本行动轮此前已经退却，因本次进攻造成损失而立即消灭。",
+		"en": "{piece} had already retreated this Action Round and is immediately eliminated after the attack inflicts a loss."
+	},
+	"combat.log.piece": {
+		"params": ["piece"],
+		"zh-CN": "{piece}",
+		"en": "{piece}"
+	},
+	"combat.log.reduced": {
+		"params": ["piece"],
+		"zh-CN": "{piece}减员",
+		"en": "{piece} reduced"
+	},
+	"combat.panzerfaust.loss": {
+		"params": [],
+		"zh-CN": "『铁拳』：选择一个苏军机械化单位损失一步。",
+		"en": "Panzerfaust: choose one Soviet mechanized unit to lose one step."
+	},
+	"combat.retreat.cancel_complete": {
+		"params": [],
+		"zh-CN": "撤退取消已完成。",
+		"en": "Retreat cancellation is complete."
+	},
+	"combat.retreat.cancel_option": {
+		"params": [],
+		"zh-CN": "防守方可以额外承受 1 级损失以取消撤退。",
+		"en": "The defender may take one additional step loss to cancel the retreat."
+	},
+	"combat.retreat.choose_path": {
+		"params": ["remaining"],
+		"zh-CN": "选择撤退路径（剩余 {remaining} 格）。",
+		"en": "Choose a retreat path ({remaining} spaces remaining)."
+	},
+	"combat.retreat.choose_units": {
+		"params": ["distance"],
+		"zh-CN": "选择撤退单位（{distance} 格）。",
+		"en": "Choose units to retreat ({distance} spaces)."
+	},
+	"combat.retreat.complete": {
+		"params": [],
+		"zh-CN": "撤退已完成。",
+		"en": "Retreat is complete."
+	},
+	"combat.select_attack": {
+		"params": [],
+		"zh-CN": "选择进攻单位和目标。",
+		"en": "Choose attacking units and a target."
+	}
+}

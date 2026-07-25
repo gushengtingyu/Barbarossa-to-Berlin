@@ -1,0 +1,23 @@
+{
+  "source": {
+    "file": "cover.png",
+    "sha256": "a15c0d457e21591910423981e21b880e12ea3627dbae8adc0ee9b40eda4cf0fa"
+  },
+  "variants": {
+    "cover.1x.jpg": {
+      "width": 150,
+      "height": 200,
+      "sha256": "d063d9283b94b0b8271bd801a949c62b630a9595321f949c8151f223122a664f"
+    },
+    "cover.2x.jpg": {
+      "width": 300,
+      "height": 400,
+      "sha256": "ec8d7936bf8947f5c2d0d0b5b92a4d99d25ead563b425117ce92cd185b5afb3b"
+    },
+    "thumbnail.jpg": {
+      "width": 108,
+      "height": 144,
+      "sha256": "d50471d8b106b2bafacd5264189ec0e0f2ee3d00cfc10519811e0413e658c5bf"
+    }
+  }
+}

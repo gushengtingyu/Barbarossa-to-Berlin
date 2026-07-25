@@ -1,0 +1,52 @@
+{
+	"core.none": {
+		"params": [],
+		"zh-CN": "无",
+		"en": "none"
+	},
+	"core.blank": {
+		"params": [],
+		"zh-CN": "",
+		"en": ""
+	},
+	"core.waiting": {
+		"params": ["role"],
+		"zh-CN": "等待 {role} 行动",
+		"en": "Waiting for {role}"
+	},
+	"core.game_over": {
+		"params": [],
+		"zh-CN": "游戏结束。",
+		"en": "Game over."
+	},
+	"core.role.allied": {
+		"params": [],
+		"zh-CN": "盟军",
+		"en": "Allied"
+	},
+	"core.role.axis": {
+		"params": [],
+		"zh-CN": "轴心国",
+		"en": "Axis"
+	},
+	"core.rollback.turn_start": {
+		"params": ["turn", "side"],
+		"zh-CN": "第{turn}回合开始 · {side}行动前",
+		"en": "Start of Turn {turn} · before the {side} action"
+	},
+	"core.rollback.action_round": {
+		"params": ["turn", "round", "side"],
+		"zh-CN": "第{turn}回合 · 第{round}行动轮 · {side}行动前",
+		"en": "Turn {turn} · Action Round {round} · before the {side} action"
+	},
+	"core.log.rollback_accepted": {
+		"params": ["name"],
+		"zh-CN": "双方同意回滚到：{name}。",
+		"en": "Both players agree to roll back to: {name}."
+	},
+	"core.log.supply_acknowledged": {
+		"params": ["side", "count"],
+		"zh-CN": "{side}确认收到{count}处补给警告。",
+		"en": "{side} acknowledges {count} supply warnings."
+	}
+}

@@ -1,0 +1,242 @@
+{
+	"turn.attrition.allied": {
+		"params": [],
+		"zh-CN": "结算盟军损耗。",
+		"en": "Resolve Allied Attrition."
+	},
+	"turn.attrition.axis": {
+		"params": [],
+		"zh-CN": "结算轴心国损耗。",
+		"en": "Resolve Axis Attrition."
+	},
+	"turn.cards.blitz": {
+		"params": [],
+		"zh-CN": "选择一张闪击战牌，或跳过。",
+		"en": "Choose a Blitzkrieg card, or skip."
+	},
+	"turn.cards.discard": {
+		"params": ["note"],
+		"zh-CN": "弃牌至手牌上限{note}。",
+		"en": "Discard down to the hand limit{note}."
+	},
+	"turn.cards.total_war": {
+		"params": [],
+		"zh-CN": "将『总体战！』加入手牌，或跳过。",
+		"en": "Add Total War! to your hand, or skip."
+	},
+	"turn.collaboration.acknowledge": {
+		"params": ["spaces"],
+		"zh-CN": "确认收到补给警告：{spaces}。",
+		"en": "Acknowledge supply warnings: {spaces}."
+	},
+	"turn.collaboration.flag": {
+		"params": ["count"],
+		"zh-CN": "标记补给警告（{count}）。",
+		"en": "Flag supply warnings ({count})."
+	},
+	"turn.collaboration.rollback": {
+		"params": ["proposer", "name"],
+		"zh-CN": "{proposer} 提议回滚到：{name}。",
+		"en": "{proposer} proposes rolling back to: {name}."
+	},
+	"turn.draw.exchange": {
+		"params": [],
+		"zh-CN": "弃一张 3+ OPS 牌，换取盟军第24号牌。",
+		"en": "Discard a 3+ OPS card to receive Allied card 24."
+	},
+	"turn.draw.redraw": {
+		"params": [],
+		"zh-CN": "保留一张牌并重抽，或重抽全部手牌。",
+		"en": "Keep one card and redraw, or redraw the entire hand."
+	},
+	"turn.eliminated_theater": {
+		"params": ["piece"],
+		"zh-CN": "为 {piece} 选择被消灭战区。",
+		"en": "Choose an eliminated theater for {piece}."
+	},
+	"turn.game_over": {
+		"params": ["result"],
+		"zh-CN": "{result}",
+		"en": "{result}"
+	},
+	"turn.log.attrition_control": {
+		"params": ["space", "side"],
+		"zh-CN": "{space}因断补转为{side}控制",
+		"en": "{space} changes to {side} control (OOS)"
+	},
+	"turn.log.attrition_eliminated": {
+		"params": ["piece"],
+		"zh-CN": "{piece}被消灭（断补）",
+		"en": "{piece} is eliminated (OOS)"
+	},
+	"turn.log.attrition_released": {
+		"params": ["piece"],
+		"zh-CN": "{piece}返回已消灭单位池",
+		"en": "{piece} returns to the Eliminated Units Box"
+	},
+	"turn.log.card_added": {
+		"params": ["side", "card"],
+		"zh-CN": "{side}将{card}加入初次总体战手牌。",
+		"en": "{side} adds {card} to its initial Total War hand."
+	},
+	"turn.log.deck_transition": {
+		"params": [],
+		"zh-CN": "双方总体战牌、弃牌与未抽取的闪击战牌已分别洗入新牌堆。",
+		"en": "Each side shuffles its Total War cards, discards, and undrawn Blitzkrieg cards into a new deck."
+	},
+	"turn.log.eliminated_theater": {
+		"params": ["piece", "theater"],
+		"zh-CN": "{piece}记入{theater}战区被消灭区。",
+		"en": "Record {piece} in the {theater} Eliminated Units Box."
+	},
+	"turn.log.no_replacement": {
+		"params": ["side"],
+		"zh-CN": "{side}没有合法补充消费，自动结束补充阶段。",
+		"en": "{side} has no legal replacement expenditure; end the Replacement Phase automatically."
+	},
+	"turn.log.order_roll": {
+		"params": ["side", "die", "result"],
+		"zh-CN": "{side}：{die} → {result}",
+		"en": "{side}: {die} → {result}"
+	},
+	"turn.log.place_initial_orders": {
+		"params": [],
+		"zh-CN": "第一回合：轴心国放置三个斯大林命令坚守标记。",
+		"en": "Turn 1: the Axis places three Stalin Orders Stand Fast markers."
+	},
+	"turn.log.action_phase": {
+		"params": [],
+		"zh-CN": "行动阶段",
+		"en": "Action Phase"
+	},
+	"turn.log.action_round": {
+		"params": ["turn", "round"],
+		"zh-CN": "Turn {turn} -- 行动轮 {round}",
+		"en": "Turn {turn} -- Action Round {round}"
+	},
+	"turn.log.mandated_offensive_failed": {
+		"params": ["side"],
+		"zh-CN": "{side}未完成强制攻势：VP惩罚1点。",
+		"en": "{side} fails its Mandated Offensive: 1 VP penalty."
+	},
+	"turn.log.winter_pass": {
+		"params": ["turn_name", "required"],
+		"zh-CN": "{turn_name}结束：轴心国满足冬季{required}个计分格要求。",
+		"en": "End of {turn_name}: the Axis satisfies the Winter requirement of {required} VP spaces."
+	},
+	"turn.log.winter_penalty": {
+		"params": ["turn_name", "controlled", "penalty", "vp"],
+		"zh-CN": "{turn_name}结束：轴心国在苏联、埃及和伊拉克仅控制{controlled}个计分格，VP-{penalty}，当前{vp}。",
+		"en": "End of {turn_name}: the Axis controls only {controlled} VP spaces in the Soviet Union, Egypt, and Iraq; VP -{penalty}, now {vp}."
+	},
+	"turn.opening.choose": {
+		"params": [],
+		"zh-CN": "选择开局事件。",
+		"en": "Choose the opening event."
+	},
+	"turn.phase.attrition": {
+		"params": [],
+		"zh-CN": "损耗阶段",
+		"en": "Attrition Phase"
+	},
+	"turn.phase.draw": {
+		"params": [],
+		"zh-CN": "抽牌阶段",
+		"en": "Draw Strategy Phase"
+	},
+	"turn.phase.replacement": {
+		"params": [],
+		"zh-CN": "补充阶段",
+		"en": "Replacement Phase"
+	},
+	"turn.phase.turn_heading": {
+		"params": ["turn", "name"],
+		"zh-CN": "Turn {turn}：{name}",
+		"en": "Turn {turn}: {name}"
+	},
+	"turn.opening.play": {
+		"params": [],
+		"zh-CN": "打出开局事件。",
+		"en": "Play the opening event."
+	},
+	"turn.orders.place": {
+		"params": ["leader", "count"],
+		"zh-CN": "放置{leader}坚守标记（{count}/3）。",
+		"en": "Place {leader} Stand Fast markers ({count}/3)."
+	},
+	"turn.orders.place_stalin": {
+		"params": ["count"],
+		"zh-CN": "放置斯大林坚守标记（{count}/3）。",
+		"en": "Place Stalin Stand Fast markers ({count}/3)."
+	},
+	"turn.orders.roll_allied": {
+		"params": [],
+		"zh-CN": "掷盟军命令骰。",
+		"en": "Roll the Allied Orders die."
+	},
+	"turn.orders.roll_axis": {
+		"params": [],
+		"zh-CN": "掷轴心国命令骰。",
+		"en": "Roll the Axis Orders die."
+	},
+	"turn.replacement.allied": {
+		"params": [],
+		"zh-CN": "使用盟军补充点。",
+		"en": "Spend Allied Replacement Points."
+	},
+	"turn.replacement.axis": {
+		"params": [],
+		"zh-CN": "使用轴心国补充点。",
+		"en": "Spend Axis Replacement Points."
+	},
+	"turn.replacement.location": {
+		"params": [],
+		"zh-CN": "选择重建位置。",
+		"en": "Choose a rebuild location."
+	},
+	"turn.setup.deploy_armies": {
+		"params": [],
+		"zh-CN": "部署德国第1与第7集团军（分处两个占领法国空间）。",
+		"en": "Deploy the German 1st and 7th Armies in separate Occupied France spaces."
+	},
+	"turn.setup.place_stalin": {
+		"params": ["count"],
+		"zh-CN": "放置斯大林坚守标记（{count}/3）。",
+		"en": "Place Stalin Stand Fast markers ({count}/3)."
+	},
+	"turn.trench.remove_allied": {
+		"params": [],
+		"zh-CN": "移除滩头或己方堑壕。",
+		"en": "Remove a beachhead or a friendly trench."
+	},
+	"turn.trench.remove_axis": {
+		"params": [],
+		"zh-CN": "移除己方堑壕。",
+		"en": "Remove a friendly trench."
+	},
+	"turn.voluntary_elimination": {
+		"params": [],
+		"zh-CN": "盟军可自愿消灭一个完整补给的英、美或自由法国集团军；可重复选择或结束。",
+		"en": "The Allies may voluntarily eliminate a fully supplied British, US, or Free French army; choose repeatedly or finish."
+	},
+	"turn.victory.allied_automatic": {
+		"params": [],
+		"zh-CN": "盟军自动胜利",
+		"en": "Allied Automatic Victory"
+	},
+	"turn.victory.allied_german_supply": {
+		"params": [],
+		"zh-CN": "盟军控制德国全部轴心补给源，获得自动胜利",
+		"en": "The Allies control every Axis supply source in Germany and win an Automatic Victory"
+	},
+	"turn.victory.axis_automatic": {
+		"params": [],
+		"zh-CN": "轴心国自动胜利",
+		"en": "Axis Automatic Victory"
+	},
+	"turn.victory.axis_campaign": {
+		"params": [],
+		"zh-CN": "轴心国Campaign胜利",
+		"en": "Axis Campaign Victory"
+	}
+}

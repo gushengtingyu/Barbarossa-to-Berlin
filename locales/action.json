@@ -1,0 +1,62 @@
+{
+	"action.usage.event": {
+		"params": [],
+		"zh-CN": "事件",
+		"en": "Event"
+	},
+	"action.usage.ops": {
+		"params": ["ops"],
+		"zh-CN": "行动点（{ops}）",
+		"en": "Operations ({ops})"
+	},
+	"action.usage.sr": {
+		"params": ["ops"],
+		"zh-CN": "战略调动（{ops}）",
+		"en": "Strategic Redeployment ({ops})"
+	},
+	"action.usage.rp": {
+		"params": [],
+		"zh-CN": "补充（RP）",
+		"en": "Replacements (RP)"
+	},
+	"action.choose": {
+		"params": ["turn", "round"],
+		"zh-CN": "第{turn}回合 · 行动轮{round}：选择一项行动。",
+		"en": "Turn {turn} · Action Round {round}: choose an action."
+	},
+	"action.log.auto_ops": {
+		"params": [],
+		"zh-CN": "自动行动（1）",
+		"en": "Automatic action (1)"
+	},
+	"action.log.card": {
+		"params": ["card", "usage"],
+		"zh-CN": "{card} -- {usage}",
+		"en": "{card} -- {usage}"
+	},
+	"action.log.phase": {
+		"params": [],
+		"zh-CN": "行动阶段",
+		"en": "Action Phase"
+	},
+	"action.log.round": {
+		"params": ["turn", "round"],
+		"zh-CN": "Turn {turn} -- 行动轮 {round}",
+		"en": "Turn {turn} -- Action Round {round}"
+	},
+	"action.log.partisan": {
+		"params": ["space"],
+		"zh-CN": "盟军在{space}放置游击队标记。",
+		"en": "The Allies place a Partisan marker in {space}."
+	},
+	"action.partisans.complete": {
+		"params": [],
+		"zh-CN": "游击队放置完成。",
+		"en": "Partisan placement is complete."
+	},
+	"action.partisans.place": {
+		"params": ["placed", "total"],
+		"zh-CN": "放置游击队（{placed}/{total}）。",
+		"en": "Place Partisans ({placed}/{total})."
+	}
+}

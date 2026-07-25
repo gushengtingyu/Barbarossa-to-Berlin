@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+work/
+outputs/
+tmp/
+server/
+data.js
+lcov.info
+*.log
+.DS_Store
+Thumbs.db
+/AGENTS.md

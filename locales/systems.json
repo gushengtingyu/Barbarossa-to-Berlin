@@ -1,0 +1,92 @@
+{
+	"invasions.log.beachhead_created": {
+		"params": ["event", "space", "marker", "count"],
+		"zh-CN": "『{event}』在{space}建立{marker}滩头并投入{count}个单位。",
+		"en": "{event} establishes a {marker} beachhead at {space} and lands {count} units."
+	},
+	"invasions.log.beachhead_removed": {
+		"params": ["space", "reason"],
+		"zh-CN": "{space}滩头{reason}，移除滩头标记。",
+		"en": "The beachhead at {space} {reason}; remove its marker."
+	},
+	"invasions.log.declared_complete": {
+		"params": [],
+		"zh-CN": "盟军宣布本局不再进行登陆；剩余可转换登陆牌此后可作为普通增援事件使用。",
+		"en": "The Allies declare that no further invasions will be made; remaining convertible invasion cards may now be used as ordinary reinforcement events."
+	},
+	"invasions.log.deploy": {
+		"params": [],
+		"zh-CN": "按普通增援流程部署登陆部队。",
+		"en": "Deploy the invasion units using the normal reinforcement procedure."
+	},
+	"invasions.log.pacific": {
+		"params": ["pieces"],
+		"zh-CN": "{pieces}由预备箱调往太平洋战区并移出游戏。",
+		"en": "{pieces} move from the Reserve Box to the Pacific theater and are removed from the game."
+	},
+	"invasions.log.reserve_return": {
+		"params": ["piece"],
+		"zh-CN": "{piece}在盟军行动结束后进入盟军预备箱，并恢复为满编。",
+		"en": "{piece} enters the Allied Reserve Box at the end of the Allied action and returns to full strength."
+	},
+	"map.log.control_vp": {
+		"params": ["space", "delta", "vp"],
+		"zh-CN": "{space}控制权改变：轴心国VP{delta}，当前{vp}。",
+		"en": "{space} changes control: Axis VP {delta}; now {vp}."
+	},
+	"neutrals.log.declare_war": {
+		"params": ["side", "country"],
+		"zh-CN": "{side}向{country}宣战。",
+		"en": "{side} declares war on {country}."
+	},
+	"neutrals.log.declare_war_penalty": {
+		"params": ["country", "penalty", "vp"],
+		"zh-CN": "轴心国向{country}宣战：VP-{penalty}，当前{vp}。",
+		"en": "The Axis declares war on {country}: VP -{penalty}, now {vp}."
+	},
+	"neutrals.log.deployment": {
+		"params": ["country", "piece", "space"],
+		"zh-CN": "{country}将{piece}部署至{space}。",
+		"en": "{country} deploys {piece} to {space}."
+	},
+	"neutrals.log.turkey_rp": {
+		"params": ["side"],
+		"zh-CN": "土耳其获得本回合固定2点补充点，由{side}使用。",
+		"en": "Turkey receives a fixed 2 RP this turn, spent by {side}."
+	},
+	"neutrals.log.vichy": {
+		"params": [],
+		"zh-CN": "维希法国参战；双方此后可进入维希法国及法属北非。",
+		"en": "Vichy France enters the war; both sides may now enter Vichy France and French North Africa."
+	},
+	"replacements.log.rebuild": {
+		"params": ["side", "piece", "location"],
+		"zh-CN": "{side}重建{piece}至{location}。",
+		"en": "{side} rebuilds {piece} in {location}."
+	},
+	"replacements.log.restore": {
+		"params": ["side", "piece", "location"],
+		"zh-CN": "{side}补足{piece}于{location}。",
+		"en": "{side} restores {piece} to full strength in {location}."
+	},
+	"replacements.log.voluntary_elimination": {
+		"params": ["piece", "turn"],
+		"zh-CN": "盟军自愿消灭{piece}；该单位将在 Turn {turn} 进入被消灭区。",
+		"en": "The Allies voluntarily eliminate {piece}; it enters the Eliminated Units Box in Turn {turn}."
+	},
+	"replacements.log.wehrkreis": {
+		"params": ["count", "points"],
+		"zh-CN": "德国军区惩罚：{count} 个军区失控和/或断补，德国补充点减少 {points}。",
+		"en": "Wehrkreis penalty: {count} districts are uncontrolled and/or out of supply; German RP is reduced by {points}."
+	},
+	"stalin.log.captured": {
+		"params": ["space", "reason", "vp"],
+		"zh-CN": "斯大林在{space}{reason}：VP+4，当前{vp}。",
+		"en": "Stalin is {reason} at {space}: VP +4, now {vp}."
+	},
+	"stalin.log.sr": {
+		"params": ["origin", "destination"],
+		"zh-CN": "斯大林由{origin}战略调动至{destination}。",
+		"en": "Stalin strategically redeploys from {origin} to {destination}."
+	}
+}

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, height=device-height, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover" />
+		<title>WWII: Barbarossa to Berlin</title>
+		<link rel="stylesheet" href="/fonts/fonts.css" />
+		<link rel="stylesheet" href="/common/client.css" />
+		<link rel="stylesheet" href="play.css" />
+		<script defer src="/common/client.js"></script>
+		<script defer src="data.js"></script>
+		<script defer src="modules/core/i18n_catalog.js"></script>
+		<script defer src="modules/core/i18n.js"></script>
+		<script defer src="play.js"></script>
+	</head>
+	<body class="bevel">
+		<div id="tooltip" hidden></div>
+
+		<menu id="card_popup" hidden>
+			<li class="title" data-i18n="ui.cards">卡牌</li>
+			<li class="separator"></li>
+			<li data-action="play_event">🎴︎ &nbsp; <span data-i18n="ui.event">事件</span></li>
+			<li data-action="play_ops">🔀︎ &nbsp; <span data-i18n="ui.operations">行动点</span></li>
+			<li data-action="play_sr">🚂︎ &nbsp; <span data-i18n="ui.strategic_redeployment">战略转移</span></li>
+			<li data-action="play_rp">🏭︎ &nbsp; <span data-i18n="ui.replacements">补员</span></li>
+		</menu>
+
+		<menu id="activation_popup" hidden>
+			<li class="title" data-i18n="ui.activation">激活</li>
+			<li class="separator"></li>
+			<li data-action="space" data-i18n="ui.activation.move">移动激活</li>
+			<li data-action="attack" data-i18n="ui.activation.combat">战斗激活</li>
+			<li data-action="deactivate" data-i18n="ui.activation.cancel">取消激活</li>
+			<li data-action="move" data-i18n="ui.move">移动</li>
+			<li data-action="piece" data-i18n="ui.move_piece">移动单位</li>
+			<li data-action="entrench" data-i18n="ui.entrench">掘壕</li>
+		</menu>
+
+		<div id="card_list_panel" class="card-list-panel" hidden>
+			<div class="card-list-panel-head">
+				<strong id="card_list_title" data-i18n="ui.cards">卡牌</strong>
+				<button type="button" onclick="hideCardQuery()" aria-label="关闭" data-i18n-aria-label="ui.close">×</button>
+			</div>
+			<div id="card_list_body"></div>
+		</div>
+
+		<dialog id="propose_rollback_dialog" class="collaboration-dialog">
+			<h3 data-i18n="ui.rollback.propose">提议回滚</h3>
+			<p data-i18n="ui.rollback.propose_text">选择一个行动边界。对手接受后，游戏将回到该位置；已经产生的随机结果不会重新投掷。</p>
+			<label for="rollback_checkpoint" data-i18n="ui.rollback.checkpoint">回滚到：</label>
+			<select id="rollback_checkpoint" onchange="updateRollbackDialog()"></select>
+			<div id="propose_rollback_details" class="rollback-details"></div>
+			<div class="dialog-buttons">
+				<button type="button" onclick="closeRollbackProposal()" data-i18n="ui.cancel">取消</button>
+				<button type="button" class="primary" onclick="submitRollbackProposal()" data-i18n="ui.submit">提交</button>
+			</div>
+		</dialog>
+
+		<dialog id="review_rollback_dialog" class="collaboration-dialog">
+			<h3 data-i18n="ui.rollback.review_proposal">审查回滚提议</h3>
+			<p data-i18n="ui.rollback.accept_text">对手请求回到之前的行动边界。请确认将撤销的位置和公开记录。</p>
+			<div id="review_rollback_details" class="rollback-details"></div>
+			<div class="dialog-buttons">
+				<button type="button" onclick="closeRollbackReview()" data-i18n="ui.rollback.defer">稍后决定</button>
+				<button type="button" onclick="rejectRollbackProposal()" data-i18n="ui.rollback.reject">拒绝</button>
+				<button type="button" class="primary" onclick="acceptRollbackProposal()" data-i18n="ui.accept">接受</button>
+			</div>
+		</dialog>
+
+		<header>
+			<div id="toolbar">
+				<details>
+					<summary><img src="/images/cog.svg" alt="菜单" data-i18n-alt="ui.menu" /></summary>
+					<menu>
+						<li onclick="window.open(uiLocale === 'en' ? 'BtB%20rules-2006.pdf' : 'info/rules.html', '_blank')" data-i18n="ui.toolbar.rules">规则书（2006 v1.3）</li>
+						<li onclick="window.open('info/charts.html', '_blank')" data-i18n="ui.toolbar.charts">辅助图表</li>
+						<li onclick="window.open('info/cards.html?side=allied', '_blank')" data-i18n="ui.toolbar.cards_allied">盟军牌组</li>
+						<li onclick="window.open('info/cards.html?side=axis', '_blank')" data-i18n="ui.toolbar.cards_axis">轴心国牌组</li>
+						<li onclick="window.open('info/pieces.html', '_blank')" data-i18n="ui.toolbar.pieces">算子图鉴</li>
+					</menu>
+				</details>
+				<details id="stack_menu">
+					<summary>
+						<img src="/images/stack.svg" alt="堆叠" data-i18n-alt="ui.stack" />
+					</summary>
+					<menu>
+						<li class="unchecked" id="mouse_focus" onclick="set_mouse_focus()" data-i18n="ui.stack.mouse_focus">鼠标聚焦</li>
+						<li class="separator"></li>
+						<li class="unchecked" id="style_bevel" onclick="set_style('bevel')" data-i18n="ui.stack.bevel">斜面</li>
+						<li class="unchecked" id="style_flat" onclick="set_style('flat')" data-i18n="ui.stack.flat">平面</li>
+					</menu>
+				</details>
+				<details id="info_menu">
+					<summary>
+						<img src="/images/wooden-sign.svg" alt="查看" data-i18n-alt="ui.toolbar.view" />
+					</summary>
+					<menu>
+						<li onclick="to_reinforcements()" data-i18n="ui.toolbar.reinforcements">增援与兵力池</li>
+						<li class="unchecked" id="supply_allied" onclick="send_query('allied_supply')" data-i18n="ui.toolbar.supply_allied">盟军补给</li>
+						<li class="unchecked" id="supply_axis" onclick="send_query('axis_supply')" data-i18n="ui.toolbar.supply_axis">轴心国补给</li>
+						<li class="separator"></li>
+						<li onclick="send_query('discard')" data-i18n="ui.toolbar.discard">弃牌堆</li>
+						<li onclick="send_query('removed')" data-i18n="ui.toolbar.removed">移出游戏牌</li>
+					</menu>
+				</details>
+				<details id="collaboration_menu">
+					<summary>
+						<img src="/images/oil-drum.svg" alt="协作" data-i18n-alt="ui.collaboration" />
+					</summary>
+					<menu>
+						<li id="flag_supply_warning_menu" onclick="flagSupplyWarnings()" data-i18n="ui.warning.flag">标记补给警告</li>
+						<li id="propose_rollback_menu" onclick="openRollbackProposal()" data-i18n="ui.rollback.propose">提议回滚</li>
+					</menu>
+				</details>
+				<button id="review_rollback_button" type="button" onclick="openRollbackReview()" hidden data-i18n="ui.rollback.review">审查回滚</button>
+				<button id="piece_button" onclick="toggle_counters()" title="循环显示棋子与标记" data-i18n-title="ui.toolbar.cycle_counters">
+					<img src="/images/earth-america.svg" alt="棋子" data-i18n-alt="ui.toolbar.counters" />
+				</button>
+			</div>
+		</header>
+
+		<aside>
+			<div id="roles">
+				<div class="role" id="role_Allied">
+					<div class="role_name" data-i18n="ui.allied">盟军</div>
+					<div class="role_stat" id="allied_hand"></div>
+					<div class="role_user">-</div>
+				</div>
+				<div class="role" id="role_Axis">
+					<div class="role_name" data-i18n="ui.axis">轴心国</div>
+					<div class="role_stat" id="axis_hand"></div>
+					<div class="role_user">-</div>
+				</div>
+			</div>
+			<div id="turn_info">
+				<div id="allied_deck_size"></div>
+				<div id="axis_deck_size"></div>
+				<div id="rp_summary" hidden></div>
+			</div>
+			<div id="log"></div>
+		</aside>
+
+		<main data-min-zoom="0.3" data-max-zoom="2" data-map-width="3400" data-map-height="2200">
+			<div id="mapwrap">
+				<div id="map">
+					<img id="map-image" src="btb%20map.webp" width="3400" height="2200" decoding="async" fetchpriority="high" alt="BTB map" />
+					<div id="space-overlay"></div>
+					<div id="piece-overlay"><div id="focus-box"></div></div>
+				</div>
+			</div>
+			<div class="panel-list">
+				<div class="panel" id="combat_cards_panel" hidden>
+					<div class="panel-head" data-i18n="ui.combat_cards">战斗牌</div>
+					<div class="combat-card-groups">
+						<div class="combat-card-list" id="combat_cards"></div>
+					</div>
+				</div>
+				<div class="panel">
+					<div class="panel-head" id="cards_head" data-i18n="ui.hand">手牌</div>
+					<div class="panel-body" id="cards"></div>
+				</div>
+				<div class="event-marker-tray" id="event_markers_panel" hidden>
+					<div class="panel-head" data-i18n="ui.events.ongoing">持续事件</div>
+					<div class="event-marker-groups">
+						<section id="event_markers_allied_group" hidden>
+							<h3 data-i18n="ui.allied">盟军</h3>
+							<div class="event-marker-list" id="event_markers_allied"></div>
+						</section>
+						<section id="event_markers_axis_group" hidden>
+							<h3 data-i18n="ui.axis">轴心国</h3>
+							<div class="event-marker-list" id="event_markers_axis"></div>
+						</section>
+					</div>
+				</div>
+				<div id="reinforcements_wrap">
+					<div id="reinforcements"></div>
+				</div>
+			</div>
+		</main>
+
+		<footer id="status"></footer>
+	</body>
+</html>

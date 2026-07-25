@@ -1,0 +1,780 @@
+{
+	"ui.event_marker.barbarossa": { "params": [], "zh-CN": "巴巴罗萨", "en": "Barbarossa" },
+	"ui.event_marker.von_paulus_pause": { "params": [], "zh-CN": "保卢斯停顿", "en": "Von Paulus Pause" },
+	"ui.event_marker.lend_lease": { "params": [], "zh-CN": "租借法案", "en": "Lend-Lease" },
+	"ui.event_marker.sorge": { "params": [], "zh-CN": "佐尔格", "en": "Sorge" },
+	"ui.event_marker.us_buildup": { "params": [], "zh-CN": "美国扩军", "en": "US Build-Up" },
+	"ui.event_marker.maquis": { "params": [], "zh-CN": "马基游击队", "en": "Maquis" },
+	"ui.event_marker.speer": { "params": [], "zh-CN": "施佩尔", "en": "Speer" },
+	"ui.event_marker.romania_defects": { "params": [], "zh-CN": "罗马尼亚倒戈", "en": "Romania Defects" },
+	"ui.event_marker.torch": { "params": [], "zh-CN": "火炬行动", "en": "Torch" },
+	"ui.event_marker.sledgehammer": { "params": [], "zh-CN": "大锤行动", "en": "Sledgehammer" },
+	"ui.event_marker.overlord": { "params": [], "zh-CN": "霸王行动", "en": "Overlord" },
+	"ui.event_marker.round_up": { "params": [], "zh-CN": "围捕行动", "en": "Round-Up" },
+	"ui.event_marker.fdr_declares_war": { "params": [], "zh-CN": "罗斯福宣战", "en": "FDR Declares War" },
+	"ui.event_marker.hitler_declares_war": { "params": [], "zh-CN": "希特勒宣战", "en": "Hitler Declares War" },
+	"ui.event_marker.allied_invasion_used": { "params": [], "zh-CN": "本回合已打出盟军登陆牌", "en": "Allied invasion card played this turn" },
+	"ui.rp.ge": { "params": [], "zh-CN": "德", "en": "GE" },
+	"ui.rp.axis": { "params": [], "zh-CN": "轴", "en": "Axis" },
+	"ui.rp.br": { "params": [], "zh-CN": "英", "en": "BR" },
+	"ui.rp.usa": { "params": [], "zh-CN": "美", "en": "US" },
+	"ui.rp.su": { "params": [], "zh-CN": "苏", "en": "SU" },
+	"ui.rp.tu": { "params": [], "zh-CN": "土", "en": "TU" },
+	"ui.order.none": { "params": [], "zh-CN": "无命令", "en": "No Order" },
+	"ui.order.okw_mo": { "params": [], "zh-CN": "OKW强制攻势", "en": "OKW Mandated Offensive" },
+	"ui.order.hitler_orders": { "params": [], "zh-CN": "希特勒命令", "en": "Hitler Orders" },
+	"ui.order.allied_mo": { "params": [], "zh-CN": "西方盟军强制攻势", "en": "Western Allied Mandated Offensive" },
+	"ui.order.soviet_mo": { "params": [], "zh-CN": "苏军强制攻势", "en": "Soviet Mandated Offensive" },
+	"ui.order.stalin_orders": { "params": [], "zh-CN": "斯大林命令", "en": "Stalin Orders" },
+	"ui.action_track.br_reinf": { "params": [], "zh-CN": "英军增援", "en": "British Reinforcement" },
+	"ui.action_track.su_reinf": { "params": [], "zh-CN": "苏军增援", "en": "Soviet Reinforcement" },
+	"ui.action_track.usa_reinf": { "params": [], "zh-CN": "美军增援", "en": "US Reinforcement" },
+	"ui.action_track.allied_invasion": { "params": [], "zh-CN": "盟军登陆", "en": "Allied Invasion" },
+	"ui.action_track.ops": { "params": [], "zh-CN": "行动点", "en": "OPS" },
+	"ui.action_track.other_event": { "params": [], "zh-CN": "其他事件", "en": "Other Event" },
+	"ui.action_track.one_ops": { "params": [], "zh-CN": "1 OPS", "en": "1 OPS" },
+	"ui.action_track.partisans": { "params": [], "zh-CN": "游击队", "en": "Partisans" },
+	"ui.action_track.sr": { "params": [], "zh-CN": "战略调动", "en": "SR" },
+	"ui.action_track.rp": { "params": [], "zh-CN": "补员", "en": "RP" },
+	"ui.action_track.ge_reinf": { "params": [], "zh-CN": "德军增援", "en": "German Reinforcement" },
+	"ui.action_track.axis_reinf": { "params": [], "zh-CN": "轴心国增援", "en": "Axis Reinforcement" },
+	"ui.track.turn": { "params": ["turn"], "zh-CN": "第{turn}回合", "en": "Turn {turn}" },
+	"ui.track.industrial_evacuation": { "params": ["turn"], "zh-CN": "工业疏散：第{turn}回合起可打出坦克集团军", "en": "Industrial Evacuation: Tank Armies available from Turn {turn}" },
+	"ui.track.vp_ones": { "params": ["value"], "zh-CN": "VP个位 {value}", "en": "VP ones digit {value}" },
+	"ui.track.vp_tens": { "params": ["value"], "zh-CN": "VP十位 {value}", "en": "VP tens digit {value}" },
+	"ui.track.hand_limit": { "params": ["side", "count"], "zh-CN": "{side}手牌上限 {count}", "en": "{side} hand limit {count}" },
+	"ui.track.rp_ge": { "params": [], "zh-CN": "德军RP", "en": "German RP" },
+	"ui.track.rp_axis": { "params": [], "zh-CN": "轴心国RP", "en": "Axis RP" },
+	"ui.track.rp_br": { "params": [], "zh-CN": "英军RP", "en": "British RP" },
+	"ui.track.rp_usa": { "params": [], "zh-CN": "美军RP", "en": "US RP" },
+	"ui.track.rp_su": { "params": [], "zh-CN": "苏军RP", "en": "Soviet RP" },
+	"ui.track.rp": { "params": ["label", "value"], "zh-CN": "{label} {value}", "en": "{label} {value}" },
+	"ui.track.orders": { "params": ["side", "order"], "zh-CN": "{side}命令 · {order}", "en": "{side} Orders · {order}" },
+	"ui.track.action": { "params": ["side", "round", "action"], "zh-CN": "{side}第{round}行动 · {action}", "en": "{side} Action {round} · {action}" },
+	"ui.log.die": { "params": ["value"], "zh-CN": "掷骰 {value}", "en": "Die roll {value}" },
+	"ui.log.locate_card": { "params": [], "zh-CN": "定位卡牌", "en": "Locate card" },
+	"ui.log.locate_space": { "params": [], "zh-CN": "在地图上定位", "en": "Locate on map" },
+	"ui.log.locate_piece": { "params": [], "zh-CN": "定位单位", "en": "Locate unit" },
+	"ui.cards.strategy": { "params": ["side"], "zh-CN": "{side}战略牌", "en": "{side} strategy card" },
+	"ui.marker.control": { "params": ["side"], "zh-CN": "{side}控制", "en": "{side} control" },
+	"ui.marker.out_of_supply": { "params": [], "zh-CN": "断补", "en": "Out of Supply" },
+	"ui.marker.trench": { "params": ["level"], "zh-CN": "{level}级堑壕", "en": "Level {level} trench" },
+	"ui.marker.shingle_beachhead": { "params": [], "zh-CN": "鹅卵石行动滩头", "en": "Operation Shingle beachhead" },
+	"ui.marker.allied_beachhead": { "params": [], "zh-CN": "盟军滩头", "en": "Allied beachhead" },
+	"ui.marker.hitler_stand_fast": { "params": [], "zh-CN": "希特勒坚守", "en": "Hitler Stand Fast" },
+	"ui.marker.stalin_stand_fast": { "params": [], "zh-CN": "斯大林坚守", "en": "Stalin Stand Fast" },
+	"ui.marker.luftwaffe_supply": { "params": [], "zh-CN": "空军补给：本回合防御与损耗时为有限补给", "en": "Luftwaffe Supply: Limited Supply for defense and Attrition this turn" },
+	"ui.marker.stalin": { "params": [], "zh-CN": "斯大林", "en": "Stalin" },
+	"ui.terrain.clear": { "params": [], "zh-CN": "平原", "en": "Clear" },
+	"ui.terrain.desert": { "params": [], "zh-CN": "沙漠", "en": "Desert" },
+	"ui.terrain.mountain": { "params": [], "zh-CN": "山地", "en": "Mountain" },
+	"ui.terrain.forest": { "params": [], "zh-CN": "森林", "en": "Forest" },
+	"ui.terrain.swamp": { "params": [], "zh-CN": "沼泽", "en": "Swamp" },
+	"ui.space.sr": { "params": [], "zh-CN": "SR空间", "en": "SR space" },
+	"ui.space.beach": { "params": [], "zh-CN": "登陆滩头", "en": "Invasion beach" },
+	"ui.space.control": { "params": ["side"], "zh-CN": "控制：{side}", "en": "Control: {side}" },
+	"ui.space.urban": { "params": [], "zh-CN": "城市", "en": "Urban" },
+	"ui.space.capital": { "params": [], "zh-CN": "首都", "en": "Capital" },
+	"ui.space.port": { "params": [], "zh-CN": "港口", "en": "Port" },
+	"ui.space.oil": { "params": [], "zh-CN": "石油", "en": "Oil" },
+	"ui.space.iron": { "params": [], "zh-CN": "铁矿", "en": "Iron" },
+	"ui.space.supply_source": { "params": [], "zh-CN": "印刷补给源", "en": "Printed supply source" },
+	"ui.space.wehrkreis": { "params": [], "zh-CN": "军区", "en": "Wehrkreis" },
+	"ui.space.fort": { "params": [], "zh-CN": "要塞", "en": "Fort" },
+	"ui.space.fort_destroyed": { "params": [], "zh-CN": "要塞已摧毁", "en": "Fort destroyed" },
+	"ui.space.trench": { "params": ["level"], "zh-CN": "战壕 {level}", "en": "Trench {level}" },
+	"ui.space.stand_fast": { "params": [], "zh-CN": "坚守", "en": "Stand Fast" },
+	"ui.space.partisans": { "params": [], "zh-CN": "游击队", "en": "Partisans" },
+	"ui.space.unit_count": { "params": ["count"], "zh-CN": "{count}个单位", "en": "{count} units" },
+	"ui.piece.off_map": { "params": [], "zh-CN": "场外", "en": "Off map" },
+	"ui.piece.space": { "params": ["id"], "zh-CN": "空间 {id}", "en": "Space {id}" },
+	"ui.piece.reserve": { "params": [], "zh-CN": "预备兵力池", "en": "Reserve Box" },
+	"ui.piece.eliminated": { "params": [], "zh-CN": "被消灭单位池", "en": "Eliminated Units Box" },
+	"ui.piece.turn_track": { "params": [], "zh-CN": "回合轨", "en": "Turn track" },
+	"ui.piece.available": { "params": [], "zh-CN": "可用单位", "en": "Available units" },
+	"ui.piece.reduced": { "params": [], "zh-CN": "（减员）", "en": " (reduced)" },
+	"ui.piece.status": {
+		"params": ["name", "reduced", "side", "cf", "lf", "mf", "location"],
+		"zh-CN": "{name}{reduced} · {side} · {cf}-{lf}-{mf} · {location}",
+		"en": "{name}{reduced} · {side} · {cf}-{lf}-{mf} · {location}"
+	},
+	"ui.piece.marker_status": {
+		"params": ["name", "side", "location"],
+		"zh-CN": "{name} · {side} · 游戏标记 · {location}",
+		"en": "{name} · {side} · Game marker · {location}"
+	},
+	"ui.cards.my_discard": { "params": [], "zh-CN": "我的弃牌堆", "en": "My discard pile" },
+	"ui.cards.removed_side": { "params": ["side"], "zh-CN": "{side}移出游戏", "en": "{side} removed from play" },
+	"ui.side.neutral": { "params": [], "zh-CN": "中立", "en": "Neutral" },
+	"ui.cards.choose": { "params": [], "zh-CN": "请选择卡牌", "en": "Choose a card" },
+	"ui.cards.none": { "params": [], "zh-CN": "无卡牌", "en": "No cards" },
+	"ui.cards.group_count": { "params": ["title", "count"], "zh-CN": "{title}（{count}）", "en": "{title} ({count})" },
+	"ui.cards.discard": { "params": [], "zh-CN": "弃牌堆", "en": "Discard pile" },
+	"ui.cards.removed": { "params": [], "zh-CN": "移出游戏卡牌", "en": "Removed cards" },
+	"ui.cards.count": { "params": ["count"], "zh-CN": "{count}张牌", "en": "{count} cards" },
+	"ui.cards.deck_count": { "params": ["side", "count"], "zh-CN": "{side}牌库：{count} 张", "en": "{side} deck: {count} cards" },
+	"ui.supply.summary": {
+		"params": ["side", "full", "limited", "oos"],
+		"zh-CN": "{side}当前补给：完整 {full}，有限 {limited}，断补 {oos}",
+		"en": "{side} supply: full {full}, limited {limited}, out of supply {oos}"
+	},
+	"ui.reinforcement.enter_reserve": { "params": [], "zh-CN": "进入预备区", "en": "Enter reserve" },
+	"ui.reinforcement.board_label": { "params": [], "zh-CN": "巴巴罗萨到柏林印刷增援表", "en": "Barbarossa to Berlin reinforcement chart" },
+	"ui.reinforcement.caption": {
+		"params": [],
+		"zh-CN": "印刷增援表：棋子入场后会从对应槽位移至地图；金色框表示当前可打出的增援事件。",
+		"en": "Printed reinforcement chart. Counters leave their printed slots when they enter play; highlighted card boxes are currently playable events."
+	},
+	"ui.rollback.none": { "params": [], "zh-CN": "没有可用的回滚检查点。", "en": "No rollback checkpoints are available." },
+	"ui.rollback.removed_log_count": {
+		"params": ["count"],
+		"zh-CN": "将撤销该检查点之后的{count}条公开记录。",
+		"en": "{count} public log entries after this checkpoint will be undone."
+	},
+	"ui.warning.flag_count": { "params": ["count"], "zh-CN": "标记补给警告 ({count})", "en": "Flag supply warnings ({count})" },
+	"ui.action.ops": { "params": [], "zh-CN": "OPS", "en": "OPS" },
+	"ui.action.sr": { "params": [], "zh-CN": "SR", "en": "SR" },
+	"ui.action.rp": { "params": [], "zh-CN": "RP", "en": "RP" },
+	"ui.action.event": { "params": [], "zh-CN": "事件", "en": "Event" },
+	"ui.action.single_beachhead": { "params": [], "zh-CN": "一个盟军滩头", "en": "One Allied beachhead" },
+	"ui.action.double_beachheads": { "params": [], "zh-CN": "两个国别滩头", "en": "Two national beachheads" },
+	"ui.action.auto_ops": { "params": [], "zh-CN": "自动 1 OPS", "en": "Automatic 1 OPS" },
+	"ui.action.declare_turkey": { "params": [], "zh-CN": "向土耳其宣战", "en": "Declare war on Turkey" },
+	"ui.action.declare_sweden": { "params": [], "zh-CN": "向瑞典宣战", "en": "Declare war on Sweden" },
+	"ui.action.place_partisan": { "params": [], "zh-CN": "放置游击队", "en": "Place partisan" },
+	"ui.action.confirm": { "params": [], "zh-CN": "确认", "en": "Confirm" },
+	"ui.action.cancel": { "params": [], "zh-CN": "取消", "en": "Cancel" },
+	"ui.action.cancel_selection": { "params": [], "zh-CN": "取消选择", "en": "Cancel selection" },
+	"ui.action.yes": { "params": [], "zh-CN": "是", "en": "Yes" },
+	"ui.action.no": { "params": [], "zh-CN": "否", "en": "No" },
+	"ui.action.continue": { "params": [], "zh-CN": "继续", "en": "Continue" },
+	"ui.action.select_all": { "params": [], "zh-CN": "全选", "en": "Select all" },
+	"ui.action.discard_all": { "params": [], "zh-CN": "全部弃掉并重抽", "en": "Discard all and redraw" },
+	"ui.action.end_invasions": { "params": [], "zh-CN": "宣布不再登陆", "en": "End invasions" },
+	"ui.action.reserve": { "params": [], "zh-CN": "进入盟军预备箱", "en": "Enter Allied Reserve Box" },
+	"ui.action.stalin": { "params": [], "zh-CN": "调动斯大林", "en": "Move Stalin" },
+	"ui.action.move_marker": { "params": [], "zh-CN": "放置移动标记", "en": "Place move marker" },
+	"ui.action.combat_marker": { "params": [], "zh-CN": "放置战斗标记", "en": "Place combat marker" },
+	"ui.action.yellow_ops": { "params": [], "zh-CN": "改作黄色事件 OPS", "en": "Use Yellow Event OPS" },
+	"ui.action.done": { "params": [], "zh-CN": "完成", "en": "Done" },
+	"ui.action.roll": { "params": [], "zh-CN": "掷骰", "en": "Roll" },
+	"ui.action.stop": { "params": [], "zh-CN": "停止移动", "en": "Stop moving" },
+	"ui.action.pass": { "params": [], "zh-CN": "跳过", "en": "Pass" },
+	"ui.action.med": { "params": [], "zh-CN": "地中海战区", "en": "Mediterranean theater" },
+	"ui.action.nwe": { "params": [], "zh-CN": "西北欧战区", "en": "Northwest Europe theater" },
+	"ui.action.undo": { "params": [], "zh-CN": "撤销", "en": "Undo" },
+	"ui.action.accept_rollback": { "params": [], "zh-CN": "接受回滚", "en": "Accept rollback" },
+	"ui.action.reject_rollback": { "params": [], "zh-CN": "拒绝回滚", "en": "Reject rollback" },
+	"ui.action.finish_refit": { "params": [], "zh-CN": "完成整补", "en": "Finish refit" },
+	"ui.action.finish_placement": { "params": [], "zh-CN": "完成放置", "en": "Finish placement" },
+	"ui.action.confirm_removal": { "params": [], "zh-CN": "确认移除", "en": "Confirm removal" },
+	"ui.action.activate": { "params": [], "zh-CN": "发动", "en": "Activate" },
+	"ui.action.end_action": { "params": [], "zh-CN": "结束行动", "en": "End action" },
+	"ui.action.back": { "params": [], "zh-CN": "返回", "en": "Back" },
+	"ui.action.skip_placement": { "params": [], "zh-CN": "不放置", "en": "Do not place" },
+	"ui.action.resolve": { "params": [], "zh-CN": "结算", "en": "Resolve" },
+	"ui.action.confirm_attack": { "params": [], "zh-CN": "确认进攻", "en": "Confirm attack" },
+	"ui.action.back_to_selection": { "params": [], "zh-CN": "返回选择", "en": "Back to selection" },
+	"ui.action.retreat": { "params": [], "zh-CN": "撤退", "en": "Retreat" },
+	"ui.action.finish_retreat": { "params": [], "zh-CN": "完成撤退", "en": "Finish retreat" },
+	"ui.action.end_advance": { "params": [], "zh-CN": "结束推进", "en": "End advance" },
+	"ui.action.enter_move": { "params": [], "zh-CN": "进入移动", "en": "Proceed to movement" },
+	"ui.action.enter_combat": { "params": [], "zh-CN": "进入战斗", "en": "Proceed to combat" },
+	"ui.action.resolve_entrenchment": { "params": [], "zh-CN": "结算掘壕", "en": "Resolve entrenchment" },
+	"info.nav.rulebook": {
+		"params": [],
+		"zh-CN": "规则书",
+		"en": "Rulebook"
+	},
+	"info.nav.charts": {
+		"params": [],
+		"zh-CN": "图表",
+		"en": "Charts"
+	},
+	"info.nav.cards": {
+		"params": [],
+		"zh-CN": "牌组",
+		"en": "Decks"
+	},
+	"info.nav.pieces": {
+		"params": [],
+		"zh-CN": "算子",
+		"en": "Units"
+	},
+	"info.charts.document_title": {
+		"params": [],
+		"zh-CN": "BTB 辅助图表",
+		"en": "BTB Player Aid Charts"
+	},
+	"info.charts.title": {
+		"params": [],
+		"zh-CN": "辅助图表",
+		"en": "Player Aid Charts"
+	},
+	"info.charts.intro": {
+		"params": [],
+		"zh-CN": "战斗、地形、补给、替补和回合流程的官方辅助图表。",
+		"en": "Official player aids for combat, terrain, supply, replacements, and the turn sequence."
+	},
+	"info.charts.combat_alt": {
+		"params": [],
+		"zh-CN": "BTB 战斗图表",
+		"en": "BTB combat charts"
+	},
+	"info.charts.other_alt": {
+		"params": [],
+		"zh-CN": "BTB 其他辅助图表",
+		"en": "Other BTB player aid charts"
+	},
+	"info.cards.document_title": {
+		"params": [],
+		"zh-CN": "BTB 牌组",
+		"en": "BTB Decks"
+	},
+	"info.cards.title": {
+		"params": [],
+		"zh-CN": "牌组",
+		"en": "Decks"
+	},
+	"info.cards.side_title": {
+		"params": ["side"],
+		"zh-CN": "{side}牌组",
+		"en": "{side} Deck"
+	},
+	"info.cards.document_side_title": {
+		"params": ["side"],
+		"zh-CN": "BTB {side}牌组",
+		"en": "BTB {side} Deck"
+	},
+	"info.cards.english_cards": {
+		"params": [],
+		"zh-CN": "英文卡牌",
+		"en": "English cards"
+	},
+	"info.cards.card_alt": {
+		"params": ["side", "num", "name"],
+		"zh-CN": "{side}第{num}号牌 {name}",
+		"en": "{side} card {num}: {name}"
+	},
+	"info.pieces.document_title": {
+		"params": [],
+		"zh-CN": "BTB 算子图鉴",
+		"en": "BTB Unit Reference"
+	},
+	"info.pieces.title": {
+		"params": [],
+		"zh-CN": "算子图鉴",
+		"en": "Unit Reference"
+	},
+	"info.pieces.neutral": {
+		"params": [],
+		"zh-CN": "中立国",
+		"en": "Neutral"
+	},
+	"info.pieces.heading": {
+		"params": ["nation", "side"],
+		"zh-CN": "{nation} · {side}",
+		"en": "{nation} · {side}"
+	},
+	"info.pieces.full_alt": {
+		"params": ["name"],
+		"zh-CN": "{name}满编面",
+		"en": "{name} full-strength side"
+	},
+	"info.pieces.reduced_alt": {
+		"params": ["name"],
+		"zh-CN": "{name}减损面",
+		"en": "{name} reduced side"
+	},
+	"info.pieces.marker": {
+		"params": [],
+		"zh-CN": "游戏标记",
+		"en": "Game marker"
+	},
+	"info.pieces.stats": {
+		"params": ["cf", "lf", "mf", "rcf", "rlf", "rmf"],
+		"zh-CN": "满编 {cf}-{lf}-{mf} · 减损 {rcf}-{rlf}-{rmf}",
+		"en": "Full {cf}-{lf}-{mf} · Reduced {rcf}-{rlf}-{rmf}"
+	},
+	"info.nation.ge": {
+		"params": [],
+		"zh-CN": "德国",
+		"en": "Germany"
+	},
+	"info.nation.it": {
+		"params": [],
+		"zh-CN": "意大利",
+		"en": "Italy"
+	},
+	"info.nation.ro": {
+		"params": [],
+		"zh-CN": "罗马尼亚",
+		"en": "Romania"
+	},
+	"info.nation.bu": {
+		"params": [],
+		"zh-CN": "保加利亚",
+		"en": "Bulgaria"
+	},
+	"info.nation.hu": {
+		"params": [],
+		"zh-CN": "匈牙利",
+		"en": "Hungary"
+	},
+	"info.nation.su": {
+		"params": [],
+		"zh-CN": "苏联",
+		"en": "Soviet Union"
+	},
+	"info.nation.us": {
+		"params": [],
+		"zh-CN": "美国",
+		"en": "United States"
+	},
+	"info.nation.br": {
+		"params": [],
+		"zh-CN": "英国",
+		"en": "Britain"
+	},
+	"info.nation.cw": {
+		"params": [],
+		"zh-CN": "英联邦",
+		"en": "Commonwealth"
+	},
+	"info.nation.ff": {
+		"params": [],
+		"zh-CN": "自由法国",
+		"en": "Free France"
+	},
+	"info.nation.sw": {
+		"params": [],
+		"zh-CN": "瑞典",
+		"en": "Sweden"
+	},
+	"info.nation.tu": {
+		"params": [],
+		"zh-CN": "土耳其",
+		"en": "Turkey"
+	},
+	"info.nation.yu": {
+		"params": [],
+		"zh-CN": "南斯拉夫",
+		"en": "Yugoslavia"
+	},
+	"about.introduction": {
+		"params": [],
+		"zh-CN": "《二战：巴巴罗萨到柏林》是一款双人卡牌驱动战略游戏，再现1941年6月至1945年5月间席卷欧洲与北非的战争。战局从德军越过苏联国境的黎明展开，穿过莫斯科城下的严冬、北非沙漠、斯大林格勒废墟与诺曼底海岸，最终逼近柏林。",
+		"en": "WWII: Barbarossa to Berlin is a two-player card-driven strategy game portraying the war across Europe and North Africa from June 1941 to May 1945. It begins as German forces cross the Soviet frontier and continues through the winter before Moscow, the North African desert, Stalingrad, Normandy, and the final approach to Berlin."
+	},
+	"about.gameplay": {
+		"params": [],
+		"zh-CN": "一方统率轴心国，在时间、距离与资源耗尽之前寻求决定性的胜利；另一方指挥盟军，承受最初的攻势，集结苏联、西方盟军与地中海战场的力量，逐步夺回主动。110张战略牌把作战、调动、补员和历史事件融入每一次抉择；补给线、季节更替、国家政治和登陆窗口，则让每一步推进都伴随着代价。",
+		"en": "One player commands the Axis and seeks a decisive victory before time, distance, and resources run out. The other commands the Allies, absorbs the opening assault, and brings Soviet, Western Allied, and Mediterranean strength together to regain the initiative. The 110 strategy cards combine operations, redeployment, replacements, and historical events, while supply, seasons, national politics, and invasion windows give every advance a cost."
+	},
+	"about.game_design": {
+		"params": [],
+		"zh-CN": "游戏设计 (Game Design)：Ted Raicer。",
+		"en": "Game Design: Ted Raicer."
+	},
+	"about.game_development": {
+		"params": [],
+		"zh-CN": "游戏开发 (Game Development)：William F. Ramsay, Jr.、Steve Kosakowski。",
+		"en": "Game Development: William F. Ramsay, Jr. and Steve Kosakowski."
+	},
+	"about.art": {
+		"params": [],
+		"zh-CN": "美术指导：Rodger B. MacGowan；地图、卡牌与算子美术：Mark Simonitch。",
+		"en": "Art Direction: Rodger B. MacGowan; map, card, and counter art: Mark Simonitch."
+	},
+	"about.copyright": {
+		"params": [],
+		"zh-CN": "版权所有",
+		"en": "Copyright"
+	},
+	"about.period": {
+		"params": [],
+		"zh-CN": "。",
+		"en": "."
+	},
+	"about.rules": {
+		"params": [],
+		"zh-CN": "规则",
+		"en": "Rules"
+	},
+	"about.rulebook": {
+		"params": [],
+		"zh-CN": "规则书（2006 v1.3）",
+		"en": "Rulebook (2006 v1.3)"
+	},
+	"about.charts": {
+		"params": [],
+		"zh-CN": "辅助图表",
+		"en": "Player aid charts"
+	},
+	"about.references": {
+		"params": [],
+		"zh-CN": "参考资料",
+		"en": "References"
+	},
+	"about.allied_cards": {
+		"params": [],
+		"zh-CN": "盟军牌组",
+		"en": "Allied deck"
+	},
+	"about.axis_cards": {
+		"params": [],
+		"zh-CN": "轴心国牌组",
+		"en": "Axis deck"
+	},
+	"about.pieces": {
+		"params": [],
+		"zh-CN": "算子图鉴",
+		"en": "Unit reference"
+	},
+	"create.campaign_name": {
+		"params": [],
+		"zh-CN": "完整战役",
+		"en": "Campaign"
+	},
+	"create.campaign_description": {
+		"params": [],
+		"zh-CN": "：轴心国与盟军进行18回合对局，从巴巴罗萨行动开始，直到柏林战役或提前达成自动胜利。",
+		"en": ": The Axis and Allied sides play an 18-turn campaign, beginning with Operation Barbarossa and ending with the Battle of Berlin or an earlier automatic victory."
+	},
+	"create.chinese": {
+		"params": [],
+		"zh-CN": "中文",
+		"en": "Chinese"
+	},
+	"create.chinese_cards": {
+		"params": [],
+		"zh-CN": "中文卡牌",
+		"en": "Chinese cards"
+	},
+	"create.optional_rules": {
+		"params": [],
+		"zh-CN": "选规",
+		"en": "Optional rules"
+	},
+	"create.rule.reinforcement": {
+		"params": [],
+		"zh-CN": "1941年苏军增援限制",
+		"en": "1941 Soviet reinforcement restriction"
+	},
+	"create.rule.reinforcement_help_label": {
+		"params": [],
+		"zh-CN": "查看苏军增援限制说明",
+		"en": "View the Soviet reinforcement restriction"
+	},
+	"create.rule.reinforcement_help": {
+		"params": [],
+		"zh-CN": "1941年内，盟军第2号与第24号苏军增援事件只能打出其中一张；另一张仍可作非事件用途使用。",
+		"en": "During 1941, only one of Allied events 2 and 24 may be played as an event; the other remains available for non-event use."
+	},
+	"create.rule.invasion": {
+		"params": [],
+		"zh-CN": "1942年夏季前禁止盟军入侵",
+		"en": "No Allied invasions before Summer 1942"
+	},
+	"create.rule.invasion_help_label": {
+		"params": [],
+		"zh-CN": "查看盟军早期入侵限制说明",
+		"en": "View the early Allied invasion restriction"
+	},
+	"create.rule.invasion_help": {
+		"params": [],
+		"zh-CN": "盟军在1942年夏季回合前不得将登陆牌作为入侵事件打出。",
+		"en": "The Allies may not play an invasion card as an invasion event before the Summer 1942 turn."
+	},
+	"create.rule.mud": {
+		"params": [],
+		"zh-CN": "泥泞时节",
+		"en": "Time of Mud"
+	},
+	"create.rule.mud_help_label": {
+		"params": [],
+		"zh-CN": "查看泥泞时节说明",
+		"en": "View the Time of Mud rule"
+	},
+	"create.rule.mud_help": {
+		"params": [],
+		"zh-CN": "1941年秋季第2与第3行动轮，德国机械化单位受到选规规定的移动与战斗限制。",
+		"en": "During Action Rounds 2 and 3 of Fall 1941, German mechanized units are subject to the optional movement and combat restrictions."
+	},
+	"create.rule.italy": {
+		"params": [],
+		"zh-CN": "意大利晴空",
+		"en": "Sunny Italy"
+	},
+	"create.rule.italy_help_label": {
+		"params": [],
+		"zh-CN": "查看意大利晴空说明",
+		"en": "View the Sunny Italy rule"
+	},
+	"create.rule.italy_help": {
+		"params": [],
+		"zh-CN": "秋季与冬季回合中，那不勒斯作为补给源时只提供有限补给。",
+		"en": "During Fall and Winter turns, Naples provides only Limited Supply when used as a supply source."
+	},
+	"create.card_language": {
+		"params": [],
+		"zh-CN": "卡牌语言（Card language）：",
+		"en": "Card language:"
+	},
+	"create.interface_language": {
+		"params": [],
+		"allow_han_in_en": true,
+		"zh-CN": "界面语言（UI language）：",
+		"en": "界面语言（UI language）："
+	},
+	"ui.cards": {
+		"params": [],
+		"zh-CN": "卡牌",
+		"en": "Cards"
+	},
+	"ui.close": {
+		"params": [],
+		"zh-CN": "关闭",
+		"en": "Close"
+	},
+	"ui.hand": {
+		"params": [],
+		"zh-CN": "手牌",
+		"en": "Hand"
+	},
+	"ui.menu": {
+		"params": [],
+		"zh-CN": "菜单",
+		"en": "Menu"
+	},
+	"ui.accept": {
+		"params": [],
+		"zh-CN": "接受",
+		"en": "Accept"
+	},
+	"ui.activation": {
+		"params": [],
+		"zh-CN": "激活",
+		"en": "Activation"
+	},
+	"ui.activation.cancel": {
+		"params": [],
+		"zh-CN": "取消激活",
+		"en": "Cancel activation"
+	},
+	"ui.activation.combat": {
+		"params": [],
+		"zh-CN": "战斗激活",
+		"en": "Combat activation"
+	},
+	"ui.activation.move": {
+		"params": [],
+		"zh-CN": "移动激活",
+		"en": "Move activation"
+	},
+	"ui.allied": {
+		"params": [],
+		"zh-CN": "盟军",
+		"en": "Allied"
+	},
+	"ui.axis": {
+		"params": [],
+		"zh-CN": "轴心国",
+		"en": "Axis"
+	},
+	"ui.cancel": {
+		"params": [],
+		"zh-CN": "取消",
+		"en": "Cancel"
+	},
+	"ui.collaboration": {
+		"params": [],
+		"zh-CN": "协作",
+		"en": "Collaboration"
+	},
+	"ui.combat_cards": {
+		"params": [],
+		"zh-CN": "战斗牌",
+		"en": "Combat cards"
+	},
+	"ui.deactivate": {
+		"params": [],
+		"zh-CN": "取消激活",
+		"en": "Deactivate"
+	},
+	"ui.entrench": {
+		"params": [],
+		"zh-CN": "掘壕",
+		"en": "Entrench"
+	},
+	"ui.event": {
+		"params": [],
+		"zh-CN": "事件",
+		"en": "Event"
+	},
+	"ui.events.ongoing": {
+		"params": [],
+		"zh-CN": "持续事件",
+		"en": "Ongoing events"
+	},
+	"ui.move": {
+		"params": [],
+		"zh-CN": "移动",
+		"en": "Move"
+	},
+	"ui.move_piece": {
+		"params": [],
+		"zh-CN": "移动单位",
+		"en": "Move unit"
+	},
+	"ui.operations": {
+		"params": [],
+		"zh-CN": "行动点",
+		"en": "Operations"
+	},
+	"ui.replacements": {
+		"params": [],
+		"zh-CN": "补员",
+		"en": "Replacements"
+	},
+	"ui.rollback.accept_text": {
+		"params": [],
+		"zh-CN": "对手请求回到之前的行动边界。请确认将撤销的位置和公开记录。",
+		"en": "Your opponent requests a return to an earlier action boundary. Review the position and public record that will be undone."
+	},
+	"ui.rollback.checkpoint": {
+		"params": [],
+		"zh-CN": "回滚到：",
+		"en": "Roll back to:"
+	},
+	"ui.rollback.defer": {
+		"params": [],
+		"zh-CN": "稍后决定",
+		"en": "Decide later"
+	},
+	"ui.rollback.propose": {
+		"params": [],
+		"zh-CN": "提议回滚",
+		"en": "Propose rollback"
+	},
+	"ui.rollback.propose_text": {
+		"params": [],
+		"zh-CN": "选择一个行动边界。对手接受后，游戏将回到该位置；已经产生的随机结果不会重新投掷。",
+		"en": "Choose an action boundary. If your opponent accepts, the game will return to that point; random results already generated will not be rerolled."
+	},
+	"ui.rollback.reject": {
+		"params": [],
+		"zh-CN": "拒绝",
+		"en": "Reject"
+	},
+	"ui.rollback.review": {
+		"params": [],
+		"zh-CN": "审查回滚",
+		"en": "Review rollback"
+	},
+	"ui.rollback.review_proposal": {
+		"params": [],
+		"zh-CN": "审查回滚提议",
+		"en": "Review rollback proposal"
+	},
+	"ui.stack": {
+		"params": [],
+		"zh-CN": "堆叠",
+		"en": "Stacks"
+	},
+	"ui.stack.bevel": {
+		"params": [],
+		"zh-CN": "斜面",
+		"en": "Beveled"
+	},
+	"ui.stack.flat": {
+		"params": [],
+		"zh-CN": "平面",
+		"en": "Flat"
+	},
+	"ui.stack.mouse_focus": {
+		"params": [],
+		"zh-CN": "鼠标聚焦",
+		"en": "Mouse focus"
+	},
+	"ui.strategic_redeployment": {
+		"params": [],
+		"zh-CN": "战略转移",
+		"en": "Strategic Redeployment"
+	},
+	"ui.submit": {
+		"params": [],
+		"zh-CN": "提交",
+		"en": "Submit"
+	},
+	"ui.toolbar.cards_allied": {
+		"params": [],
+		"zh-CN": "盟军牌组",
+		"en": "Allied deck"
+	},
+	"ui.toolbar.cards_axis": {
+		"params": [],
+		"zh-CN": "轴心国牌组",
+		"en": "Axis deck"
+	},
+	"ui.toolbar.charts": {
+		"params": [],
+		"zh-CN": "辅助图表",
+		"en": "Charts"
+	},
+	"ui.toolbar.counters": {
+		"params": [],
+		"zh-CN": "棋子",
+		"en": "Counters"
+	},
+	"ui.toolbar.cycle_counters": {
+		"params": [],
+		"zh-CN": "循环显示棋子与标记",
+		"en": "Cycle counters and markers"
+	},
+	"ui.toolbar.discard": {
+		"params": [],
+		"zh-CN": "弃牌堆",
+		"en": "Discard pile"
+	},
+	"ui.toolbar.pieces": {
+		"params": [],
+		"zh-CN": "算子图鉴",
+		"en": "Counter reference"
+	},
+	"ui.toolbar.reinforcements": {
+		"params": [],
+		"zh-CN": "增援与兵力池",
+		"en": "Reinforcements and force pools"
+	},
+	"ui.toolbar.removed": {
+		"params": [],
+		"zh-CN": "移出游戏牌",
+		"en": "Removed cards"
+	},
+	"ui.toolbar.rules": {
+		"params": [],
+		"zh-CN": "规则书（2006 v1.3）",
+		"en": "Rules (2006 v1.3)"
+	},
+	"ui.toolbar.supply_allied": {
+		"params": [],
+		"zh-CN": "盟军补给",
+		"en": "Allied supply"
+	},
+	"ui.toolbar.supply_axis": {
+		"params": [],
+		"zh-CN": "轴心国补给",
+		"en": "Axis supply"
+	},
+	"ui.toolbar.view": {
+		"params": [],
+		"zh-CN": "查看",
+		"en": "View"
+	},
+	"ui.warning.flag": {
+		"params": [],
+		"zh-CN": "标记补给警告",
+		"en": "Flag supply warnings"
+	}
+}

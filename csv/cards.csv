@@ -1,0 +1,111 @@
+id,side,num,ops,remove,cc,dual,dual_condition,rp_ge,rp_axis,rp_br,rp_usa,rp_su,name,name_zh
+1,allied,1,4,true,false,false,,,,2,2,4,Torch,火炬行动
+2,allied,2,4,true,false,false,,,,2,2,4,Soviet Reinforcements,苏军增援
+3,allied,3,2,false,false,false,stalin_in_moscow,,,1,1,2,Stavka,大本营
+4,allied,4,4,true,false,false,,,,2,2,4,Soviet Reinforcements,苏军增援
+5,allied,5,4,true,false,false,,,,2,2,4,British Reinforcements,英国增援
+6,allied,6,4,true,false,false,,,,2,2,4,FDR Declares War,罗斯福宣战
+7,allied,7,5,true,false,false,stalin_in_moscow,,,2,3,6,Industrial Evacuation,工业疏散
+8,allied,8,2,false,true,false,,,,1,1,2,Fortified Boxes,筑垒盒式阵地
+9,allied,9,4,true,false,false,,,,2,2,4,US Build-Up,美国扩军
+10,allied,10,2,false,true,false,,,,1,1,2,NKVD Boosts Morale,内务人民委员部鼓舞士气
+11,allied,11,3,true,false,false,,,,1,2,3,Sorge,佐尔格
+12,allied,12,3,false,false,false,,,,1,2,3,Bomber Command,轰炸机司令部
+13,allied,13,3,true,false,false,stalin_in_moscow,,,1,2,3,Siberians,西伯利亚部队
+14,allied,14,5,true,false,false,,,,2,3,6,Lend-Lease,租借法案
+15,allied,15,3,true,false,true,,,,1,2,3,Casablanca,卡萨布兰卡会议
+16,allied,16,5,true,false,false,,,,2,3,6,Sledgehammer,大锤行动
+17,allied,17,2,false,true,false,,,,1,1,2,Zhukov,朱可夫
+18,allied,18,2,false,true,false,,,,1,1,2,T-34,T-34
+19,allied,19,3,true,false,false,,,,1,2,3,Partisans,游击队
+20,allied,20,2,false,true,false,,,,1,1,2,Paradrop,空降
+21,allied,21,4,true,false,false,,,,2,2,4,British Reinforcement,英国增援
+22,allied,22,5,true,false,true,,,,2,3,6,Operation Uranus,天王星行动
+23,allied,23,4,true,false,false,,,,2,2,4,Clearing the Scheldt,清扫斯海尔德河口
+24,allied,24,3,true,false,false,,,,1,2,3,Soviet Reinforcements,苏军增援
+25,allied,25,5,false,false,true,,,,2,3,6,Enigma,恩尼格玛
+26,allied,26,5,true,false,false,,,,2,3,6,British Reinforcements,英国增援
+27,allied,27,2,true,false,false,,,,1,1,2,Italy Defects,意大利倒戈
+28,allied,28,2,false,false,false,,,,1,1,2,US 8th Air Force,美国第 8 航空队
+29,allied,29,3,true,false,true,,,,1,2,3,Romania Defects,罗马尼亚倒戈
+30,allied,30,2,true,false,true,,,,1,1,2,Bulgaria Defects,保加利亚倒戈
+31,allied,31,4,true,false,true,,,,2,2,4,Soviet Reinforcements,苏军增援
+32,allied,32,5,false,false,true,,,,2,3,6,IX Tac-Air,第九战术航空队
+33,allied,33,5,true,false,false,,,,2,3,6,Overlord,霸王行动
+34,allied,34,5,true,false,false,,,,2,3,6,Husky,哈士奇行动
+35,allied,35,5,true,false,true,,,,2,3,6,Bagration,巴格拉季昂行动
+36,allied,36,3,true,false,false,,,,1,2,3,ASW Victory,反潜战胜利
+37,allied,37,4,true,false,true,,,,2,2,4,Soviet Reinforcements,苏军增援
+38,allied,38,3,true,false,false,,,,1,2,3,US Reinforcements,美国增援
+39,allied,39,5,true,false,true,,,,2,3,6,Soviet Reinforcements,苏军增援
+40,allied,40,3,true,false,false,,,,1,2,3,US Reinforcements,美国增援
+41,allied,41,3,true,false,false,,,,1,2,3,US Reinforcements,美国增援
+42,allied,42,3,true,false,false,,,,1,2,3,Tito,铁托
+43,allied,43,3,true,false,false,,,,1,2,3,Operation Strangle,绞杀行动
+44,allied,44,2,true,false,false,,,,1,1,2,Thunderclap,雷霆行动
+45,allied,45,4,true,false,false,,,,2,2,4,Avalanche,雪崩行动
+46,allied,46,3,true,false,false,,,,1,2,3,Shingle,鹅卵石行动
+47,allied,47,2,true,false,true,,,,1,1,2,The Big Three,三巨头
+48,allied,48,2,true,false,false,,,,1,1,2,Bomb Plot,炸弹密谋
+49,allied,49,2,true,false,false,,,,1,1,2,Maquis,马基游击队
+50,allied,50,4,true,false,false,,,,2,2,4,Round-Up,围捕行动
+51,allied,51,2,true,false,true,,,,1,1,2,Yalta,雅尔塔会议
+52,allied,52,4,true,false,false,,,,2,2,4,Anvil-Dragoon,铁砧-龙骑兵行动
+53,allied,53,4,true,false,false,,,,2,2,4,P-51 Mustang,P-51“野马”
+54,allied,54,2,true,false,false,,,,1,1,2,Finland Withdraws,芬兰退出战争
+55,allied,55,5,false,false,true,,,,2,3,6,Patton,巴顿
+56,axis,1,5,true,false,false,,4,2,,,,Barbarossa,巴巴罗萨
+57,axis,2,4,true,false,false,,3,1,,,,Von Paulus Pause,保卢斯停顿
+58,axis,3,2,true,false,true,,2,0,,,,OKH Conference,陆军总部会议
+59,axis,4,4,true,false,false,,3,1,,,,Taifun,台风行动
+60,axis,5,4,false,false,true,,3,1,,,,Panzergruppe Guderian,古德里安装甲集群
+61,axis,6,4,true,false,true,,3,1,,,,Panzer Refit,装甲部队整补
+62,axis,7,5,true,false,false,,4,2,,,,Hedgehogs,刺猬阵地
+63,axis,8,2,true,false,false,,2,0,,,,Hitler Declares War,希特勒宣战
+64,axis,9,4,true,false,false,,3,1,,,,Hitler Takes Command,希特勒接管指挥
+65,axis,10,2,false,true,false,,2,0,,,,Desert Fox,沙漠之狐
+66,axis,11,3,false,false,false,,2,1,,,,Italian Naval Sortie,意大利海军出击
+67,axis,12,3,true,false,true,,2,1,,,,Nordlicht,北极光行动
+68,axis,13,3,true,false,true,,2,1,,,,Krim,克里米亚
+69,axis,14,5,true,false,false,,4,2,,,,Fall Blau,蓝色方案
+70,axis,15,3,false,false,false,,2,1,,,,Wolfpacks,狼群
+71,axis,16,5,true,false,false,,4,2,,,,Speer,施佩尔
+72,axis,17,2,true,false,false,,2,0,,,,Banzai!,万岁冲锋
+73,axis,18,2,true,true,false,,2,0,,,,Devil's Gardens,魔鬼花园
+74,axis,19,3,true,false,true,,2,1,,,,Luftwaffe Supply,空军补给
+75,axis,20,2,false,false,false,,2,0,,,,Kammhuber Line,卡姆胡伯防线
+76,axis,21,5,true,false,false,,4,2,,,,Herkules,赫拉克勒斯行动
+77,axis,22,4,true,false,false,,3,1,,,,German Reinforcements,德国增援
+78,axis,23,4,true,false,false,,3,1,,,,Axis Satellites,轴心国卫星国
+79,axis,24,3,true,false,false,,2,1,,,,German Reinforcements,德国增援
+80,axis,25,4,false,false,true,,3,1,,,,Stuka,斯图卡
+81,axis,26,5,true,false,false,,4,2,,,,Totaler Krieg!,总体战！
+82,axis,27,3,true,false,false,,2,1,,,,Fall Zitadelle,堡垒行动
+83,axis,28,2,true,false,true,,2,0,,,,Skorzeny,斯科尔兹内
+84,axis,29,2,false,false,false,,2,0,,,,FW-190,FW-190
+85,axis,30,2,false,true,false,,2,0,,,,Kesselring,凯塞林
+86,axis,31,4,true,false,true,,3,1,,,,Achse,轴心行动
+87,axis,32,5,true,false,false,,4,2,,,,German Reinforcements,德国增援
+88,axis,33,5,true,false,false,,4,2,,,,German Reinforcements,德国增援
+89,axis,34,5,true,false,false,,4,2,,,,German Reinforcements,德国增援
+90,axis,35,5,true,false,false,,4,2,,,,German Reinforcements,德国增援
+91,axis,36,5,true,false,false,,4,2,,,,German Reinforcements,德国增援
+92,axis,37,4,true,false,false,,3,1,,,,German Reinforcements,德国增援
+93,axis,38,3,true,false,false,,2,1,,,,Atlantic Wall,大西洋壁垒
+94,axis,39,5,true,false,false,,4,2,,,,East Wall,东方壁垒
+95,axis,40,3,false,false,false,,2,1,,,,Anti-Partisan Sweep,反游击队扫荡
+96,axis,41,3,false,true,false,,2,1,,,,Panther,黑豹
+97,axis,42,3,false,true,false,,2,1,,,,Tiger,虎式
+98,axis,43,3,true,true,false,,2,1,,,,Panzerfaust,铁拳
+99,axis,44,2,true,true,false,,2,0,,,,Volkssturm,国民突击队
+100,axis,45,4,true,false,false,,3,1,,,,Vergeltungs-Waffe,报复武器
+101,axis,46,3,true,false,true,,2,1,,,,Manstein,曼施坦因
+102,axis,47,2,false,true,false,,2,0,,,,Model,莫德尔
+103,axis,48,2,false,true,false,,2,0,,,,Heinrici,海因里希
+104,axis,49,2,true,true,false,,2,0,,,,Weichs,魏克斯
+105,axis,50,4,true,false,true,,3,1,,,,Foreign Armies East,东方外军处
+106,axis,51,2,false,false,false,,2,0,,,,Anti-Partisan Sweep,反游击队扫荡
+107,axis,52,4,true,false,false,,3,1,,,,Final Production Surge,最后生产冲刺
+108,axis,53,4,true,false,true,,3,1,,,,Wacht am Rhein,守望莱茵
+109,axis,54,2,true,false,false,,2,0,,,,The Bunker,地堡
+110,axis,55,3,true,false,false,,2,1,,,,National Redoubt,国家堡垒

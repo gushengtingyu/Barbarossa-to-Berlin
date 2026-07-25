@@ -1,0 +1,97 @@
+{
+	"activation.choose_space": {
+		"params": ["points"],
+		"zh-CN": "选择激活空间（剩余 {points} OPS）。",
+		"en": "Choose an activation space ({points} OPS remaining)."
+	},
+	"activation.log.combat": {
+		"params": [],
+		"zh-CN": "战斗",
+		"en": "Combat"
+	},
+	"activation.log.entrench_failure": {
+		"params": ["space", "die"],
+		"zh-CN": "{space}掘壕检定：{die} → 失败",
+		"en": "{space} entrenchment attempt: {die} → failure"
+	},
+	"activation.log.entrench_success": {
+		"params": ["space", "die", "level"],
+		"zh-CN": "{space}掘壕检定：{die} → 成功，堑壕等级{level}",
+		"en": "{space} entrenchment attempt: {die} → success, trench level {level}"
+	},
+	"activation.log.move": {
+		"params": [],
+		"zh-CN": "移动",
+		"en": "Move"
+	},
+	"activation.log.move_from": {
+		"params": ["origin"],
+		"zh-CN": "从 {origin} 移动",
+		"en": "Move from {origin}"
+	},
+	"activation.log.move_piece": {
+		"params": ["piece", "destination"],
+		"zh-CN": "{piece} → {destination}",
+		"en": "{piece} → {destination}"
+	},
+	"activation.log.space": {
+		"params": ["space"],
+		"zh-CN": "{space}",
+		"en": "{space}"
+	},
+	"activation.log.space_cost": {
+		"params": ["space", "cost"],
+		"zh-CN": "{space}（{cost} OPS）",
+		"en": "{space} ({cost} OPS)"
+	},
+	"activation.log.sr": {
+		"params": [],
+		"zh-CN": "战略调动",
+		"en": "Strategic Redeployment"
+	},
+	"activation.log.sr_move": {
+		"params": ["piece", "origin", "destination"],
+		"zh-CN": "{piece}：{origin} → {destination}",
+		"en": "{piece}: {origin} → {destination}"
+	},
+	"activation.entrench.none": {
+		"params": [],
+		"zh-CN": "没有待结算的掘壕尝试。",
+		"en": "There are no entrenchment attempts to resolve."
+	},
+	"activation.entrench.roll": {
+		"params": ["spaces"],
+		"zh-CN": "为 {spaces} 的掘壕尝试掷骰。",
+		"en": "Roll the entrenchment attempts for {spaces}."
+	},
+	"activation.move.choose_group": {
+		"params": [],
+		"zh-CN": "选择同一空间中一起移动的单位，再选择相邻空间。",
+		"en": "Choose units in the same space to move together, then choose an adjacent space."
+	},
+	"activation.move.group_distance": {
+		"params": ["distance"],
+		"zh-CN": "移动组已走 {distance} 格。",
+		"en": "The moving group has moved {distance} spaces."
+	},
+	"activation.move.units": {
+		"params": [],
+		"zh-CN": "移动已激活空间中的单位。",
+		"en": "Move units in activated spaces."
+	},
+	"activation.sr.choose_piece": {
+		"params": ["points"],
+		"zh-CN": "选择战略调动单位（剩余 {points} SR）。",
+		"en": "Choose a Strategic Redeployment unit ({points} SR remaining)."
+	},
+	"activation.sr.destination": {
+		"params": [],
+		"zh-CN": "选择战略调动目的地。",
+		"en": "Choose a Strategic Redeployment destination."
+	},
+	"activation.sr.stalin_destination": {
+		"params": [],
+		"zh-CN": "选择斯大林战略调动目的地。",
+		"en": "Choose Stalin's Strategic Redeployment destination."
+	}
+}

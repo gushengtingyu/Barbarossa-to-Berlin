@@ -1,0 +1,12 @@
+[project]
+name = "barbarossa-to-berlin-tools"
+version = "0.1.0"
+description = "Reproducible Python environment for BTB asset and rulebook tools"
+requires-python = ">=3.10"
+dependencies = [
+    "pillow>=10,<13",
+    "pypdf>=5,<7",
+]
+
+[tool.uv]
+package = false

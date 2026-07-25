@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title data-i18n="info.pieces.document_title">BTB 算子图鉴</title>
+		<link rel="stylesheet" href="info.css" />
+		<script defer src="../modules/core/i18n_catalog.js"></script>
+		<script defer src="../modules/core/i18n.js"></script>
+		<script defer src="info_i18n.js"></script>
+		<script defer src="../data.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 data-i18n="info.pieces.title">算子图鉴</h1>
+			<nav>
+				<a href="rules.html" data-i18n="info.nav.rulebook">规则书</a>
+				<a href="charts.html" data-i18n="info.nav.charts">图表</a>
+				<a href="cards.html?side=allied" data-i18n="info.nav.cards">牌组</a>
+				<a class="active" href="pieces.html" data-i18n="info.nav.pieces">算子</a>
+			</nav>
+		</header>
+		<main>
+			<div id="piece-catalog"></div>
+		</main>
+		<script>
+			window.addEventListener("DOMContentLoaded", () => {
+				const t = (key, params = {}) => BTBI18N.render(BTBI18N.getLocale(), key, params)
+				const pieces = data.pieces.filter(Boolean).sort((a, b) =>
+					a.side.localeCompare(b.side) || a.nation.localeCompare(b.nation) || a.id - b.id)
+				const groups = new Map()
+				for (const piece of pieces) {
+					const key = `${piece.side}:${piece.nation}`
+					if (!groups.has(key)) groups.set(key, [])
+					groups.get(key).push(piece)
+				}
+
+				const catalog = document.getElementById("piece-catalog")
+				for (const [key, group] of groups) {
+					const [side, nation] = key.split(":")
+					const section = document.createElement("section")
+					section.className = "nation-section"
+					const nationName = t(`info.nation.${nation}`)
+					const sideName = t(side === "axis" ? "core.role.axis" : side === "allied" ? "core.role.allied" : "info.pieces.neutral")
+					section.innerHTML = `<h2 class="nation-title">${t("info.pieces.heading", { nation: nationName, side: sideName })}</h2><div class="piece-grid"></div>`
+					const grid = section.querySelector(".piece-grid")
+					for (const piece of group) {
+						const entry = document.createElement("article")
+						entry.className = "piece-entry"
+						const reducedImage = piece.image_reduced
+							? `<img loading="lazy" src="../images/${piece.image_reduced}" alt="${t("info.pieces.reduced_alt", { name: piece.name })}" />`
+							: ""
+						const stats = piece.cf === undefined
+							? t("info.pieces.marker")
+							: t("info.pieces.stats", { cf: piece.cf, lf: piece.lf, mf: piece.mf, rcf: piece.rcf, rlf: piece.rlf, rmf: piece.rmf })
+						entry.innerHTML = `
+							<div><h3>${piece.name}</h3><div class="piece-stats">${piece.size.toUpperCase()} · ${piece.unit_type}</div></div>
+							<div class="piece-images"><img loading="lazy" src="../images/${piece.image_full}" alt="${t("info.pieces.full_alt", { name: piece.name })}" />${reducedImage}</div>
+							<div class="piece-stats">${stats}</div>`
+						grid.append(entry)
+					}
+					catalog.append(section)
+				}
+			})
+		</script>
+	</body>
+</html>

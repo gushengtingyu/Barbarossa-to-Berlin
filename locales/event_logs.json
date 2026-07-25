@@ -1,0 +1,392 @@
+{
+	"event.log.allied_deploy": {
+		"params": ["piece", "space"],
+		"zh-CN": "盟军将{piece}部署至{space}。",
+		"en": "The Allies deploy {piece} to {space}."
+	},
+	"event.log.allied_replace": {
+		"params": ["space", "new_piece", "old_piece"],
+		"zh-CN": "盟军在{space}以{new_piece}替换{old_piece}。",
+		"en": "At {space}, the Allies replace {old_piece} with {new_piece}."
+	},
+	"event.log.allied_replace_removed": {
+		"params": ["space", "new_piece", "old_piece"],
+		"zh-CN": "盟军在{space}以{new_piece}替换{old_piece}；原方面军移出游戏。",
+		"en": "At {space}, the Allies replace {old_piece} with {new_piece}; remove the original Front from the game."
+	},
+	"event.log.antwerp": {
+		"params": [],
+		"zh-CN": "安特卫普港现已开放。",
+		"en": "The port of Antwerp is now open."
+	},
+	"event.log.asw_victory": {
+		"params": ["vp"],
+		"zh-CN": "反潜战胜利：此后不得打出狼群，VP-1，当前{vp}。",
+		"en": "ASW Victory: Wolfpacks may no longer be played; VP -1, now {vp}."
+	},
+	"event.log.axis_action": {
+		"params": [],
+		"zh-CN": "轴心行动生效：德国集团军现在可以进入博洛尼亚—拉斯佩齐亚以南的意大利与西西里，并解锁斯科尔兹内事件。",
+		"en": "Axis Action is in effect: German armies may now enter Italy south of Bologna–La Spezia and Sicily, and the Skorzeny event is enabled."
+	},
+	"event.log.axis_deploy": {
+		"params": ["piece", "space"],
+		"zh-CN": "轴心国将{piece}部署至{space}。",
+		"en": "The Axis deploys {piece} to {space}."
+	},
+	"event.log.axis_satellites": {
+		"params": ["piece1", "space1", "piece2", "space2"],
+		"zh-CN": "轴心国卫星国：{piece1}部署至{space1}，{piece2}部署至{space2}。",
+		"en": "Axis Satellites: deploy {piece1} to {space1} and {piece2} to {space2}."
+	},
+	"event.log.axis_transfer_reserve": {
+		"params": ["piece", "space"],
+		"zh-CN": "轴心国将{piece}从{space}调回预备箱。",
+		"en": "The Axis returns {piece} from {space} to the Reserve Box."
+	},
+	"event.log.atlantic_wall_complete": {
+		"params": ["spaces"],
+		"zh-CN": "大西洋壁垒完成：在{spaces}放置 1 级大西洋壁垒堑壕。",
+		"en": "Atlantic Wall complete: place Level-1 Atlantic Wall trenches in {spaces}."
+	},
+	"event.log.atlantic_wall_select": {
+		"params": [],
+		"zh-CN": "大西洋壁垒：选择 2 个与 A–I 登陆滩相连的轴心国控制空间。",
+		"en": "Atlantic Wall: choose two Axis-controlled spaces connected to invasion beaches A–I."
+	},
+	"event.log.banzai_none": {
+		"params": [],
+		"zh-CN": "万岁冲锋：没有可移出游戏的英联邦军。",
+		"en": "Banzai: there are no Commonwealth corps available to remove from the game."
+	},
+	"event.log.banzai_removed": {
+		"params": ["pieces"],
+		"zh-CN": "万岁冲锋：盟军将{pieces}移出游戏。",
+		"en": "Banzai: the Allies remove {pieces} from the game."
+	},
+	"event.log.banzai_select": {
+		"params": [],
+		"zh-CN": "万岁冲锋：盟军须依次从地图、预备箱、已消灭单位池选择两个英联邦军移出游戏。",
+		"en": "Banzai: the Allies must choose two Commonwealth corps in order from the map, Reserve Box, and Eliminated Units Box to remove from the game."
+	},
+	"event.log.bomb_plot": {
+		"params": [],
+		"zh-CN": "炸弹密谋：此后忽略希特勒命令时，每个标记下的德国单位须支付1 VP。",
+		"en": "Bomb Plot: whenever Hitler Orders are ignored, pay 1 VP for each German unit under a marker."
+	},
+	"event.log.bomber_command": {
+		"params": [],
+		"zh-CN": "轰炸机司令部：轴心国在下一抽牌阶段的手牌上限减少2。",
+		"en": "Bomber Command: the Axis hand limit is reduced by two in the next Draw Strategy Phase."
+	},
+	"event.log.card_discarded": {
+		"params": ["side", "card"],
+		"zh-CN": "{side}随机弃置{card}。",
+		"en": "{side} randomly discards {card}."
+	},
+	"event.log.combat_markers_four_auto_ops": {
+		"params": [],
+		"zh-CN": "在至多4个含轴心单位的空间放置战斗标记；第2回合第5行动轮前必须连续执行两个自动1 OPS行动。",
+		"en": "Place Combat markers in up to four spaces containing Axis units; before Action Round 5 of Turn 2, take two consecutive automatic 1 OPS actions."
+	},
+	"event.log.combat_markers_five": {
+		"params": [],
+		"zh-CN": "在至多5个含轴心单位的空间放置战斗标记；本行动轮德国单位对苏军攻击+1 DRM。",
+		"en": "Place Combat markers in up to five spaces containing Axis units; German attacks against Soviet units receive +1 DRM this Action Round."
+	},
+	"event.log.eighth_air_force": {
+		"params": [],
+		"zh-CN": "美国第8航空队：轴心国在下一抽牌阶段的手牌上限减少2。",
+		"en": "US 8th Air Force: the Axis hand limit is reduced by two in the next Draw Strategy Phase."
+	},
+	"event.log.east_wall_complete": {
+		"params": ["spaces"],
+		"zh-CN": "东方壁垒完成：在{spaces}放置 1 级德军堑壕。",
+		"en": "East Wall complete: place Level-1 German trenches in {spaces}."
+	},
+	"event.log.east_wall_select": {
+		"params": [],
+		"zh-CN": "东方壁垒：选择 3 个苏联境内、含完整补给德国集团军且没有堑壕的格。",
+		"en": "East Wall: choose three unentrenched Soviet spaces containing fully supplied German armies."
+	},
+	"event.log.enigma": {
+		"params": [],
+		"zh-CN": "恩尼格玛：本行动中轴心国手牌向盟军玩家公开。",
+		"en": "Enigma: reveal the Axis hand to the Allied player for this action."
+	},
+	"event.log.final_production_complete": {
+		"params": ["pieces"],
+		"zh-CN": "最后生产冲刺完成：{pieces}恢复满编；下次抽牌自动补至 7 张，从下一回合起被消灭的德军装甲单位不能重建。",
+		"en": "Final Production Surge complete: {pieces} return to full strength; automatically draw to seven cards next Draw Phase, and eliminated German Panzer units may not be rebuilt beginning next turn."
+	},
+	"event.log.final_production_select": {
+		"params": [],
+		"zh-CN": "最后生产冲刺：选择 3 个减员的德国装甲集团军。",
+		"en": "Final Production Surge: choose three reduced German Panzer armies."
+	},
+	"event.log.fall_blau": {
+		"params": [],
+		"zh-CN": "蓝色方案生效：放置 5 个战斗标记，本行动轮轴心国对苏军攻击 +1 DRM，并可攻击斯大林格勒、迈科普与阿尔马维尔。",
+		"en": "Fall Blau is in effect: place five Combat markers; Axis attacks against Soviet units receive +1 DRM this Action Round, and Stalingrad, Maikop, and Armavir may be attacked."
+	},
+	"event.log.finland_withdraws": {
+		"params": ["vp"],
+		"zh-CN": "芬兰退出战争：轴心国VP-1，当前{vp}。",
+		"en": "Finland Withdraws: Axis VP -1, now {vp}."
+	},
+	"event.log.fortress": {
+		"params": ["space"],
+		"zh-CN": "国家堡垒：{space}成为完整轴心国补给源；此后不能打出地堡事件。",
+		"en": "National Redoubt: {space} becomes a full Axis supply source; Bunker may no longer be played."
+	},
+	"event.log.fw190": {
+		"params": ["vp"],
+		"zh-CN": "FW-190取消本回合美国第8航空队的效果：VP+1，当前{vp}。",
+		"en": "FW-190 cancels US 8th Air Force for this turn: VP +1, now {vp}."
+	},
+	"event.log.guderian": {
+		"params": [],
+		"zh-CN": "古德里安装甲集群：德国第2装甲集团军完成首次攻击后，可在全部常规战斗结束时再攻击一次；第二次战斗最多推进一格。",
+		"en": "Guderian Panzer Group: after the German 2nd Panzer Army completes its first attack, it may attack again after all regular combats; the second combat may advance at most one space."
+	},
+	"event.log.herkules": {
+		"params": ["space", "losses"],
+		"zh-CN": "赫拉克勒斯行动：轴心国控制{space}{losses}；只要马耳他仍由轴心国控制，北非轴心国单位可经的黎波里或突尼斯获得完整海运补给。",
+		"en": "Operation Herkules: the Axis controls {space}{losses}; while Malta remains Axis-controlled, Axis units in North Africa may trace full sea supply through Tripoli or Tunis."
+	},
+	"event.log.herkules_losses": {
+		"params": ["pieces"],
+		"zh-CN": "，其上{pieces}进入盟军被消灭区",
+		"en": "; {pieces} there enter the Allied Eliminated Units Box"
+	},
+	"event.log.hedgehogs_complete": {
+		"params": ["spaces"],
+		"zh-CN": "刺猬阵地完成：在{spaces}放置 1 级德军堑壕；本回合苏联境内德军可使用不退却。",
+		"en": "Hedgehogs complete: place Level-1 German trenches in {spaces}; German units in the Soviet Union may use No Retreat this turn."
+	},
+	"event.log.hedgehogs_select": {
+		"params": [],
+		"zh-CN": "刺猬阵地：选择 3 个苏联境内、含完整补给德国集团军且没有堑壕的格。",
+		"en": "Hedgehogs: choose three unentrenched Soviet spaces containing fully supplied German armies."
+	},
+	"event.log.hitler_command": {
+		"params": [],
+		"zh-CN": "希特勒接管指挥生效：解锁总体战、蓝色方案、堡垒行动与守望莱茵，禁止古德里安装甲集群；此后轴心国命令掷骰 +2 DRM。",
+		"en": "Hitler Takes Command is in effect: enable Totaler Krieg, Fall Blau, Zitadelle, and Wacht am Rhein; prohibit Guderian Panzer Group; Axis Orders rolls receive +2 DRM."
+	},
+	"event.log.italian_navy": {
+		"params": [],
+		"zh-CN": "意大利海军出击：本回合北非轴心国单位可经的黎波里或突尼斯获得完整海运补给，并可放置一个移动或战斗标记。",
+		"en": "Italian Naval Sortie: this turn Axis units in North Africa may trace full sea supply through Tripoli or Tunis, and the Axis may place one Move or Combat marker."
+	},
+	"event.log.ix_tac_air": {
+		"params": [],
+		"zh-CN": "第九战术航空队：本行动轮纯英军或美军攻击获得+1 DRM。",
+		"en": "IX Tactical Air: all-British or all-US attacks receive +1 DRM this Action Round."
+	},
+	"event.log.kammhuber": {
+		"params": [],
+		"zh-CN": "卡姆胡伯防线取消本回合轰炸机司令部的效果。",
+		"en": "Kammhuber Line cancels Bomber Command for this turn."
+	},
+	"event.log.mechanized_fronts": {
+		"params": [],
+		"zh-CN": "从下一回合起可打出第31、37和39号苏军机械化方面军增援。",
+		"en": "Soviet mechanized Front reinforcements 31, 37, and 39 become playable beginning next turn."
+	},
+	"event.log.krim": {
+		"params": [],
+		"zh-CN": "克里木：本行动中对塞瓦斯托波尔的一次攻击忽略苏军要塞战斗效果。",
+		"en": "Krim: one attack on Sevastopol during this action ignores the Soviet fort's combat effects."
+	},
+	"event.log.luftwaffe_supply": {
+		"params": [],
+		"zh-CN": "空军补给：选择一个含断补轴心单位的空间；其中轴心单位本回合仅在防御与损耗时视为有限补给。",
+		"en": "Luftwaffe Supply: choose a space containing out-of-supply Axis units; those units are treated as in Limited Supply only for defense and Attrition this turn."
+	},
+	"event.log.manstein": {
+		"params": ["removed"],
+		"zh-CN": "曼施坦因取消本回合轴心国命令及其处罚{removed}。",
+		"en": "Manstein cancels Axis Orders and their penalty for this turn{removed}."
+	},
+	"event.log.neutral_vp": {
+		"params": ["penalty", "vp"],
+		"zh-CN": "中立VP空间视为盟军控制，轴心国VP-{penalty}，当前{vp}。",
+		"en": "Neutral VP spaces are treated as Allied-controlled: Axis VP -{penalty}, now {vp}."
+	},
+	"event.log.nordlicht": {
+		"params": [],
+		"zh-CN": "北极光行动生效：此后可攻击列宁格勒；本行动轮轴心国只能攻击列宁格勒。",
+		"en": "Nordlicht is in effect: Leningrad may now be attacked; the Axis may attack only Leningrad this Action Round."
+	},
+	"event.log.okh_conference": {
+		"params": [],
+		"zh-CN": "陆军总部会议生效：此后打出台风行动不承受 VP 惩罚。",
+		"en": "OKH Conference is in effect: Taifun no longer incurs its VP penalty."
+	},
+	"event.log.panzer_refit_complete": {
+		"params": ["pieces"],
+		"zh-CN": "装甲部队整补完成：{pieces}恢复满编；本行动轮不能激活其所在格。",
+		"en": "Panzer Refit complete: {pieces} return to full strength; their spaces may not be activated this Action Round."
+	},
+	"event.log.panzer_refit_select": {
+		"params": [],
+		"zh-CN": "装甲部队整补：选择 3 个有补给的减员德国装甲单位。",
+		"en": "Panzer Refit: choose three supplied reduced German Panzer units."
+	},
+	"event.log.partisan_expanded": {
+		"params": [],
+		"zh-CN": "扩大游击队适用国家并立即放置1个游击队标记。",
+		"en": "Expand Partisan eligibility and immediately place one Partisan marker."
+	},
+	"event.log.partisan_nations": {
+		"params": [],
+		"zh-CN": "苏联、希腊、阿尔巴尼亚和南斯拉夫现可放置游击队标记。",
+		"en": "Partisan markers may now be placed in the Soviet Union, Greece, Albania, and Yugoslavia."
+	},
+	"event.log.partisan_remove": {
+		"params": ["space"],
+		"zh-CN": "移除{space}的游击队标记。",
+		"en": "Remove the Partisan marker from {space}."
+	},
+	"event.log.partisan_remove_up_to_two": {
+		"params": [],
+		"zh-CN": "必须移除至多两个现有游击队标记。",
+		"en": "Remove up to two existing Partisan markers."
+	},
+	"event.log.patton": {
+		"params": [],
+		"zh-CN": "巴顿：美国第3集团军完成首次攻击后，可在常规战斗结束时再攻击一次；第二次战斗最多推进两格。",
+		"en": "Patton: after the US 3rd Army completes its first attack, it may attack again after regular combat; the second combat may advance at most two spaces."
+	},
+	"event.log.p51": {
+		"params": [],
+		"zh-CN": "P-51“野马”：此后不得打出FW-190，并允许打出绞杀行动和第九战术航空队。",
+		"en": "P-51 Mustang: FW-190 may no longer be played; Operation Strangle and IX Tactical Air are enabled."
+	},
+	"event.log.people_army": {
+		"params": [],
+		"zh-CN": "选择一个有游击队且无轴心单位的南斯拉夫空间部署人民军。",
+		"en": "Choose a Yugoslav space with Partisans and no Axis units in which to deploy the People's Army."
+	},
+	"event.log.reinforcement_reserve": {
+		"params": ["card", "side"],
+		"zh-CN": "{card}增援进入{side}预备箱。",
+		"en": "{card} reinforcements enter the {side} Reserve Box."
+	},
+	"event.log.removed_and_flipped": {
+		"params": ["pieces", "spaces", "reserve"],
+		"zh-CN": "移除{pieces}个该国单位，翻转{spaces}个无轴心驻军空间{reserve}。",
+		"en": "Remove {pieces} national units and flip {spaces} spaces without Axis units{reserve}."
+	},
+	"event.log.revenge_weapon": {
+		"params": ["vp"],
+		"zh-CN": "报复武器：VP+1，当前 {vp}。",
+		"en": "Vergeltungs-Waffe: VP +1, now {vp}."
+	},
+	"event.log.sorge_markers": {
+		"params": [],
+		"zh-CN": "可在至多两个含苏军的格放置移动或战斗标记。",
+		"en": "Place Move or Combat markers in up to two spaces containing Soviet units."
+	},
+	"event.log.skorzeny": {
+		"params": ["vp"],
+		"zh-CN": "斯科尔兹内：VP+1，当前 {vp}。",
+		"en": "Skorzeny: VP +1, now {vp}."
+	},
+	"event.log.soviet_attack": {
+		"params": [],
+		"zh-CN": "本行动轮纯苏军攻击获得+1 DRM。",
+		"en": "All-Soviet attacks receive +1 DRM this Action Round."
+	},
+	"event.log.soviet_attack_no_retreat": {
+		"params": [],
+		"zh-CN": "本行动轮纯苏军攻击获得+1 DRM，轴心国不得使用不退却。",
+		"en": "All-Soviet attacks receive +1 DRM this Action Round, and the Axis may not use No Retreat."
+	},
+	"event.log.soviet_orders_cancelled": {
+		"params": ["removed"],
+		"zh-CN": "本回合苏军命令及其处罚取消{removed}。",
+		"en": "Soviet Orders and their penalty are cancelled for this turn{removed}."
+	},
+	"event.log.soviet_tank_delay": {
+		"params": [],
+		"zh-CN": "四回合后可打出苏军坦克集团军增援，八回合后盟军手牌上限增加1。",
+		"en": "Soviet Tank Army reinforcements become playable four turns later; the Allied hand limit increases by one eight turns later."
+	},
+	"event.log.speer": {
+		"params": [],
+		"zh-CN": "『施佩尔』生效：现在可以打出德国第35、36号增援及最终生产激增事件。",
+		"en": "Speer is in effect: German Reinforcements 35 and 36 and Final Production Surge may now be played."
+	},
+	"event.log.stuka": {
+		"params": [],
+		"zh-CN": "斯图卡生效：本行动轮纯德军对苏军的攻击 +1 DRM。",
+		"en": "Stuka is in effect: all-German attacks against Soviet units receive +1 DRM this Action Round."
+	},
+	"event.log.strangle": {
+		"params": [],
+		"zh-CN": "绞杀行动：法国境内轴心单位此后处于有限补给，轴心国不得在法国进行战略调动。",
+		"en": "Operation Strangle: Axis units in France are now in Limited Supply, and the Axis may not use Strategic Redeployment in France."
+	},
+	"event.log.taifun": {
+		"params": ["penalty"],
+		"zh-CN": "台风行动生效：放置 4 个战斗标记，本行动轮轴心国对苏军攻击 +1 DRM，并可攻击莫斯科{penalty}",
+		"en": "Taifun is in effect: place four Combat markers; Axis attacks against Soviet units receive +1 DRM this Action Round, and Moscow may be attacked{penalty}"
+	},
+	"event.log.three_power_conference": {
+		"params": ["vp"],
+		"zh-CN": "三巨头会议：轴心国VP-1，当前{vp}。",
+		"en": "Three Power Conference: Axis VP -1, now {vp}."
+	},
+	"event.log.totaler_krieg": {
+		"params": ["bonus"],
+		"zh-CN": "总体战生效：轴心国此后不能自动胜利；德军装甲补充上限从下一回合起提高至 3{bonus}。",
+		"en": "Totaler Krieg is in effect: the Axis may no longer win an Automatic Victory; the German Panzer replacement limit rises to three beginning next turn{bonus}."
+	},
+	"event.log.us_entry": {
+		"params": ["turn"],
+		"zh-CN": "美国于第{turn}回合加入盟军。",
+		"en": "The United States joins the Allies in Turn {turn}."
+	},
+	"event.log.us_events_enabled": {
+		"params": [],
+		"zh-CN": "现在可以打出盟军登陆、美国第8航空队和美国增援事件。",
+		"en": "Allied invasions, US 8th Air Force, and US reinforcement events may now be played."
+	},
+	"event.log.vp_plus_one": {
+		"params": ["vp"],
+		"zh-CN": "轴心国VP+1，当前{vp}。",
+		"en": "Axis VP +1, now {vp}."
+	},
+	"event.log.wacht_am_rhein": {
+		"params": [],
+		"zh-CN": "守望莱茵：放置4个战斗标记；本行动轮德国第5装甲集团军或第6党卫军装甲集团军参加对非苏军的攻击时+2 DRM。",
+		"en": "Wacht am Rhein: place four Combat markers; attacks against non-Soviet units involving the German 5th Panzer Army or 6th SS Panzer Army receive +2 DRM this Action Round."
+	},
+	"event.log.wolfpacks": {
+		"params": [],
+		"zh-CN": "狼群：盟军在下一抽牌阶段的手牌上限减少2。",
+		"en": "Wolfpacks: the Allied hand limit is reduced by two in the next Draw Strategy Phase."
+	},
+	"event.log.bunker": {
+		"params": ["space"],
+		"zh-CN": "地堡：在{space}放置 1 级德军堑壕；此后不能打出国家堡垒事件。",
+		"en": "Bunker: place a Level-1 German trench in {space}; National Redoubt may no longer be played."
+	},
+	"event.log.yalta": {
+		"params": ["vp"],
+		"zh-CN": "雅尔塔会议：轴心国VP-1，当前{vp}；本行动轮轴心国不得对含美军的攻击使用不撤退。",
+		"en": "Yalta Conference: Axis VP -1, now {vp}; the Axis may not use No Retreat against attacks containing US units this Action Round."
+	},
+	"event.log.zitadelle": {
+		"params": [],
+		"zh-CN": "堡垒行动：放置2个战斗标记；本行动轮苏军防御射击+2 DRM。德国装甲集团军若推进占领原有至少2个LCU的苏联空间则VP+1，否则VP-1。",
+		"en": "Zitadelle: place two Combat markers; Soviet defensive fire receives +2 DRM this Action Round. Gain 1 VP if a German Panzer army advances into a Soviet space that originally contained at least two LCUs; otherwise lose 1 VP."
+	},
+	"event.log.zitadelle_result": {
+		"params": ["result", "delta", "vp"],
+		"zh-CN": "堡垒行动{result}：VP{delta}，当前{vp}。",
+		"en": "Zitadelle {result}: VP {delta}, now {vp}."
+	}
+}

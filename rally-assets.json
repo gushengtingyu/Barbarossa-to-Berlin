@@ -1,0 +1,25 @@
+{
+	"files": [
+		"about.html",
+		"create.html",
+		"outside.css",
+		"play.html",
+		"play.css",
+		"play.js",
+		"rules.js",
+		"data.js",
+		"btb map.webp",
+		"BtB rules-2006.pdf",
+		"cover.png",
+		"cover.1x.jpg",
+		"cover.2x.jpg",
+		"thumbnail.jpg"
+	],
+	"directories": [
+		"modules",
+		"images",
+		"cards.CN",
+		"cards.EN",
+		"info"
+	]
+}

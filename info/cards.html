@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title data-i18n="info.cards.document_title">BTB 牌组</title>
+		<link rel="stylesheet" href="info.css" />
+		<script defer src="../modules/core/i18n_catalog.js"></script>
+		<script defer src="../modules/core/i18n.js"></script>
+		<script defer src="info_i18n.js"></script>
+		<script defer src="../data.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 id="page-title" data-i18n="info.cards.title">牌组</h1>
+			<nav>
+				<a href="rules.html" data-i18n="info.nav.rulebook">规则书</a>
+				<a href="charts.html" data-i18n="info.nav.charts">图表</a>
+				<a class="active" href="cards.html?side=allied" data-i18n="info.nav.cards">牌组</a>
+				<a href="pieces.html" data-i18n="info.nav.pieces">算子</a>
+			</nav>
+		</header>
+		<main>
+			<div class="catalog-tools" id="side-tools"></div>
+			<div class="catalog-tools" id="language-tools"></div>
+			<div class="card-grid" id="card-grid"></div>
+		</main>
+		<script>
+			window.addEventListener("DOMContentLoaded", () => {
+				const t = (key, params = {}) => BTBI18N.render(BTBI18N.getLocale(), key, params)
+				const params = new URLSearchParams(location.search)
+				const side = params.get("side") === "axis" ? "axis" : "allied"
+				const language = params.get("lang") === "en" ? "EN" : "CN"
+				const sideName = t(side === "allied" ? "core.role.allied" : "core.role.axis")
+				document.title = t("info.cards.document_side_title", { side: sideName })
+				document.getElementById("page-title").textContent = t("info.cards.side_title", { side: sideName })
+				document.getElementById("side-tools").innerHTML = `
+					<a class="${side === "allied" ? "active" : ""}" href="?side=allied&lang=${language.toLowerCase()}">${t("core.role.allied")}</a>
+					<a class="${side === "axis" ? "active" : ""}" href="?side=axis&lang=${language.toLowerCase()}">${t("core.role.axis")}</a>`
+				document.getElementById("language-tools").innerHTML = `
+					<a class="${language === "CN" ? "active" : ""}" href="?side=${side}&lang=cn">${t("create.chinese_cards")}</a>
+					<a class="${language === "EN" ? "active" : ""}" href="?side=${side}&lang=en">${t("info.cards.english_cards")}</a>`
+
+				const grid = document.getElementById("card-grid")
+				for (const card of data.cards.filter((entry) => entry && entry.side === side)) {
+					const article = document.createElement("article")
+					article.className = "card-entry"
+					const number = String(card.num).padStart(2, "0")
+					const name = BTBI18N.getLocale() === "en" ? card.name : card.name_zh || card.name
+					article.innerHTML = `
+						<img loading="lazy" src="../cards.${language}/card_${side}_${number}.webp" alt="${t("info.cards.card_alt", { side: sideName, num: card.num, name })}" />`
+					grid.append(article)
+				}
+			})
+		</script>
+	</body>
+</html>
