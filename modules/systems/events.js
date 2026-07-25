@@ -309,9 +309,13 @@ function eventOpsValue(game, data, cardId) {
 	const card = data.cards[cardId]
 	if (!card) return 0
 	if (card.dual) return card.ops
-	if (card.dual_condition === "stalin_in_moscow" && stalinInMoscow(game, data) && !Weather.isSpringThaw(game)) return card.ops
-	if (cardId === 53 && !game.events?.overlord && !Weather.isSpringThaw(game)) return card.ops
-	if (cardId === 43 && !game.events?.overlord && !Weather.isSpringThaw(game)) return card.ops
+	if (Weather.isSpringThaw(game)) return 0
+	if (card.dual_condition === "stalin_in_moscow" && stalinInMoscow(game, data)) return card.ops
+	if (cardId === 6 && Number(game.events?.wolfpacks_turn) > 0) return card.ops
+	if (cardId === 46 && !game.events?.overlord) return card.ops
+	if (cardId === 52 && game.events?.overlord && game.event?.invasion) return card.ops
+	if (cardId === 53 && !game.events?.overlord) return card.ops
+	if (cardId === 43 && !game.events?.overlord) return card.ops
 	return 0
 }
 
@@ -1038,6 +1042,7 @@ function removePartisan(game, data, spaceId) {
 	const index = game.partisans.indexOf(spaceId)
 	if (index < 0) throw new Error(`illegal partisan removal: ${spaceId}`)
 	game.partisans.splice(index, 1)
+	MapSystem.syncPartisanVp(game, data)
 	log(game, "event.log.partisan_remove", { space: `s${spaceId}` })
 }
 

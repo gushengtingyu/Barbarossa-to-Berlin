@@ -131,6 +131,7 @@ function applyWinterVpPenalty(game, data) {
 }
 
 function finishTurn(game, runtime) {
+	runtime.map.syncPartisanVp(game, runtime.data)
 	game.phase = "end"
 	if (checkAutomaticVictory(game)) return
 	applyWinterVpPenalty(game, runtime.data)
@@ -190,7 +191,7 @@ function finishDrawForSide(game, side, runtime) {
 	}
 }
 
-function startEndPhases(game) {
+function settleActionPhase(game) {
 	Events.revealForeignArmiesEastAtEnd(game)
 	CombatCards.discardAtEndOfTurn(game)
 	if (game.turn > 1) {
@@ -199,10 +200,20 @@ function startEndPhases(game) {
 	}
 	game.action = null
 	game.event = null
+}
+
+function startAttrition(game, side, resumeAlliedAction = false) {
+	if (resumeAlliedAction) game.resume_allied_action_after_axis_attrition = true
+	else delete game.resume_allied_action_after_axis_attrition
 	game.phase = "attrition"
-	game.state = "axis_attrition"
-	setActive(game, AXIS)
+	game.state = side === AXIS ? "axis_attrition" : "allied_attrition"
+	setActive(game, side)
 	logH1(game, "turn.phase.attrition")
+}
+
+function startEndPhases(game) {
+	settleActionPhase(game)
+	startAttrition(game, AXIS)
 }
 
 function finish(game, result, messageKey) {
@@ -217,6 +228,10 @@ function finish(game, result, messageKey) {
 
 function alliedControlsAllGermanSupplySpaces(game, data) {
 	const sources = data.spaces.filter((space) => space?.kind === "land" && space.nation === "ge" && space.supply === "axis")
+	if (game.events?.national_redoubt) {
+		const munich = data.spaces.find((space) => space?.name === "Munich")
+		if (munich && !sources.includes(munich)) sources.push(munich)
+	}
 	return sources.length > 0 && sources.every((space) => game.control[space.id] === ALLIED)
 }
 
@@ -230,12 +245,17 @@ function continueAfterAction(game, side, runtime) {
 		else startEndPhases(game)
 		return
 	}
-	if (side === AXIS) startAction(game, ALLIED, game.action_round, runtime)
+	if (side === AXIS && game.action_round === 6) startAttrition(game, AXIS, true)
+	else if (side === AXIS) startAction(game, ALLIED, game.action_round, runtime)
 	else if (game.action_round < 6) startAction(game, AXIS, game.action_round + 1, runtime)
-	else startEndPhases(game)
+	else {
+		settleActionPhase(game)
+		startAttrition(game, ALLIED)
+	}
 }
 
 function finishAction(game, side, runtime) {
+	runtime.map.syncPartisanVp(game, runtime.data)
 	Events.settleActionEvent(game)
 	game.action_history[side].push(game.action?.mode || "pass")
 	game.action_track ||= { [ALLIED]: [], [AXIS]: [] }
@@ -280,8 +300,14 @@ function create(runtime) {
 		TURN_NAMES,
 		WINTER_VP_REQUIREMENTS,
 		alliedControlsAllGermanSupplySpaces: (game) => alliedControlsAllGermanSupplySpaces(game, runtime.data),
-		applyWinterVpPenalty: (game) => applyWinterVpPenalty(game, runtime.data),
-		checkAutomaticVictory,
+		applyWinterVpPenalty: (game) => {
+			runtime.map.syncPartisanVp(game, runtime.data)
+			return applyWinterVpPenalty(game, runtime.data)
+		},
+		checkAutomaticVictory: (game) => {
+			runtime.map.syncPartisanVp(game, runtime.data)
+			return checkAutomaticVictory(game)
+		},
 		completeDrawPhase: (game) => completeDrawPhase(game, runtime),
 		finish,
 		finishAction: (game, side) => finishAction(game, side, runtime),

@@ -7,6 +7,7 @@ const Engine = Object.freeze({
 	cards: require("../systems/cards.js"),
 	events: require("../systems/events.js"),
 	invasions: require("../systems/invasions.js"),
+	map: Runtime.map,
 	neutrals: require("../systems/neutrals.js"),
 	weather: require("../systems/weather.js"),
 	turn: Runtime.turn,
@@ -80,6 +81,16 @@ function addCardMenuActions(result, game, data, side, cardIds) {
 		"play_event",
 		cardIds.filter((cardId) => Engine.events.canPlayEvent(game, data, cardId)),
 	)
+}
+
+function vonPaulusAutoOpsRemaining(game, side) {
+	if (side !== AXIS || game.turn !== 2) return 0
+	return Math.max(0, Number(game.events?.axis_forced_auto_ops) || 0)
+}
+
+function mustTakeVonPaulusAutoOps(game, side) {
+	const remaining = vonPaulusAutoOpsRemaining(game, side)
+	return remaining > 0 && (remaining === 1 || game.action_round >= 3)
 }
 
 function playEventCard(game, role, noun, { data }) {
@@ -166,6 +177,10 @@ function register(registerState) {
 			const side = Engine.constants.sideForRole(game.active)
 			const cardIds = game.hands[side].slice()
 			result.prompt("action.choose", { turn: game.turn, round: game.action_round })
+			if (mustTakeVonPaulusAutoOps(game, side)) {
+				result.action("auto_ops")
+				return
+			}
 			addCardMenuActions(result, game, data, side, cardIds)
 			result.action("auto_ops")
 			if (!Engine.neutrals.isAtWar(game, "tu")) result.action("declare_turkey")
@@ -178,8 +193,14 @@ function register(registerState) {
 		play_ops: playOpsCard,
 		play_sr: playSrCard,
 		auto_ops(game) {
+			const side = Engine.constants.sideForRole(game.active)
+			const vonPaulusRemaining = vonPaulusAutoOpsRemaining(game, side)
 			Engine.state.log(game, "action.log.auto_ops")
 			startCardAction(game, "ops", 1, "one_ops")
+			if (vonPaulusRemaining) {
+				game.events.axis_forced_auto_ops = vonPaulusRemaining - 1
+				game.action.von_paulus_no_soviet_combat = true
+			}
 			game.state = "ops_activate"
 		},
 		declare_turkey(game, role, noun, { data }) {
@@ -216,6 +237,7 @@ function register(registerState) {
 			const side = Engine.constants.sideForRole(role)
 			const spaceId = Number(noun)
 			game.partisans.push(spaceId)
+			Engine.map.syncPartisanVp(game, data)
 			game.action.placed.push(spaceId)
 			Engine.state.log(game, "action.log.partisan", { space: `s${spaceId}` })
 			const complete = game.action.placed.length >= game.action.placements || !eligiblePartisanSpaces(game, data).length

@@ -302,8 +302,13 @@ function register(registerState) {
 		continue(game, role, noun, { data, adjacency }) {
 			const resolved = Engine.logistics.resolveAttrition(game, data, Engine.map, adjacency, AXIS)
 			logAttritionResult(game, resolved, ALLIED)
-			game.state = "allied_attrition"
-			game.active = roleForSide(ALLIED)
+			if (game.resume_allied_action_after_axis_attrition) {
+				delete game.resume_allied_action_after_axis_attrition
+				Engine.turn.startAction(game, ALLIED, game.action_round)
+			} else {
+				game.state = "allied_attrition"
+				game.active = roleForSide(ALLIED)
+			}
 			Engine.state.clearUndo(game)
 		},
 	})

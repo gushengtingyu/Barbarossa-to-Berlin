@@ -25,10 +25,6 @@ function eliminateForAttrition(game, data, pieceId, map = null) {
 	Orders.ensureStandFastUnits(game, data, location)
 	Combat.setReduced(game, pieceId, false)
 	if (game.eliminated_theater) delete game.eliminated_theater[pieceId]
-	if (Combat.replaceEliminatedSouthwestFront(game, data, pieceId)) {
-		Orders.releaseStandFastIfVacated(game, data, location)
-		return
-	}
 	if (piece.size === "scu") {
 		game.pieces[pieceId] = Locations.eliminated(side)
 		Orders.releaseStandFastIfVacated(game, data, location)
@@ -40,9 +36,10 @@ function eliminateForAttrition(game, data, pieceId, map = null) {
 		Orders.releaseStandFastIfVacated(game, data, location)
 		return
 	}
+	const southwestReplacement = Combat.replaceEliminatedSouthwestFront(game, data, pieceId)
 	Combat.setReduced(game, replacement, false)
 	game.pieces[replacement] = Locations.eliminated(side)
-	game.pieces[pieceId] = piece.nation === "su" ? Locations.eliminated(side) : Locations.turnTrack(game.turn + 3)
+	if (!southwestReplacement) game.pieces[pieceId] = piece.nation === "su" ? Locations.eliminated(side) : Locations.turnTrack(game.turn + 3)
 	Orders.releaseStandFastIfVacated(game, data, location)
 }
 

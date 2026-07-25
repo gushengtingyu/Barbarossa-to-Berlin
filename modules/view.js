@@ -45,6 +45,7 @@ function readNormalized(game) {
 	if (!game || typeof game !== "object") throw new Error("game state must be an object")
 	const normalized = Engine.state.normalizeGame(Engine.state.clone(game))
 	Engine.map.normalizeControlNations(normalized, data)
+	Engine.map.syncPartisanVp(normalized, data)
 	return normalized
 }
 

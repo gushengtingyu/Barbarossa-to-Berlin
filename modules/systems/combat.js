@@ -1,6 +1,6 @@
 "use strict"
 
-const { AXIS } = require("../core/constants.js")
+const { ALLIED, AXIS } = require("../core/constants.js")
 const { clone } = require("../core/state.js")
 const Locations = require("../core/unit_locations.js")
 const Random = require("../core/random.js")
@@ -79,19 +79,28 @@ function defenderSupplyStatus(game, data, map, adjacency, pieceId, spaceId = gam
 	return map.traceSupply(game, data, adjacency, side, spaceId, data.pieces[pieceId].nation)
 }
 
+function sovietTrenchDefenseCancelled(game, data, defenders) {
+	return game.turn === 1 && !!game.events?.barbarossa && defenders.length > 0 && defenders.every((pieceId) => data.pieces[pieceId]?.nation === "su")
+}
+
 function trenchProvidesBenefit(game, data, map, adjacency, spaceId, defenders) {
 	if (!game.trench?.[spaceId] || !defenders.length) return false
+	if (sovietTrenchDefenseCancelled(game, data, defenders)) return false
 	const side = sideOf(game, data, map, defenders)
 	if (game.trench_owner?.[spaceId] && game.trench_owner[spaceId] !== side) return false
 	const oos = defenders.some((pieceId) => defenderSupplyStatus(game, data, map, adjacency, pieceId, spaceId) === "oos")
 	return !oos || defenders.every((pieceId) => data.pieces[pieceId]?.nation === "su")
 }
 
+function axisDefendsInPartisanSpace(game, data, map, spaceId, defenders) {
+	return !!game.partisans?.includes(spaceId) && sideOf(game, data, map, defenders) === AXIS
+}
+
 function attackerTerrainShift(game, data, map, adjacency, spaceId, defenders) {
 	const space = data.spaces[spaceId]
 	const side = sideOf(game, data, map, defenders)
-	const defenderOos = defenders.some((pieceId) => defenderSupplyStatus(game, data, map, adjacency, pieceId, spaceId) === "oos")
-	let shift = !defenderOos && (["mountain", "swamp"].includes(space?.terrain) || space?.urban || fortProvidesBenefit(game, data, map, spaceId, side) || space?.kind === "beach") ? -1 : 0
+	const normalTerrainAllowed = !axisDefendsInPartisanSpace(game, data, map, spaceId, defenders)
+	let shift = normalTerrainAllowed && (["mountain", "swamp"].includes(space?.terrain) || space?.urban || fortProvidesBenefit(game, data, map, spaceId, side) || space?.kind === "beach") ? -1 : 0
 	if (trenchProvidesBenefit(game, data, map, adjacency, spaceId, defenders)) shift -= Number(game.trench[spaceId]) || 0
 	return shift
 }
@@ -108,6 +117,17 @@ function attackersAcrossRiver(game, adjacency, combat, attackers) {
 			return (adjacency[origin] || []).some((edge) => edge.to === combat.defender_space && edge.type === "river")
 		})
 	)
+}
+
+function solelyAcrossSkagerrak(game, data, combat) {
+	const defenderName = data.spaces[combat.defender_space]?.name
+	const origins = combat.origin_spaces?.length ? combat.origin_spaces : (combat.attackers || []).filter((pieceId) => isOnMap(game, pieceId)).map((pieceId) => game.pieces[pieceId])
+	if (!defenderName || !origins.length) return false
+	const skagerrakPairs = new Set(["Jutland:Oslo", "Copenhagen:Malmo"])
+	return origins.every((spaceId) => {
+		const originName = data.spaces[spaceId]?.name
+		return !!originName && skagerrakPairs.has([originName, defenderName].sort().join(":"))
+	})
 }
 
 function sideOf(game, data, map, pieceIds) {
@@ -250,10 +270,15 @@ function hasTrait(piece, trait) {
 
 function replacementMatches(lcu, scu) {
 	if (!scu || scu.size !== "scu" || scu.side !== lcu.side) return false
+	if (lcu.nation === "su") return scu.nation === "su" && scu.unit_type !== "mechanized" && !String(scu.name || "").includes("Shock")
 	if (lcu.nation === "br" && !["br", "cw"].includes(scu.nation)) return false
 	else if (lcu.nation === "cw" && scu.nation !== "cw") return false
-	else if (lcu.nation === "ff" && !["ff", "us"].includes(scu.nation)) return false
+	else if (lcu.nation === "ff" && scu.nation !== "ff") return false
 	else if (!["br", "cw", "ff"].includes(lcu.nation) && scu.nation !== lcu.nation) return false
+	if (lcu.nation === "ge" && lcu.unit_type === "mechanized") {
+		const ssReplacement = String(scu.name || "").includes("SS")
+		return scu.unit_type === "mechanized" && (String(lcu.name || "").includes("6SS") ? ssReplacement : !ssReplacement)
+	}
 	return lcu.unit_type === "mechanized" ? scu.unit_type === "mechanized" : scu.unit_type !== "mechanized"
 }
 
@@ -308,10 +333,19 @@ function applyStepLoss(game, data, combat, pieceId, maxCost = null) {
 	}
 	const location = game.pieces[pieceId]
 	setReduced(game, pieceId, false)
-	const southwestReplacement = replaceEliminatedSouthwestFront(game, data, pieceId)
-	if (southwestReplacement) {
+	if (piece.name === "SU Southwest Front") {
+		const replacement = findLcuReplacement(game, data, pieceId)
+		if (!replacement) {
+			game.pieces[pieceId] = Locations.REMOVED
+			const cost = maxCost === null ? baseCost : baseCost + hypotheticalReplacementLoss(data, pieceId, Math.max(0, maxCost - baseCost))
+			Orders.releaseStandFastIfVacated(game, data, location)
+			return { cost, eliminated: true, replacement: null, permanent: true, origin_space_id: location }
+		}
+		const southwestReplacement = replaceEliminatedSouthwestFront(game, data, pieceId)
+		game.pieces[replacement] = location
+		replaceParticipant(combat, pieceId, replacement)
 		Orders.releaseStandFastIfVacated(game, data, location)
-		return { cost: baseCost, eliminated: true, replacement: southwestReplacement, permanent: false, origin_space_id: location }
+		return { cost: baseCost, eliminated: true, replacement: southwestReplacement, scu_replacement: replacement, permanent: false, origin_space_id: location }
 	}
 	game.pieces[pieceId] = Locations.eliminated(Neutrals.effectivePieceSide(game, piece))
 	let replacement = null
@@ -343,10 +377,18 @@ function eliminatePreviouslyRetreated(game, data, pieceId) {
 	const side = Neutrals.effectivePieceSide(game, piece)
 	Orders.ensureStandFastUnits(game, data, location)
 	setReduced(game, pieceId, false)
-	const southwestReplacement = replaceEliminatedSouthwestFront(game, data, pieceId)
-	if (southwestReplacement) {
+	if (piece.name === "SU Southwest Front") {
+		const replacement = findLcuReplacement(game, data, pieceId)
+		if (!replacement) {
+			game.pieces[pieceId] = Locations.REMOVED
+			Orders.releaseStandFastIfVacated(game, data, location)
+			return { replacement: null, permanent: true, origin_space_id: location }
+		}
+		const southwestReplacement = replaceEliminatedSouthwestFront(game, data, pieceId)
+		setReduced(game, replacement, false)
+		game.pieces[replacement] = Locations.eliminated(side)
 		Orders.releaseStandFastIfVacated(game, data, location)
-		return { replacement: southwestReplacement, permanent: false, origin_space_id: location }
+		return { replacement: southwestReplacement, scu_replacement: replacement, permanent: false, origin_space_id: location }
 	}
 	if (piece.size === "scu") {
 		game.pieces[pieceId] = hasTrait(piece, "non_replaceable") ? Locations.REMOVED : Locations.eliminated(side)
@@ -416,11 +458,10 @@ function canCancelRetreat(game, data, map, adjacency, combat) {
 	const space = data.spaces[combat.defender_space]
 	const survivors = combat.defenders.filter((pieceId) => isOnMap(game, pieceId))
 	const side = sideOf(game, data, map, survivors)
-	const trenchAllowed = trenchProvidesBenefit(game, data, map, adjacency, combat.defender_space, survivors) && !(game.turn === 1 && (game.events.barbarossa || game.events.von_paulus_pause))
+	const sovietTrenchNoRetreatCancelled = game.turn === 1 && (game.events?.barbarossa || game.events?.von_paulus_pause) && survivors.length > 0 && survivors.every((pieceId) => data.pieces[pieceId]?.nation === "su")
+	const trenchAllowed = trenchProvidesBenefit(game, data, map, adjacency, combat.defender_space, survivors) && !sovietTrenchNoRetreatCancelled
 	const hedgehogsAllowed = game.events?.hedgehogs_turn === game.turn && data.spaces[combat.defender_space]?.nation === "su" && survivors.length > 0 && survivors.every((pieceId) => data.pieces[pieceId]?.nation === "ge")
 	if (hedgehogsAllowed) return true
-	const defenderOos = survivors.some((pieceId) => defenderSupplyStatus(game, data, map, adjacency, pieceId, combat.defender_space) === "oos")
-	if (defenderOos) return !!trenchAllowed
 	if (
 		Weather.formationIsWinter42German(
 			game,
@@ -429,7 +470,13 @@ function canCancelRetreat(game, data, map, adjacency, combat) {
 		)
 	)
 		return !!trenchAllowed
-	return !!(trenchAllowed || fortProvidesBenefit(game, data, map, combat.defender_space, side) || space?.kind === "beach" || ["forest", "mountain", "swamp"].includes(space?.terrain))
+	const alliedAntwerp = space?.name === "Antwerp" && game.control?.[combat.defender_space] === ALLIED
+	const skagerrak = solelyAcrossSkagerrak(game, data, combat)
+	const normalTerrainAllowed = !axisDefendsInPartisanSpace(game, data, map, combat.defender_space, survivors)
+	return !!(
+		trenchAllowed ||
+		(normalTerrainAllowed && (alliedAntwerp || skagerrak || fortProvidesBenefit(game, data, map, combat.defender_space, side) || space?.kind === "beach" || ["forest", "mountain", "swamp"].includes(space?.terrain)))
+	)
 }
 
 function eventRoundMatches(game, value) {
@@ -440,6 +487,7 @@ function eventRoundMatches(game, value) {
 function mayAttackSpace(game, data, side, spaceId) {
 	const space = data.spaces[spaceId]
 	if (!space || !["land", "beach"].includes(space.kind)) return false
+	if (side === AXIS && game.action?.von_paulus_no_soviet_combat && data.pieces.some((piece) => piece?.nation === "su" && game.pieces?.[piece.id] === spaceId)) return false
 	if (space.kind === "beach") return true
 	if (side !== AXIS) return true
 	const requirement = space.attack_requires_event
@@ -476,6 +524,10 @@ function advanceLimit(game, data, map, adjacency, combat, pieceId) {
 
 function stopsMechanizedAdvance(game, space) {
 	return !!((space?.fort && !game.destroyed_forts?.includes(space.id)) || ["forest", "mountain", "swamp"].includes(space?.terrain))
+}
+
+function stopsWinter42GermanAdvance(game, data, pieceId, space) {
+	return Weather.isWinter42(game) && data.pieces[pieceId]?.nation === "ge" && space?.nation === "su"
 }
 
 function nonMechanizedAdvancePaths(game, data, map, adjacency, combat, pieceId) {
@@ -528,7 +580,7 @@ function legalAdvancePaths(game, data, map, adjacency, combat, pieceId) {
 			if (!Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
 			const hasCombatMarker = game.action?.attack_spaces?.includes(edge.to)
 			if (!hasCombatMarker && map.canStack(game, data, pieceId, edge.to)) paths.set(edge.to, path)
-			if (stopsMechanizedAdvance(game, next)) continue
+			if (stopsMechanizedAdvance(game, next) || stopsWinter42GermanAdvance(game, data, pieceId, next)) continue
 			if (visited.has(edge.to) && visited.get(edge.to) <= path.length) continue
 			visited.set(edge.to, path.length)
 			queue.push({ space: edge.to, path })

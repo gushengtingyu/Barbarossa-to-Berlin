@@ -53,6 +53,7 @@ function createInitialState(data, scenario = "Campaign", seed = 1, options = {})
 		stand_fast_round_units: {},
 		orders: null,
 		partisans: [],
+		partisan_vp_adjustment: 0,
 		retreat_history: [],
 		hands: { [ALLIED]: [], [AXIS]: [] },
 		decks: { [ALLIED]: [], [AXIS]: [] },

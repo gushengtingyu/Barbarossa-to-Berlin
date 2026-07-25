@@ -14,6 +14,7 @@ function mayEnter(game, data, adjacency, pieceId, spaceId) {
 	const piece = data.pieces[pieceId]
 	const space = data.spaces[spaceId]
 	if (!piece || !space || space.kind !== "land") return false
+	if (space.attack_requires_event === "axis_no_entry" && Neutrals.effectivePieceSide(game, piece) === "axis") return false
 	if (!Neutrals.mayEnterSpace(game, space)) return false
 	if (["tu", "sw"].includes(piece.nation) && space.nation !== piece.nation) return false
 	if (piece.nation === "hu") {

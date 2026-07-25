@@ -161,6 +161,7 @@ function normalizeGame(game) {
 	game.reduced ||= []
 	game.control_nation ||= []
 	game.retreat_history ||= []
+	game.partisan_vp_adjustment ??= 0
 	game.stand_fast ||= {}
 	game.stand_fast_round_units ||= {}
 	game.trench ||= {}

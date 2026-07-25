@@ -46,11 +46,13 @@ function combatTargets(game, side, origin, data, adjacency) {
 function extraAttackTargets(game, data, adjacency) {
 	const extra = game.event?.extra_attack
 	if (!extra || extra.used || !extra.first_attack_completed || !Engine.combat.isOnMap(game, extra.piece_id)) return []
+	if (game.action?.activation_supply?.[extra.piece_id] === "oos") return []
 	const origin = game.pieces[extra.piece_id]
 	const side = Engine.map.pieceSide(game, data, extra.piece_id)
 	return (adjacency[origin] || [])
 		.filter((edge) => edge.type !== "sr")
 		.map((edge) => edge.to)
+		.filter((spaceId) => !game.action?.defended?.includes(spaceId))
 		.filter((spaceId) => Engine.map.enemyPiecesInSpace(game, data, side, spaceId).length > 0 || (side === AXIS && Engine.invasions.activeBeachhead(game, spaceId)))
 		.filter((spaceId) => Engine.combat.mayAttackSpace(game, data, side, spaceId))
 }
@@ -81,34 +83,38 @@ function invasionCombatPending(game, data) {
 	return Engine.invasions.pendingCombatBeaches(game, data, Engine.map).length > 0
 }
 
-function combatOrigins(game, pieceIds, preferredPrimary = null) {
-	const origins = []
-	if (preferredPrimary && pieceIds.some((pieceId) => game.pieces[pieceId] === preferredPrimary)) origins.push(preferredPrimary)
-	for (const pieceId of pieceIds) {
-		const origin = game.pieces[pieceId]
-		if (!origins.includes(origin)) origins.push(origin)
-	}
+function combatOrigins(game, pieceIds) {
+	return [...new Set(pieceIds.map((pieceId) => game.pieces[pieceId]))].sort((a, b) => a - b)
+}
+
+function mechanizedOrigins(game, data, adjacency, pieceIds) {
+	const origins = new Set()
+	for (const pieceId of pieceIds) if (Engine.map.isMechanizedInSupply(game, data, adjacency, pieceId)) origins.add(game.pieces[pieceId])
 	return origins
 }
 
-function validAttackerSelection(game, data, adjacency, selected = game.combat.attackers, origins = game.combat.origin_spaces) {
-	if (!selected.length || !origins.length) return false
-	if (!selected.some((pieceId) => game.pieces[pieceId] === origins[0])) return false
-	for (const origin of origins.slice(1)) {
-		const fromOrigin = selected.filter((pieceId) => game.pieces[pieceId] === origin)
-		if (!fromOrigin.length || !fromOrigin.some((pieceId) => Engine.map.isMechanizedInSupply(game, data, adjacency, pieceId))) return false
-	}
-	return true
+function normalizedCombatOrigins(game, data, adjacency, selected) {
+	const origins = combatOrigins(game, selected)
+	if (!origins.length) return null
+	const mechanized = mechanizedOrigins(game, data, adjacency, selected)
+	const withoutMechanized = origins.filter((origin) => !mechanized.has(origin))
+	if (withoutMechanized.length > 1) return null
+	const primary = withoutMechanized[0] ?? origins[0]
+	return [primary, ...origins.filter((origin) => origin !== primary)]
+}
+
+function commonCombatTargets(game, data, adjacency, side, origins) {
+	if (!origins.length) return []
+	const targets = combatTargets(game, side, origins[0], data, adjacency)
+	return targets.filter((target) => origins.slice(1).every((origin) => (adjacency[origin] || []).some((edge) => edge.type !== "sr" && edge.to === target)))
 }
 
 function combatSelectionTargets(game, data, adjacency, selected = game.combat?.attackers || []) {
 	if (!selected.length) return []
-	const primary = game.combat?.origin_spaces?.[0]
-	const origins = combatOrigins(game, selected, primary)
-	if (!validAttackerSelection(game, data, adjacency, selected, origins)) return []
+	const origins = normalizedCombatOrigins(game, data, adjacency, selected)
+	if (!origins) return []
 	const side = Engine.constants.sideForRole(game.active)
-	const targets = combatTargets(game, side, origins[0], data, adjacency)
-	return targets.filter((target) => origins.slice(1).every((origin) => (adjacency[origin] || []).some((edge) => edge.type !== "sr" && edge.to === target)))
+	return commonCombatTargets(game, data, adjacency, side, origins)
 }
 
 function allCombatSelectionPieces(game, data, adjacency) {
@@ -116,14 +122,24 @@ function allCombatSelectionPieces(game, data, adjacency) {
 	return availableCombatOrigins(game, data, adjacency).flatMap((spaceId) => unusedPiecesInSpace(game, data, side, spaceId))
 }
 
-function combatSelectionCandidates(game, data, adjacency) {
-	const selected = game.combat?.attackers || []
-	return allCombatSelectionPieces(game, data, adjacency).filter((pieceId) => selected.includes(pieceId) || combatSelectionTargets(game, data, adjacency, selected.concat(pieceId)).length)
+function combatSelectionCanBeCompleted(game, data, adjacency, selected) {
+	const origins = combatOrigins(game, selected)
+	if (!origins.length) return false
+	const side = Engine.constants.sideForRole(game.active)
+	if (!commonCombatTargets(game, data, adjacency, side, origins).length) return false
+	const available = origins.flatMap((origin) => unusedPiecesInSpace(game, data, side, origin))
+	const potentiallyMechanized = mechanizedOrigins(game, data, adjacency, available)
+	return origins.filter((origin) => !potentiallyMechanized.has(origin)).length <= 1
 }
 
-function syncCombatOrigins(game) {
+function combatSelectionCandidates(game, data, adjacency) {
+	const selected = game.combat?.attackers || []
+	return allCombatSelectionPieces(game, data, adjacency).filter((pieceId) => selected.includes(pieceId) || combatSelectionCanBeCompleted(game, data, adjacency, selected.concat(pieceId)))
+}
+
+function syncCombatOrigins(game, data, adjacency) {
 	if (!game.combat) return
-	game.combat.origin_spaces = combatOrigins(game, game.combat.attackers, game.combat.origin_spaces[0])
+	game.combat.origin_spaces = normalizedCombatOrigins(game, data, adjacency, game.combat.attackers) || combatOrigins(game, game.combat.attackers)
 }
 
 function combatAttackerCandidates(game, data) {
@@ -152,7 +168,7 @@ function restoreTo(state) {
 	return handler
 }
 
-const toggleCombatAttacker = groupedSelection(function toggleCombatAttacker(game, role, noun) {
+const toggleCombatAttacker = groupedSelection(function toggleCombatAttacker(game, role, noun, { data, adjacency }) {
 	const pieceId = Number(noun)
 	if (!game.combat) {
 		game.combat = {
@@ -166,7 +182,7 @@ const toggleCombatAttacker = groupedSelection(function toggleCombatAttacker(game
 	if (index < 0) game.combat.attackers.push(pieceId)
 	else game.combat.attackers.splice(index, 1)
 	if (!game.combat.attackers.length) game.combat = null
-	else syncCombatOrigins(game)
+	else syncCombatOrigins(game, data, adjacency)
 })
 
 const toggleAdvancePiece = groupedSelection(function toggleAdvancePiece(game, role, noun) {
@@ -177,8 +193,9 @@ const toggleAdvancePiece = groupedSelection(function toggleAdvancePiece(game, ro
 	else selected.splice(index, 1)
 })
 
-const selectAllCombatAttackers = groupedSelection(function selectAllCombatAttackers(game, role, noun, { data }) {
+const selectAllCombatAttackers = groupedSelection(function selectAllCombatAttackers(game, role, noun, { data, adjacency }) {
 	game.combat.attackers = combatAttackerCandidates(game, data)
+	syncCombatOrigins(game, data, adjacency)
 })
 
 function onMapParticipants(game, key) {
@@ -405,8 +422,15 @@ function resolveSelectedCombat(game, data, adjacency) {
 	game.state = "combat_defender_losses"
 }
 
-function prepareCombatTarget(game, role, spaceId, data) {
+function validatedCombatOrigins(game, data, adjacency, side, spaceId) {
+	const origins = normalizedCombatOrigins(game, data, adjacency, game.combat.attackers)
+	if (!origins || !commonCombatTargets(game, data, adjacency, side, origins).includes(spaceId)) throw new Error("illegal multi-space combat")
+	return origins
+}
+
+function prepareCombatTarget(game, role, spaceId, data, adjacency) {
 	const side = Engine.constants.sideForRole(role)
+	game.combat.origin_spaces = validatedCombatOrigins(game, data, adjacency, side, spaceId)
 	const allDefenders = Engine.map.enemyPiecesInSpace(game, data, side, spaceId)
 	const retreated = currentRoundRetreatedPieces(game, spaceId)
 	game.combat.defender_space = spaceId
@@ -458,6 +482,7 @@ function combatConfirmationPrompt(game, data, adjacency) {
 function confirmCombatSelection(game, data, adjacency) {
 	const combat = game.combat
 	const side = combat.attacker_side
+	if (!combat.extra_attack) combat.origin_spaces = validatedCombatOrigins(game, data, adjacency, side, combat.defender_space)
 	if (side === AXIS && !combat.defenders.length && Engine.invasions.activeBeachhead(game, combat.defender_space)) {
 		for (const pieceId of combat.attackers) if (!game.action.used_pieces.includes(pieceId)) game.action.used_pieces.push(pieceId)
 		for (const origin of combat.origin_spaces) if (!game.action.attacked.includes(origin)) game.action.attacked.push(origin)
@@ -486,14 +511,14 @@ function register(registerState) {
 			if (selected.length) {
 				result.action("space", combatSelectionTargets(game, data, adjacency))
 				const originCandidates = combatAttackerCandidates(game, data)
-				if (originCandidates.some((pieceId) => !selected.includes(pieceId))) result.action("select_all")
+				if (originCandidates.some((pieceId) => !selected.includes(pieceId)) && combatSelectionTargets(game, data, adjacency, originCandidates).length) result.action("select_all")
 				result.action("cancel_selection")
 			} else if (!invasionCombatPending(game, data)) result.action("done")
 		},
 		piece: toggleCombatAttacker,
 		select_all: selectAllCombatAttackers,
-		space(game, role, noun, { data }) {
-			prepareCombatTarget(game, role, Number(noun), data)
+		space(game, role, noun, { data, adjacency }) {
+			prepareCombatTarget(game, role, Number(noun), data, adjacency)
 			game.state = "combat_confirm"
 		},
 		cancel_selection: restoreTo("ops_combat"),

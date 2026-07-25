@@ -27,7 +27,10 @@ exports.view = View.playerView
 exports.action = function action(game, player, verb, noun) {
 	game = Engine.state.normalizeGame(game)
 	Engine.map.normalizeControlNations(game, data)
+	if ((Number(game.partisan_vp_adjustment) || 0) !== Engine.map.partisanVpAdjustment(game, data)) game = Engine.state.clone(game)
+	Engine.map.syncPartisanVp(game, data)
 	const result = GameStates.applyAction(game, player, verb, noun)
+	Engine.map.syncPartisanVp(result, data)
 	const skipActionLog = Collaboration.consumeSkipActionLog(result)
 	if (verb !== "undo" && !skipActionLog)
 		result.action_log.push({
@@ -54,5 +57,6 @@ exports.query = View.query
 exports.normalize_game = function normalizeGame(game) {
 	game = Engine.state.normalizeGame(game)
 	Engine.map.normalizeControlNations(game, data)
+	Engine.map.syncPartisanVp(game, data)
 	return game
 }

@@ -130,13 +130,33 @@ function isVichyVpSpace(space) {
 	return space?.side === "neutral" && space?.vp && ["fr", "tn"].includes(space.nation)
 }
 
+function partisanVpAdjustment(game, data) {
+	let adjustment = 0
+	for (const spaceId of new Set(game.partisans || [])) {
+		const space = data.spaces[spaceId]
+		if (!space?.vp || game.control?.[spaceId] !== AXIS) continue
+		if (friendlyPiecesInSpace(game, data, AXIS, spaceId).length) continue
+		adjustment -= Number(space.vp) || 0
+	}
+	return adjustment
+}
+
+function syncPartisanVp(game, data) {
+	const previous = Number(game.partisan_vp_adjustment) || 0
+	const next = partisanVpAdjustment(game, data)
+	const delta = next - previous
+	if (delta) game.vp += delta
+	game.partisan_vp_adjustment = next
+	return delta
+}
+
 function effectiveControl(game, spaceId, control = game.control?.[spaceId], space = null) {
 	const neutralAtWar = space?.nation && game.neutrals?.[space.nation]?.at_war
 	if (control === "neutral" && game.events?.casablanca && !neutralAtWar) return ALLIED
 	return control
 }
 
-function adjustVpForControl(game, space, previousControl, side) {
+function adjustVpForControl(game, space, previousControl, side, writeLog = true) {
 	const value = Number(space?.vp) || 0
 	if (!value || previousControl === side || (isVichyVpSpace(space) && !game.events?.casablanca)) return 0
 	const previousEffective = effectiveControl(game, space.id, previousControl, space)
@@ -147,20 +167,33 @@ function adjustVpForControl(game, space, previousControl, side) {
 	else if (previousEffective !== AXIS && nextEffective === AXIS) change = value
 	if (!change) return 0
 	game.vp += change
-	log(game, "map.log.control_vp", { space: `s${space.id}`, delta: `${change > 0 ? "+" : ""}${change}`, vp: game.vp })
+	if (writeLog) log(game, "map.log.control_vp", { space: `s${space.id}`, delta: `${change > 0 ? "+" : ""}${change}`, vp: game.vp })
 	return change
 }
 
+function removePartisanAfterControlLoss(game, spaceId, side) {
+	if (side === AXIS || !game.partisans?.includes(spaceId)) return false
+	game.partisans = game.partisans.filter((candidate) => candidate !== spaceId)
+	return true
+}
+
 function setControl(game, data, spaceId, side, nation = null) {
+	syncPartisanVp(game, data)
 	const space = data.spaces[spaceId]
 	if (!space || space.kind !== "land" || !side) return false
 	const previousControl = game.control[spaceId]
 	const changed = previousControl !== side
-	if (!changed) return false
+	if (!changed) {
+		if (removePartisanAfterControlLoss(game, spaceId, side)) {
+			syncPartisanVp(game, data)
+			log(game, "event.log.partisan_remove", { space: `s${spaceId}` })
+		}
+		return false
+	}
 	game.control[spaceId] = side
 	game.control_nation ||= []
 	game.control_nation[spaceId] = nation || inferredControlNation(game, data, spaceId)
-	adjustVpForControl(game, space, previousControl, side)
+	const controlVpChange = adjustVpForControl(game, space, previousControl, side, false)
 	if (game.trench?.[spaceId] && game.trench_owner?.[spaceId] !== side) removeTrench(game, spaceId)
 	if (space.fort && originalFortOwner(data, spaceId) && originalFortOwner(data, spaceId) !== side) {
 		game.destroyed_forts ||= []
@@ -170,10 +203,16 @@ function setControl(game, data, spaceId, side, nation = null) {
 		const tobruk = data.spaces.find((candidate) => candidate?.name === "Tobruk")
 		if (tobruk) removeTrench(game, tobruk.id)
 	}
+	const removedPartisan = removePartisanAfterControlLoss(game, spaceId, side)
+	const partisanVpChange = syncPartisanVp(game, data)
+	if (removedPartisan) log(game, "event.log.partisan_remove", { space: `s${spaceId}` })
+	const vpChange = controlVpChange + partisanVpChange
+	if (vpChange) log(game, "map.log.control_vp", { space: `s${space.id}`, delta: `${vpChange > 0 ? "+" : ""}${vpChange}`, vp: game.vp })
 	return changed
 }
 
 function enterSpace(game, data, pieceId, destination) {
+	syncPartisanVp(game, data)
 	const piece = data.pieces[pieceId]
 	if (!piece) throw new Error(`unknown piece ${pieceId}`)
 	game.pieces[pieceId] = destination
@@ -187,6 +226,7 @@ function enterSpace(game, data, pieceId, destination) {
 		const previousControl = game.control[destination]
 		if (setControl(game, data, destination, side, piece.nation)) Orders.fulfillForOccupation(game, data, pieceId, destination, previousControl)
 	}
+	syncPartisanVp(game, data)
 }
 
 function activationGroup(nation) {
@@ -312,17 +352,18 @@ function canStack(game, data, pieceId, destination) {
 	return canStackFormation(game, data, [pieceId], destination)
 }
 
-function isMechanizedInSupply(game, data, adjacency, pieceId) {
+function isMechanizedInSupply(game, data, adjacency, pieceId, destination = game.pieces[pieceId]) {
 	const piece = data.pieces[pieceId]
 	const allowance = Number(game.reduced.includes(pieceId) ? piece?.rmf : piece?.mf) || 0
-	return allowance >= 4 && activationSupplyStatus(game, data, adjacency, pieceId) !== "oos" && !Weather.isGermanInSovietUnion(game, data, pieceId)
+	const winter42German = Weather.isWinter42(game) && piece?.nation === "ge" && data.spaces[destination]?.nation === "su"
+	return allowance >= 4 && activationSupplyStatus(game, data, adjacency, pieceId) !== "oos" && !winter42German
 }
 
 function mayEndMovement(game, data, adjacency, pieceId, destination) {
 	const piece = data.pieces[pieceId]
 	if (piece?.nation === "su" && game.events?.tito && data.spaces[destination]?.nation === "yu") return false
 	if (!game.action?.attack_spaces?.includes(destination)) return true
-	return isMechanizedInSupply(game, data, adjacency, pieceId)
+	return isMechanizedInSupply(game, data, adjacency, pieceId, destination)
 }
 
 function sovietTrenchCount(game, data) {
@@ -711,10 +752,12 @@ function traceSupplyDetails(game, data, adjacency, side, start, nation = null, o
 		if (beachSources.has(current.id) && !excludedSources.has(current.id)) {
 			const status = !current.limited && current.distance <= 2 ? "full" : "limited"
 			if (includeTerminals) terminals.push({ space_id: current.id, kind: "beachhead", status, distance: current.distance, path_type: current.limited ? "limited" : "regular" })
-			if (status === "full") best = "full"
-			else if (best === "oos") best = "limited"
-			if (status === "full" && options.stop_at_full) return { status: "full", terminals }
-			continue
+			if (status === "full") {
+				best = "full"
+				if (options.stop_at_full) return { status: "full", terminals }
+				continue
+			}
+			if (best === "oos") best = "limited"
 		}
 		if (sources.has(current.id) && !excludedSources.has(current.id)) {
 			const space = data.spaces[current.id]
@@ -724,10 +767,12 @@ function traceSupplyDetails(game, data, adjacency, side, start, nation = null, o
 			const partisanAtTerminal = side === AXIS && partisans.has(current.id)
 			const status = current.limited || partisanAtTerminal || (space?.supply === "axis_limited" && !current.fullSea) || naplesIntoFrance || sunnyItaly || winter42 ? "limited" : "full"
 			if (includeTerminals) terminals.push({ space_id: current.id, kind: "supply_source", status, distance: current.distance, path_type: current.limited ? "limited" : "regular" })
-			if (status === "full") best = "full"
-			else if (best === "oos") best = "limited"
-			if (status === "full" && options.stop_at_full) return { status: "full", terminals }
-			continue
+			if (status === "full") {
+				best = "full"
+				if (options.stop_at_full) return { status: "full", terminals }
+				continue
+			}
+			if (best === "oos") best = "limited"
 		}
 		for (const edge of adjacency[current.id] || []) {
 			if (data.spaces[edge.to]?.kind !== "sr" && !controlledBy(game, edge.to, side)) continue
@@ -797,6 +842,7 @@ module.exports = {
 	pieceSupplyStatus,
 	pieceSide,
 	normalizeControlNations,
+	partisanVpAdjustment,
 	piecesInSpace,
 	removeTrench,
 	recordActivationSupply,
@@ -804,6 +850,7 @@ module.exports = {
 	resolveEntrenchAttempt,
 	setControl,
 	SOVIET_TRENCH_LIMIT,
+	syncPartisanVp,
 	supplySources,
 	traceSupply,
 	traceSupplyDetails,

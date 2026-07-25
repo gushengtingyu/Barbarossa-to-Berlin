@@ -27,6 +27,52 @@ function baseGame(pieceCount, spaceCount) {
 	}
 }
 
+function multiSpaceFixture(originCount, spaceFilter = () => true, originFilter = () => true) {
+	const adjacency = Engine.map.buildAdjacency(data)
+	const restricted = new Set(["Leningrad", "Moscow", "Maikop", "Stalingrad", "Armavir", "Chelyabiinsk", "Sverdlovsk"])
+	const target = data.spaces.find((space) => {
+		if (!space || space.kind !== "land" || restricted.has(space.name) || !spaceFilter(space)) return false
+		return (adjacency[space.id] || []).filter((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land" && !restricted.has(data.spaces[edge.to].name) && originFilter(data.spaces[edge.to])).length >= originCount
+	})
+	const origins = adjacency[target.id]
+		.filter((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land" && !restricted.has(data.spaces[edge.to].name) && originFilter(data.spaces[edge.to]))
+		.slice(0, originCount)
+		.map((edge) => edge.to)
+	return { target: target.id, origins }
+}
+
+function combatSelectionGame(seed, target, placements, { turn = 8, activationSupply = {} } = {}) {
+	const defender = data.pieces.find((piece) => piece?.side === "allied").id
+	const origins = [...new Set(placements.map(([, origin]) => origin))]
+	const game = rules.setup(seed, "Campaign", {})
+	game.pieces.fill(0)
+	for (const [pieceId, origin] of placements) game.pieces[pieceId] = origin
+	game.pieces[defender] = target
+	game.control = data.spaces.map((space) => (space ? "axis" : null))
+	game.control[target] = "allied"
+	game.active = "Axis"
+	game.state = "ops_combat"
+	game.phase = "action"
+	game.turn = turn
+	game.action_round = 1
+	game.events = {}
+	game.action = {
+		mode: "ops",
+		points: 0,
+		move_spaces: [],
+		attack_spaces: origins,
+		moved: [],
+		sr_moved: [],
+		attacked: [],
+		defended: [],
+		used_pieces: [],
+		entrenching: [],
+		piece: null,
+		activation_supply: Object.assign(Object.fromEntries(placements.map(([pieceId]) => [pieceId, "full"])), activationSupply),
+	}
+	return game
+}
+
 test("control entry removes enemy trenches, destroys enemy forts, and intact friendly forts give Limited Supply", () => {
 	const localData = {
 		spaces: [
@@ -424,6 +470,169 @@ test("multi-space combat requires a participating mechanized unit in every addit
 	assert.doesNotMatch(renderLog(game).join("\n"), /(?:进攻方|防守方)开火（/)
 })
 
+test("multi-space combat automatically chooses the primary origin regardless of click order", () => {
+	const { target, origins } = multiSpaceFixture(2)
+	const infantry = data.pieces.find((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type !== "mechanized").id
+	const mechanized = data.pieces.find((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type === "mechanized" && Number(piece.mf) >= 4).id
+
+	function selectInOrder(seed, order) {
+		let game = combatSelectionGame(seed, target, [
+			[infantry, origins[0]],
+			[mechanized, origins[1]],
+		])
+		for (const pieceId of order) {
+			assert.ok(rules.view(game, "Axis").actions.piece.includes(pieceId))
+			game = rules.action(game, "Axis", "piece", pieceId)
+		}
+		assert.ok(rules.view(game, "Axis").actions.space.includes(target))
+		game = rules.action(game, "Axis", "space", target)
+		return game
+	}
+
+	const infantryFirst = selectInOrder(21, [infantry, mechanized])
+	const mechanizedFirst = selectInOrder(22, [mechanized, infantry])
+	assert.deepEqual(infantryFirst.combat.origin_spaces, [origins[0], origins[1]])
+	assert.deepEqual(mechanizedFirst.combat.origin_spaces, infantryFirst.combat.origin_spaces)
+})
+
+test("all-mechanized multi-space combat uses a stable primary-origin tie break", () => {
+	const { target, origins } = multiSpaceFixture(2)
+	const mechanized = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type === "mechanized" && Number(piece.mf) >= 4).slice(0, 2)
+	const placements = [
+		[mechanized[0].id, origins[0]],
+		[mechanized[1].id, origins[1]],
+	]
+	const expectedOrigins = origins.slice().sort((a, b) => a - b)
+
+	for (const [seed, order] of [
+		[28, mechanized],
+		[29, mechanized.slice().reverse()],
+	]) {
+		let game = combatSelectionGame(seed, target, placements)
+		for (const piece of order) game = rules.action(game, "Axis", "piece", piece.id)
+		game = rules.action(game, "Axis", "space", target)
+		assert.deepEqual(game.combat.origin_spaces, expectedOrigins)
+	}
+})
+
+test("multi-space combat permits completable intermediate selections and select-all supplies the required mechanized unit", () => {
+	const { target, origins } = multiSpaceFixture(2)
+	const infantry = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type !== "mechanized").slice(0, 2)
+	const mechanized = data.pieces.find((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type === "mechanized" && Number(piece.mf) >= 4)
+	let game = combatSelectionGame(23, target, [
+		[infantry[0].id, origins[0]],
+		[infantry[1].id, origins[1]],
+		[mechanized.id, origins[1]],
+	])
+
+	game = rules.action(game, "Axis", "piece", infantry[0].id)
+	assert.ok(rules.view(game, "Axis").actions.piece.includes(infantry[1].id))
+	game = rules.action(game, "Axis", "piece", infantry[1].id)
+	let actions = rules.view(game, "Axis").actions
+	assert.equal(actions.space, undefined)
+	assert.ok(actions.piece.includes(mechanized.id))
+	assert.equal(actions.select_all, 1)
+
+	game = rules.action(game, "Axis", "select_all")
+	actions = rules.view(game, "Axis").actions
+	assert.ok(actions.space.includes(target))
+	assert.deepEqual(game.combat.origin_spaces, [origins[0], origins[1]])
+
+	game = rules.action(game, "Axis", "piece", infantry[0].id)
+	assert.deepEqual(game.combat.origin_spaces, [origins[1]])
+	assert.ok(rules.view(game, "Axis").actions.space.includes(target))
+})
+
+test("three-origin combat still requires participating mechanized units in two origins", () => {
+	const { target, origins } = multiSpaceFixture(3)
+	const infantry = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type !== "mechanized").slice(0, 2)
+	const mechanized = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type === "mechanized" && Number(piece.mf) >= 4).slice(0, 2)
+	let game = combatSelectionGame(24, target, [
+		[infantry[0].id, origins[0]],
+		[mechanized[0].id, origins[1]],
+		[infantry[1].id, origins[2]],
+		[mechanized[1].id, origins[2]],
+	])
+
+	for (const pieceId of [infantry[1].id, mechanized[0].id, infantry[0].id]) {
+		assert.ok(rules.view(game, "Axis").actions.piece.includes(pieceId))
+		game = rules.action(game, "Axis", "piece", pieceId)
+	}
+	assert.equal(rules.view(game, "Axis").actions.space, undefined)
+	assert.ok(rules.view(game, "Axis").actions.piece.includes(mechanized[1].id))
+	game = rules.action(game, "Axis", "piece", mechanized[1].id)
+	assert.ok(rules.view(game, "Axis").actions.space.includes(target))
+	assert.deepEqual(game.combat.origin_spaces, [origins[0], ...origins.slice(1).sort((a, b) => a - b)])
+})
+
+test("an origin cannot be added when no qualifying mechanized unit can complete the attack", () => {
+	const { target, origins } = multiSpaceFixture(2)
+	const infantry = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type !== "mechanized").slice(0, 2)
+	let game = combatSelectionGame(25, target, [
+		[infantry[0].id, origins[0]],
+		[infantry[1].id, origins[1]],
+	])
+
+	game = rules.action(game, "Axis", "piece", infantry[0].id)
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(infantry[1].id), false)
+})
+
+test("OOS and Winter 1942 German mechanized units cannot complete a multi-space attack", () => {
+	const infantry = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type !== "mechanized").slice(0, 2)
+	const mechanized = data.pieces.find((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type === "mechanized" && Number(piece.mf) >= 4)
+	const western = multiSpaceFixture(2)
+	let game = combatSelectionGame(
+		26,
+		western.target,
+		[
+			[infantry[0].id, western.origins[0]],
+			[infantry[1].id, western.origins[1]],
+			[mechanized.id, western.origins[1]],
+		],
+		{ activationSupply: { [mechanized.id]: "oos" } },
+	)
+	game = rules.action(game, "Axis", "piece", infantry[0].id)
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(infantry[1].id), false)
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(mechanized.id), false)
+
+	const soviet = multiSpaceFixture(
+		2,
+		(space) => space.nation === "su",
+		(space) => space.nation === "su",
+	)
+	game = combatSelectionGame(
+		27,
+		soviet.target,
+		[
+			[infantry[0].id, soviet.origins[0]],
+			[infantry[1].id, soviet.origins[1]],
+			[mechanized.id, soviet.origins[1]],
+		],
+		{ turn: 4 },
+	)
+	game = rules.action(game, "Axis", "piece", infantry[0].id)
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(infantry[1].id), false)
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(mechanized.id), false)
+})
+
+test("combat confirmation revalidates a restored multi-space selection", () => {
+	const { target, origins } = multiSpaceFixture(2)
+	const infantry = data.pieces.filter((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type !== "mechanized").slice(0, 2)
+	const mechanized = data.pieces.find((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.unit_type === "mechanized" && Number(piece.mf) >= 4)
+	let game = combatSelectionGame(30, target, [
+		[infantry[0].id, origins[0]],
+		[infantry[1].id, origins[1]],
+		[mechanized.id, origins[1]],
+	])
+	game = rules.action(game, "Axis", "piece", infantry[0].id)
+	game = rules.action(game, "Axis", "piece", mechanized.id)
+	game = rules.action(game, "Axis", "space", target)
+	assert.equal(game.state, "combat_confirm")
+
+	game.combat.attackers = [infantry[0].id, infantry[1].id]
+	assert.throws(() => rules.action(game, "Axis", "confirm"), /illegal multi-space combat/)
+})
+
 test("single-origin combat selects units and target without intermediate steps", () => {
 	const adjacency = Engine.map.buildAdjacency(data)
 	const target = data.spaces.find((space) => space?.kind === "land" && (adjacency[space.id] || []).some((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land"))
@@ -624,7 +833,7 @@ test("Rule 11.44 prefers friendly control at each retreat step instead of counti
 	assert.deepEqual(CombatStates.preferredRetreatPaths(game, localData, adjacency, 1), [[2, 4]])
 })
 
-test("OOS Western defenders lose terrain and trench benefits while OOS Soviets retain trench benefits", () => {
+test("OOS defenders retain ordinary terrain while only Soviets retain trench benefits", () => {
 	const localData = {
 		spaces: [
 			null,
@@ -692,9 +901,9 @@ test("OOS Western defenders lose terrain and trench benefits while OOS Soviets r
 		defenders: [2],
 	}
 	Engine.combat.resolve(western, localData, map, [[], [], []], westernCombat)
-	assert.equal(westernCombat.attacker_shift, 0)
+	assert.equal(westernCombat.attacker_shift, -1)
 	assert.equal(westernCombat.defender_shift, -1)
-	assert.equal(Engine.combat.canCancelRetreat(western, localData, map, [[], [], []], westernCombat), false)
+	assert.equal(Engine.combat.canCancelRetreat(western, localData, map, [[], [], []], westernCombat), true)
 	const soviet = {
 		...baseGame(4, 3),
 		seed: 5,
@@ -709,7 +918,7 @@ test("OOS Western defenders lose terrain and trench benefits while OOS Soviets r
 		defenders: [3],
 	}
 	Engine.combat.resolve(soviet, localData, map, [[], [], []], sovietCombat)
-	assert.equal(sovietCombat.attacker_shift, -1)
+	assert.equal(sovietCombat.attacker_shift, -2)
 	assert.equal(sovietCombat.defender_shift, 0)
 	assert.equal(Engine.combat.canCancelRetreat(soviet, localData, map, [[], [], []], sovietCombat), true)
 })
