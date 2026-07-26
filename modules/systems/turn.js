@@ -241,8 +241,11 @@ function continueAfterAction(game, side, runtime) {
 		return
 	}
 	if (game.turn === 1) {
-		if (side === AXIS) startAction(game, ALLIED, 1, runtime)
-		else startEndPhases(game)
+		if (side === AXIS) startAttrition(game, AXIS, true)
+		else {
+			settleActionPhase(game)
+			startAttrition(game, ALLIED)
+		}
 		return
 	}
 	if (side === AXIS && game.action_round === 6) startAttrition(game, AXIS, true)

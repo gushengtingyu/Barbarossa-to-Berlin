@@ -48,14 +48,15 @@ function finishAxisOpeningEvent(game) {
 	return game
 }
 
+function finishAxisOpeningAttrition(game) {
+	game = finishAxisOpeningEvent(game)
+	assert.equal(game.state, "axis_attrition")
+	return rules.action(game, "Axis", "continue")
+}
+
 function finishTurnEndPhases(game) {
-	for (const [role, state, verb] of [
-		["Axis", "axis_attrition", "continue"],
-		["Allied", "allied_attrition", "continue"],
-	]) {
-		assert.equal(game.state, state)
-		game = rules.action(game, role, verb)
-	}
+	assert.equal(game.state, "allied_attrition")
+	game = rules.action(game, "Allied", "continue")
 	if (game.state === "allied_replacements") game = rules.action(game, "Allied", "done")
 	if (game.state === "axis_replacements") game = rules.action(game, "Axis", "done")
 	for (const role of ["Allied", "Axis"]) {
@@ -212,7 +213,7 @@ test("views redact opponent hands and reject forged actions", () => {
 })
 
 test("action-round cards expose per-card menu actions without entering card mode", () => {
-	let game = finishAxisOpeningEvent(setupWithPlayableAlliedHand())
+	let game = finishAxisOpeningAttrition(setupWithPlayableAlliedHand())
 	const view = rules.view(game, "Allied")
 	assert.equal(game.state, "action_select")
 	assert.equal(view.actions.card, undefined)
@@ -224,9 +225,49 @@ test("action-round cards expose per-card menu actions without entering card mode
 	assert.equal(game.action.track, "ops")
 })
 
+test("Turn 1 resolves each side's attrition immediately after its own action", () => {
+	let game = finishAxisOpeningEvent(setupWithPlayableAlliedHand())
+	assert.equal(game.phase, "attrition")
+	assert.equal(game.state, "axis_attrition")
+	assert.equal(game.active, "Axis")
+	assert.equal(game.resume_allied_action_after_axis_attrition, true)
+	assert.deepEqual(game.action_track.axis, ["other_event"])
+	assert.deepEqual(game.action_track.allied, [])
+
+	const isolatedPieces = data.pieces
+		.filter((piece) => piece?.side === "axis" && piece.size === "scu")
+		.slice(0, 2)
+		.map((piece) => piece.id)
+	const isolatedSpace = data.spaces.find((space) => space?.kind === "land" && space.nation === "su" && !space.supply).id
+	const germanSupply = data.spaces.find((space) => space?.kind === "land" && space.nation === "ge" && space.supply === "axis").id
+	game.pieces.fill(0)
+	game.pieces[isolatedPieces[0]] = isolatedSpace
+	game.control = data.spaces.map((space) => (space?.kind === "land" ? "allied" : null))
+	game.control[isolatedSpace] = "axis"
+	game.control[germanSupply] = "axis"
+
+	game = rules.action(game, "Axis", "continue")
+	assert.equal(game.pieces[isolatedPieces[0]], "eliminated:axis")
+	assert.equal(game.control[isolatedSpace], "allied")
+	assert.equal(game.phase, "action")
+	assert.equal(game.state, "action_select")
+	assert.equal(game.active, "Allied")
+	assert.equal(game.action_round, 1)
+	assert.equal(game.resume_allied_action_after_axis_attrition, undefined)
+
+	game.pieces[isolatedPieces[1]] = isolatedSpace
+	game.control[isolatedSpace] = "axis"
+	game = rules.action(game, "Allied", "auto_ops")
+	game = rules.action(game, "Allied", "done")
+	assert.equal(game.state, "allied_attrition")
+	assert.equal(game.pieces[isolatedPieces[1]], isolatedSpace)
+	game = rules.action(game, "Allied", "continue")
+	assert.equal(game.pieces[isolatedPieces[1]], isolatedSpace)
+})
+
 test("Turn 1 opening event and Allied automatic OPS advance to Turn 2", () => {
 	let game = setupWithPlayableAlliedHand()
-	game = finishAxisOpeningEvent(game)
+	game = finishAxisOpeningAttrition(game)
 	assert.equal(game.active, "Allied")
 	assert.equal(game.state, "action_select")
 	game = rules.action(game, "Allied", "auto_ops")
@@ -234,6 +275,8 @@ test("Turn 1 opening event and Allied automatic OPS advance to Turn 2", () => {
 	game = rules.action(game, "Allied", "done")
 	assert.deepEqual(game.action_track.axis, ["other_event"])
 	assert.deepEqual(game.action_track.allied, ["one_ops"])
+	assert.equal(game.state, "allied_attrition")
+	assert.equal(game.active, "Allied")
 	game = finishTurnEndPhases(game)
 	assert.equal(game.turn, 2)
 	assert.equal(game.state, "orders_axis")
@@ -305,7 +348,7 @@ test("recorded legal actions replay to a byte-equivalent normalized state", () =
 	let game = setupWithPlayableAlliedHand()
 	const seed = game.initial_seed
 	// setupWithPlayableAlliedHand has already recorded the opening-card choice.
-	game = finishAxisOpeningEvent(game)
+	game = finishAxisOpeningAttrition(game)
 	game = rules.action(game, "Allied", "auto_ops")
 	game = rules.action(game, "Allied", "done")
 	game = finishTurnEndPhases(game)

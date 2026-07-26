@@ -586,6 +586,8 @@ test("Rally SR actions enumerate and execute Reserve Box entry destinations", ()
 	game.state = "sr_piece"
 	game.phase = "action"
 	game.active = "Axis"
+	game.turn = 2
+	game.action_round = 1
 	game.action = { mode: "sr", points: 1, sr_moved: [], piece: null }
 	assert.equal(rules.view(game, "Axis").actions.piece.includes(pieceId), true)
 	game = rules.action(game, "Axis", "piece", pieceId)

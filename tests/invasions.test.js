@@ -419,6 +419,7 @@ test("Axis attack on an empty beachhead removes it without a combat die roll", (
 	game.phase = "action"
 	game.state = "ops_combat"
 	game.active = "Axis"
+	game.turn = 2
 	game.action_round = 2
 	game.action = {
 		mode: "ops",
