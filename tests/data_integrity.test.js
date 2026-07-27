@@ -190,7 +190,7 @@ test("generated map data contains only valid endpoints", () => {
 	const { data } = build()
 	const ids = new Set(data.spaces.filter(Boolean).map((space) => space.id))
 	assert.equal(ids.size, 352)
-	assert.equal(data.edges.length, 639)
+	assert.equal(data.edges.length, 658)
 	assert.equal(
 		data.edges.every((edge) => ids.has(edge.a) && ids.has(edge.b)),
 		true,
@@ -281,7 +281,7 @@ test("printed map symbols and special attack restrictions are represented as aut
 			true,
 		)
 	}
-	assert.deepEqual(Object.fromEntries(["regular", "river", "sr"].map((type) => [type, data.edges.filter((edge) => edge.type === type).length])), { regular: 530, river: 71, sr: 38 })
+	assert.deepEqual(Object.fromEntries(["regular", "river", "sr"].map((type) => [type, data.edges.filter((edge) => edge.type === type).length])), { regular: 543, river: 77, sr: 38 })
 	for (const neighbor of [48, 51]) {
 		assert.equal(
 			data.edges.some((edge) => edge.type === "regular" && ((edge.a === 47 && edge.b === neighbor) || (edge.a === neighbor && edge.b === 47))),

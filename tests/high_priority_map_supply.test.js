@@ -43,14 +43,14 @@ test("axis_no_entry spaces reject Axis movement and advance while remaining open
 	assert.equal(Engine.combat.legalAdvancePaths(game, localData, Engine.map, localAdjacency, combat, 1).has(2), false)
 })
 
-test("the map contains exactly one regular Oslo-Jutland edge", () => {
+test("the map contains exactly one river Oslo-Jutland edge", () => {
 	const oslo = space("Oslo")
 	const jutland = space("Jutland")
-	const matchingEdges = data.edges.filter((edge) => edge.type === "regular" && ((edge.a === oslo && edge.b === jutland) || (edge.a === jutland && edge.b === oslo)))
+	const matchingEdges = data.edges.filter((edge) => edge.type === "river" && ((edge.a === oslo && edge.b === jutland) || (edge.a === jutland && edge.b === oslo)))
 
 	assert.equal(matchingEdges.length, 1)
-	assert.equal(adjacency[oslo].filter((edge) => edge.to === jutland && edge.type === "regular").length, 1)
-	assert.equal(adjacency[jutland].filter((edge) => edge.to === oslo && edge.type === "regular").length, 1)
+	assert.equal(adjacency[oslo].filter((edge) => edge.to === jutland && edge.type === "river").length, 1)
+	assert.equal(adjacency[jutland].filter((edge) => edge.to === oslo && edge.type === "river").length, 1)
 })
 
 test("a Limited supply source does not hide a reachable Full supply source", () => {

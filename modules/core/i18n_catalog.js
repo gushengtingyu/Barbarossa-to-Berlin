@@ -2772,7 +2772,7 @@
 	},
 	"ui.piece.eliminated": {
 		"params": [],
-		"zh-CN": "被消灭单位池",
+		"zh-CN": "被消灭格",
 		"en": "Eliminated Units Box"
 	},
 	"ui.piece.marker_status": {
@@ -2796,7 +2796,7 @@
 	},
 	"ui.piece.reserve": {
 		"params": [],
-		"zh-CN": "预备兵力池",
+		"zh-CN": "预备格",
 		"en": "Reserve Box"
 	},
 	"ui.piece.space": {
@@ -3119,7 +3119,7 @@
 	},
 	"ui.toolbar.reinforcements": {
 		"params": [],
-		"zh-CN": "增援与兵力池",
+		"zh-CN": "增援板",
 		"en": "Reinforcements and force pools"
 	},
 	"ui.toolbar.removed": {

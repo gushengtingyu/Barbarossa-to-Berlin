@@ -88,8 +88,8 @@
 	"ui.space.unit_count": { "params": ["count"], "zh-CN": "{count}个单位", "en": "{count} units" },
 	"ui.piece.off_map": { "params": [], "zh-CN": "场外", "en": "Off map" },
 	"ui.piece.space": { "params": ["id"], "zh-CN": "空间 {id}", "en": "Space {id}" },
-	"ui.piece.reserve": { "params": [], "zh-CN": "预备兵力池", "en": "Reserve Box" },
-	"ui.piece.eliminated": { "params": [], "zh-CN": "被消灭单位池", "en": "Eliminated Units Box" },
+	"ui.piece.reserve": { "params": [], "zh-CN": "预备格", "en": "Reserve Box" },
+	"ui.piece.eliminated": { "params": [], "zh-CN": "被消灭格", "en": "Eliminated Units Box" },
 	"ui.piece.turn_track": { "params": [], "zh-CN": "回合轨", "en": "Turn track" },
 	"ui.piece.available": { "params": [], "zh-CN": "可用单位", "en": "Available units" },
 	"ui.piece.reduced": { "params": [], "zh-CN": "（减员）", "en": " (reduced)" },
@@ -745,7 +745,7 @@
 	},
 	"ui.toolbar.reinforcements": {
 		"params": [],
-		"zh-CN": "增援与兵力池",
+		"zh-CN": "增援板",
 		"en": "Reinforcements and force pools"
 	},
 	"ui.toolbar.removed": {
