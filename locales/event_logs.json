@@ -326,7 +326,7 @@
 	},
 	"event.log.strangle": {
 		"params": [],
-		"zh-CN": "绞杀行动：法国境内轴心单位此后处于有限补给，轴心国不得在法国进行战略调动。",
+		"zh-CN": "绞杀行动：法国境内轴心单位此后处于有限补给，轴心国不得在法国进行战略调整。",
 		"en": "Operation Strangle: Axis units in France are now in Limited Supply, and the Axis may not use Strategic Redeployment in France."
 	},
 	"event.log.taifun": {
@@ -341,7 +341,7 @@
 	},
 	"event.log.totaler_krieg": {
 		"params": ["bonus"],
-		"zh-CN": "总体战生效：轴心国此后不能自动胜利；德军装甲补充上限从下一回合起提高至 3{bonus}。",
+		"zh-CN": "总体战生效：轴心国此后不能自动胜利；德军装甲补员上限从下一回合起提高至 3{bonus}。",
 		"en": "Totaler Krieg is in effect: the Axis may no longer win an Automatic Victory; the German Panzer replacement limit rises to three beginning next turn{bonus}."
 	},
 	"event.log.us_entry": {

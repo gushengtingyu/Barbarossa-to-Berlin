@@ -46,7 +46,7 @@ test("normal turn resolves Axis attrition between the sixth Axis and Allied acti
 	assert.equal(game.state, "axis_attrition")
 	assert.equal(game.active, "Axis")
 
-	game = rules.action(game, "Axis", "continue")
+	game = rules.action(game, "Axis", "apply_attrition")
 	assert.equal(game.phase, "action")
 	assert.equal(game.state, "action_select")
 	assert.equal(game.active, "Allied")
@@ -64,7 +64,7 @@ test("normal turn resolves Axis attrition between the sixth Axis and Allied acti
 	assert.equal(game.state, "allied_attrition")
 	assert.equal(game.active, "Allied")
 
-	game = rules.action(game, "Allied", "continue")
+	game = rules.action(game, "Allied", "apply_attrition")
 	assert.equal(game.phase, "replacement")
 	assert.equal(game.state, "allied_replacements")
 

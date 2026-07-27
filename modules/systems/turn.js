@@ -310,7 +310,7 @@ function finishInvasionReserve(game, runtime) {
 
 function startAfterOrders(game, runtime) {
 	if (game.turn === 1) logTurnHeading(game)
-	startAction(game, AXIS, 1, runtime)
+	startAction(game, AXIS, game.turn === 1 ? 6 : 1, runtime)
 }
 
 function create(runtime) {

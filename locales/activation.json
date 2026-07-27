@@ -46,7 +46,7 @@
 	},
 	"activation.log.sr": {
 		"params": [],
-		"zh-CN": "战略调动",
+		"zh-CN": "战略调整",
 		"en": "Strategic Redeployment"
 	},
 	"activation.log.sr_move": {
@@ -81,17 +81,17 @@
 	},
 	"activation.sr.choose_piece": {
 		"params": ["points"],
-		"zh-CN": "选择战略调动单位（剩余 {points} SR）。",
+		"zh-CN": "选择战略调整单位（剩余 {points} SR）。",
 		"en": "Choose a Strategic Redeployment unit ({points} SR remaining)."
 	},
 	"activation.sr.destination": {
 		"params": [],
-		"zh-CN": "选择战略调动目的地。",
+		"zh-CN": "选择战略调整目的地。",
 		"en": "Choose a Strategic Redeployment destination."
 	},
 	"activation.sr.stalin_destination": {
 		"params": [],
-		"zh-CN": "选择斯大林战略调动目的地。",
+		"zh-CN": "选择斯大林战略调整目的地。",
 		"en": "Choose Stalin's Strategic Redeployment destination."
 	}
 }

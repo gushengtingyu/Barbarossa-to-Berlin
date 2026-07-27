@@ -148,6 +148,7 @@ test("combat card DRMs, Devil's Gardens, Panzerfaust, retention, discard, and re
 	assert.equal(Engine.combatCards.drm(game.combat, "allied"), 2)
 	assert.equal(Engine.combatCards.drm(game.combat, "axis"), 1)
 	assert.equal(Engine.combatCards.attackerTerrainShift(game.combat), -1)
+	assert.equal(Engine.combat.canCancelRetreat(game, data, fullSupplyMap, noAdjacency, game.combat), true)
 	assert.deepEqual(Engine.combatCards.panzerfaustTargets(game, data, game.combat), [suMech])
 
 	game.combat.defender_loss = 2
@@ -164,6 +165,57 @@ test("combat card DRMs, Devil's Gardens, Panzerfaust, retention, discard, and re
 	assert.deepEqual(game.combat_cards.allied, [])
 	assert.ok(game.discards.allied.includes(17))
 	assert.ok(game.discards.allied.includes(18))
+})
+
+test("Devil's Gardens applies every Mountain combat effect and Krim removes the Sevastopol fort advance stop", () => {
+	const alliedMech = pieceId("us", true)
+	const geMech = pieceId("ge", true)
+	const desert = data.spaces.find((space) => space?.terrain === "desert" && space.kind === "land").id
+	const origin = data.spaces.find((space) => space?.kind === "land" && space.id !== desert).id
+	const desertBeyond = data.spaces.find(
+		(space) => space?.kind === "land" && space.nation === "su" && space.attack_requires_event !== "axis_no_entry" && space.id !== origin && space.id !== desert && !space.fort && !["forest", "mountain", "swamp"].includes(space.terrain),
+	).id
+	const localAdjacency = []
+	localAdjacency[origin] = [{ to: desert, type: "regular" }]
+	localAdjacency[desert] = [
+		{ to: origin, type: "regular" },
+		{ to: desertBeyond, type: "regular" },
+	]
+	localAdjacency[desertBeyond] = [{ to: desert, type: "regular" }]
+
+	let game = combatGame("allied", alliedMech, geMech, desert)
+	game.pieces[alliedMech] = origin
+	game.pieces[geMech] = 0
+	game.control = data.spaces.map((space) => (space ? "allied" : null))
+	game.action = { attack_spaces: [], activation_supply: { [alliedMech]: "full" } }
+	game.combat.cc_played.axis = [73]
+	game.combat.advanced = []
+	game.combat.retreat_distance = 0
+	let paths = Engine.combat.legalAdvancePaths(game, data, Engine.map, localAdjacency, game.combat, alliedMech)
+	assert.deepEqual(paths.get(desert), [desert])
+	assert.equal(paths.has(desertBeyond), false)
+
+	const sevastopol = data.spaces.find((space) => space?.name === "Sevastopol").id
+	const beyond = desertBeyond
+	localAdjacency[origin] = [{ to: sevastopol, type: "regular" }]
+	localAdjacency[sevastopol] = [
+		{ to: origin, type: "regular" },
+		{ to: beyond, type: "regular" },
+	]
+	localAdjacency[beyond] = [{ to: sevastopol, type: "regular" }]
+	game = combatGame("axis", geMech, alliedMech, sevastopol)
+	game.pieces[geMech] = origin
+	game.pieces[alliedMech] = 0
+	game.control = data.spaces.map((space) => (space ? "axis" : null))
+	game.action = { attack_spaces: [], activation_supply: { [geMech]: "full" } }
+	game.combat.advanced = []
+	game.combat.retreat_distance = 0
+	game.combat.krim = false
+	paths = Engine.combat.legalAdvancePaths(game, data, Engine.map, localAdjacency, game.combat, geMech)
+	assert.equal(paths.has(beyond), false)
+	game.combat.krim = true
+	paths = Engine.combat.legalAdvancePaths(game, data, Engine.map, localAdjacency, game.combat, geMech)
+	assert.deepEqual(paths.get(beyond), [sevastopol, beyond])
 })
 
 test("current games normalize additive combat-card containers", () => {

@@ -51,12 +51,12 @@ function finishAxisOpeningEvent(game) {
 function finishAxisOpeningAttrition(game) {
 	game = finishAxisOpeningEvent(game)
 	assert.equal(game.state, "axis_attrition")
-	return rules.action(game, "Axis", "continue")
+	return rules.action(game, "Axis", "apply_attrition")
 }
 
 function finishTurnEndPhases(game) {
 	assert.equal(game.state, "allied_attrition")
-	game = rules.action(game, "Allied", "continue")
+	game = rules.action(game, "Allied", "apply_attrition")
 	if (game.state === "allied_replacements") game = rules.action(game, "Allied", "done")
 	if (game.state === "axis_replacements") game = rules.action(game, "Axis", "done")
 	for (const role of ["Allied", "Axis"]) {
@@ -246,13 +246,13 @@ test("Turn 1 resolves each side's attrition immediately after its own action", (
 	game.control[isolatedSpace] = "axis"
 	game.control[germanSupply] = "axis"
 
-	game = rules.action(game, "Axis", "continue")
+	game = rules.action(game, "Axis", "apply_attrition")
 	assert.equal(game.pieces[isolatedPieces[0]], "eliminated:axis")
 	assert.equal(game.control[isolatedSpace], "allied")
 	assert.equal(game.phase, "action")
 	assert.equal(game.state, "action_select")
 	assert.equal(game.active, "Allied")
-	assert.equal(game.action_round, 1)
+	assert.equal(game.action_round, 6)
 	assert.equal(game.resume_allied_action_after_axis_attrition, undefined)
 
 	game.pieces[isolatedPieces[1]] = isolatedSpace
@@ -261,7 +261,7 @@ test("Turn 1 resolves each side's attrition immediately after its own action", (
 	game = rules.action(game, "Allied", "done")
 	assert.equal(game.state, "allied_attrition")
 	assert.equal(game.pieces[isolatedPieces[1]], isolatedSpace)
-	game = rules.action(game, "Allied", "continue")
+	game = rules.action(game, "Allied", "apply_attrition")
 	assert.equal(game.pieces[isolatedPieces[1]], isolatedSpace)
 })
 
@@ -320,6 +320,7 @@ test("a Turn 1 Barbarossa combat resolves losses and automatically closes an emp
 		if (game.state === "combat_advance" && actions.move?.length) game = rules.action(game, game.active, "move", actions.move[0])
 		else if (actions.piece?.length) game = rules.action(game, game.active, "piece", actions.piece[0])
 		else if (actions.move?.length) game = rules.action(game, game.active, "move", actions.move[0])
+		else if (actions.apply_attrition) game = rules.action(game, game.active, "apply_attrition")
 		else if (actions.continue) game = rules.action(game, game.active, "continue")
 		else if (actions.done) game = rules.action(game, game.active, "done")
 		else assert.fail(`combat stalled in ${game.state}`)

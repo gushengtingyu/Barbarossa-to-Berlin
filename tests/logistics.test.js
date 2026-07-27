@@ -15,6 +15,7 @@ test("all Campaign setup units can trace rules-book supply through reviewed Sea 
 	for (let pieceId = 1; pieceId < data.pieces.length; pieceId++) {
 		if (!Number.isInteger(game.pieces[pieceId]) || game.pieces[pieceId] <= 0) continue
 		if (!["axis", "allied"].includes(data.pieces[pieceId]?.side)) continue
+		if (!["scu", "lcu"].includes(data.pieces[pieceId]?.size)) continue
 		if (Engine.logistics.supplyStatus(game, data, Engine.map, adjacency, pieceId) === "oos") out.push(pieceId)
 	}
 	assert.deepEqual(out, [])
@@ -62,7 +63,7 @@ test("attrition state logs clickable unit and control details", () => {
 	game.control[isolated] = "axis"
 	game.active = "Axis"
 	game.state = "axis_attrition"
-	game = rules.action(game, "Axis", "continue")
+	game = rules.action(game, "Axis", "apply_attrition")
 	assert.ok(renderLog(game).includes(`P${pieceId}被消灭（断补）`))
 	assert.ok(renderLog(game).includes(`s${isolated}因断补转为盟军控制`))
 	assert.ok(renderLog(game, "en").includes(`P${pieceId} is eliminated (OOS)`))

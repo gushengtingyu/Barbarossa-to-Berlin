@@ -60,7 +60,8 @@ function standFastUnitsInSpace(game, data, spaceId) {
 	if (!side) return []
 	const units = []
 	for (let pieceId = 1; pieceId < game.pieces.length; pieceId++) {
-		if (game.pieces[pieceId] === Number(spaceId) && Neutrals.effectivePieceSide(game, data.pieces[pieceId]) === side) units.push(pieceId)
+		const piece = data.pieces[pieceId]
+		if (game.pieces[pieceId] === Number(spaceId) && ["scu", "lcu"].includes(piece?.size) && Neutrals.effectivePieceSide(game, piece) === side) units.push(pieceId)
 	}
 	return units
 }

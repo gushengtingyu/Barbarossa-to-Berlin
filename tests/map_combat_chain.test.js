@@ -129,6 +129,27 @@ test("control entry removes enemy trenches, destroys enemy forts, and intact fri
 	assert.equal(game.trench[3], undefined)
 })
 
+test("Rule 10.3 destroys a fort only when an enemy unit enters and never restores it after recapture", () => {
+	const localData = {
+		spaces: [null, { id: 1, name: "Fort", kind: "land", nation: "fr", side: "allied", fort: true }],
+		pieces: [null, { id: 1, name: "GE corps", side: "axis", nation: "ge", size: "scu", mf: 3, rmf: 3 }],
+	}
+	const game = baseGame(1, 4)
+	game.control[1] = "allied"
+
+	Engine.map.setControl(game, localData, 1, "axis")
+	assert.deepEqual(game.destroyed_forts, [])
+	assert.equal(Engine.map.isFortIntactForSide(game, localData, 1, "allied"), true)
+
+	Engine.map.enterSpace(game, localData, 1, 1)
+	assert.deepEqual(game.destroyed_forts, [1])
+	assert.equal(Engine.map.isFortIntactForSide(game, localData, 1, "allied"), false)
+
+	Engine.map.setControl(game, localData, 1, "allied")
+	assert.deepEqual(game.destroyed_forts, [1])
+	assert.equal(Engine.map.isFortIntactForSide(game, localData, 1, "allied"), false)
+})
+
 test("units may pass through a Combat marker but only supplied mechanized units may stop there", () => {
 	const localData = {
 		spaces: [

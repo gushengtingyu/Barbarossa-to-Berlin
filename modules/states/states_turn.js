@@ -56,7 +56,7 @@ function logAttritionResult(game, resolved, capturingSide) {
 
 function startAxisTurnOne(game) {
 	game.phase = "action"
-	game.action_round = 1
+	game.action_round = 6
 	game.orders = {
 		axis: { result: "none", fulfilled: true },
 		allied: { result: "stalin_orders", fulfilled: true },
@@ -100,9 +100,6 @@ function enterReplacementSegment(game, side, data, adjacency) {
 	game.active = roleForSide(side)
 	if (Engine.replacements.legalReplacementPieces(game, data, Engine.map, adjacency, side).length) return
 	Engine.replacements.discardUnspentRp(game, side)
-	Engine.state.log(game, "turn.log.no_replacement", {
-		side: side === ALLIED ? { "zh-CN": "盟军", en: "The Allies" } : { "zh-CN": "轴心国", en: "The Axis" },
-	})
 	if (side === ALLIED) enterReplacementSegment(game, AXIS, data, adjacency)
 	else Engine.turn.startDrawPhase(game)
 }
@@ -297,9 +294,9 @@ function register(registerState) {
 	registerState("axis_attrition", {
 		prompt(result) {
 			result.prompt("turn.attrition.axis")
-			result.action("continue")
+			result.action("apply_attrition")
 		},
-		continue(game, role, noun, { data, adjacency }) {
+		apply_attrition(game, role, noun, { data, adjacency }) {
 			const resolved = Engine.logistics.resolveAttrition(game, data, Engine.map, adjacency, AXIS)
 			logAttritionResult(game, resolved, ALLIED)
 			if (game.resume_allied_action_after_axis_attrition) {
@@ -316,9 +313,9 @@ function register(registerState) {
 	registerState("allied_attrition", {
 		prompt(result) {
 			result.prompt("turn.attrition.allied")
-			result.action("continue")
+			result.action("apply_attrition")
 		},
-		continue(game, role, noun, { data, adjacency }) {
+		apply_attrition(game, role, noun, { data, adjacency }) {
 			const resolved = Engine.logistics.resolveAttrition(game, data, Engine.map, adjacency, ALLIED)
 			Engine.invasions.removeUnsupportedBeachheads(game, data, adjacency)
 			logAttritionResult(game, resolved, AXIS)

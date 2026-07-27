@@ -64,8 +64,13 @@ function piecesInSpace(game, spaceId) {
 	return result
 }
 
+function isCombatUnit(piece) {
+	return piece?.size === "scu" || piece?.size === "lcu"
+}
+
 function pieceSide(game, data, pieceId) {
-	return Neutrals.effectivePieceSide(game, data.pieces[pieceId])
+	const piece = data.pieces[pieceId]
+	return isCombatUnit(piece) ? Neutrals.effectivePieceSide(game, piece) : null
 }
 
 function friendlyPiecesInSpace(game, data, side, spaceId) {
@@ -89,7 +94,7 @@ function inferredControlNation(game, data, spaceId) {
 	const side = game.control?.[spaceId]
 	const occupier = piecesInSpace(game, spaceId)
 		.map((pieceId) => data.pieces[pieceId])
-		.find((piece) => piece && Neutrals.effectivePieceSide(game, piece) === side)
+		.find((piece) => isCombatUnit(piece) && Neutrals.effectivePieceSide(game, piece) === side)
 	if (occupier) return occupier.nation
 	if (side === space.side) return space.nation || null
 	if (side === ALLIED && space.nation === "ro") return "su"
@@ -195,10 +200,6 @@ function setControl(game, data, spaceId, side, nation = null) {
 	game.control_nation[spaceId] = nation || inferredControlNation(game, data, spaceId)
 	const controlVpChange = adjustVpForControl(game, space, previousControl, side, false)
 	if (game.trench?.[spaceId] && game.trench_owner?.[spaceId] !== side) removeTrench(game, spaceId)
-	if (space.fort && originalFortOwner(data, spaceId) && originalFortOwner(data, spaceId) !== side) {
-		game.destroyed_forts ||= []
-		if (!game.destroyed_forts.includes(spaceId)) game.destroyed_forts.push(spaceId)
-	}
 	if (side === ALLIED && space.name === "Benghazi") {
 		const tobruk = data.spaces.find((candidate) => candidate?.name === "Tobruk")
 		if (tobruk) removeTrench(game, tobruk.id)
@@ -215,8 +216,9 @@ function enterSpace(game, data, pieceId, destination) {
 	syncPartisanVp(game, data)
 	const piece = data.pieces[pieceId]
 	if (!piece) throw new Error(`unknown piece ${pieceId}`)
-	game.pieces[pieceId] = destination
 	const side = pieceSide(game, data, pieceId)
+	if (enemyPiecesInSpace(game, data, side, destination).length) throw new Error(`piece ${pieceId} cannot enter enemy-occupied space ${destination}`)
+	game.pieces[pieceId] = destination
 	if (side === AXIS && data.spaces[destination]?.name === "Moscow") {
 		game.events ||= {}
 		game.events.axis_occupied_moscow = true
@@ -225,6 +227,11 @@ function enterSpace(game, data, pieceId, destination) {
 	if (data.spaces[destination]?.kind === "land" && side !== "neutral") {
 		const previousControl = game.control[destination]
 		if (setControl(game, data, destination, side, piece.nation)) Orders.fulfillForOccupation(game, data, pieceId, destination, previousControl)
+		const fortOwner = originalFortOwner(data, destination)
+		if (data.spaces[destination].fort && fortOwner && fortOwner !== side) {
+			game.destroyed_forts ||= []
+			if (!game.destroyed_forts.includes(destination)) game.destroyed_forts.push(destination)
+		}
 	}
 	syncPartisanVp(game, data)
 }
@@ -334,8 +341,8 @@ function canStackFormation(game, data, pieceIds, destination) {
 }
 
 function isLegalStack(data, pieceIds) {
-	if (pieceIds.length > 3) return false
-	const pieces = pieceIds.map((pieceId) => data.pieces[pieceId]).filter(Boolean)
+	const pieces = pieceIds.map((pieceId) => data.pieces[pieceId]).filter(isCombatUnit)
+	if (pieces.length > 3) return false
 	if (pieces.some((piece) => piece.nation === "yu") && pieces.length > 1) return false
 	if (pieces.some((piece) => piece.nation === "su") && pieces.some((piece) => piece.nation !== "su")) return false
 	if (pieces.some((piece) => piece.nation === "hu") && pieces.some((piece) => piece.nation === "ro")) return false
@@ -663,6 +670,10 @@ function searchSrPaths(game, data, adjacency, pieceId, context, stopAfterFirst) 
 	for (let cursor = 0; cursor < queue.length; ++cursor) {
 		const current = queue[cursor]
 		for (const edge of adjacency[current.space] || []) {
+			// Rule 12.2 permits regular and Sea Move SR connections only.
+			// River/water-obstacle connections are movement connections, but
+			// are deliberately omitted from the SR procedure.
+			if (edge.type !== "regular" && edge.type !== "sr") continue
 			const next = data.spaces[edge.to]
 			if (!next) continue
 			if (side === AXIS && game.events?.operation_strangle && (data.spaces[current.space]?.nation === "fr" || next.nation === "fr")) continue
@@ -674,16 +685,18 @@ function searchSrPaths(game, data, adjacency, pieceId, context, stopAfterFirst) 
 			const leavingSea = current.inSea && next.kind === "land"
 			if ((enteringSea || current.inSea || directSea) && piece.size === "lcu") continue
 			if (current.usedSea && (enteringSea || directSea)) continue
+			const activeBeach = next.kind === "beach" && side === ALLIED && Invasions.usableBeachhead(game, edge.to, piece.nation)
 			const neutralHome = ["tu", "sw"].includes(piece.nation) && next.nation === piece.nation && Neutrals.controller(game, piece.nation) === side
 			const vichyAccess = axisVichySrAccess(game, next, side)
+			if (next.kind === "beach" && !activeBeach) continue
 			if (next.kind === "land" && !neutralHome && !vichyAccess && game.control[edge.to] !== side) continue
 			if (next.kind === "land" && !Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
 			if (leavingSea && !canStack(game, data, pieceId, edge.to)) continue
 			const path = current.path.concat(edge.to)
 			const usedSea = current.usedSea || leavingSea || directSea
 			const legalVichyDestination = vichyAccess === "destination"
-			if (next.kind === "land" && edge.to !== from && canStack(game, data, pieceId, edge.to) && (legalVichyDestination || (vichyAccess !== "transit" && context.supplyStatus(side, edge.to, piece.nation) !== "oos"))) {
-				const seaPanzerBlocked = usedSea && piece.nation === "ge" && piece.size === "scu" && piece.unit_type === "mechanized" && ["dz", "tn", "ly", "eg"].includes(next.nation) && context.axisPanzerScusInNorthAfrica() >= 2
+			if ((next.kind === "land" || activeBeach) && edge.to !== from && canStack(game, data, pieceId, edge.to) && (legalVichyDestination || (vichyAccess !== "transit" && context.supplyStatus(side, edge.to, piece.nation) !== "oos"))) {
+				const seaPanzerBlocked = usedSea && piece.nation === "ge" && piece.size === "scu" && piece.unit_type === "mechanized" && ["tn", "ly"].includes(next.nation) && context.axisPanzerScusInNorthAfrica() >= 2
 				if (!seaPanzerBlocked && !paths.has(edge.to)) {
 					paths.set(edge.to, path)
 					if (stopAfterFirst) return paths
@@ -761,7 +774,7 @@ function traceSupplyDetails(game, data, adjacency, side, start, nation = null, o
 		}
 		if (sources.has(current.id) && !excludedSources.has(current.id)) {
 			const space = data.spaces[current.id]
-			const sunnyItaly = game.options.sunny_italy && space?.name === "Naples" && [3, 4, 7, 8, 11, 12, 15, 16].includes(game.turn)
+			const sunnyItaly = game.options.sunny_italy && space?.name === "Naples" && (Weather.isFallTurn(game.turn) || Weather.isWinterTurn(game.turn))
 			const naplesIntoFrance = space?.name === "Naples" && data.spaces[start]?.nation === "fr"
 			const winter42 = side === AXIS && nation === "ge" && Weather.isWinter42(game) && data.spaces[start]?.nation === "su"
 			const partisanAtTerminal = side === AXIS && partisans.has(current.id)

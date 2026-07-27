@@ -7,11 +7,11 @@ const Locations = require("../core/unit_locations.js")
 const Neutrals = require("./neutrals.js")
 const Reinforcements = require("./reinforcements.js")
 const ReinforcementManifest = require("./reinforcement_manifest.js")
+const Weather = require("./weather.js")
 
 const NORTH_AFRICA_BLOCK_NATIONS = Object.freeze(new Set(["dz", "tn", "ly", "eg"]))
 const NORTH_AFRICA_BLOCKED_BEACHES = Object.freeze(new Set(["J", "M", "N", "O", "P", "Q", "R", "T", "U"]))
 const SYRACUSE_BLOCKED_BEACHES = Object.freeze(new Set(["J", "O", "R"]))
-const WINTER_TURNS = Object.freeze(new Set([4, 8, 12, 16]))
 const BEACH_LINKS = Object.freeze(new Set(["A:B", "D:E", "F:G", "K:L", "P:Q"]))
 const CONVERTIBLE_REINFORCEMENT_CARDS = Object.freeze(new Set([34, 45, 46, 52]))
 
@@ -231,11 +231,7 @@ function selectRequirementPieces(game, data, requirements, claimed = new Set(), 
 			continue
 		}
 		const count = Number(requirement.count) || 1
-		const candidates = ReinforcementManifest.piecesForCard(
-			data,
-			cardId,
-			(piece) => piece.side === ALLIED && piece.nation === requirement.nation && piece.size === requirement.size,
-		)
+		const candidates = ReinforcementManifest.piecesForCard(data, cardId, (piece) => piece.side === ALLIED && piece.nation === requirement.nation && piece.size === requirement.size)
 			.filter((piece) => !claimed.has(piece.id) && eligibleLocation(game, piece.id, requirement))
 			.map((piece) => piece.id)
 			.sort((a, b) => a - b)
@@ -278,7 +274,7 @@ function legalBeachLetters(game, data, spec) {
 	return spec.letters.filter((letter) => {
 		const space = beachSpace(data, letter)
 		if (!space || activeBeachhead(game, space.id)) return false
-		if (WINTER_TURNS.has(game.turn) && letter >= "A" && letter <= "I") return false
+		if (Weather.isWinterTurn(game.turn) && letter >= "A" && letter <= "I") return false
 		if (northAfricaBlocked && NORTH_AFRICA_BLOCKED_BEACHES.has(letter)) return false
 		if (syracuseBlocked && SYRACUSE_BLOCKED_BEACHES.has(letter)) return false
 		if (letter === "J" && hasAB) return false

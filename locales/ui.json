@@ -34,7 +34,7 @@
 	"ui.action_track.other_event": { "params": [], "zh-CN": "其他事件", "en": "Other Event" },
 	"ui.action_track.one_ops": { "params": [], "zh-CN": "1 OPS", "en": "1 OPS" },
 	"ui.action_track.partisans": { "params": [], "zh-CN": "游击队", "en": "Partisans" },
-	"ui.action_track.sr": { "params": [], "zh-CN": "战略调动", "en": "SR" },
+	"ui.action_track.sr": { "params": [], "zh-CN": "战略调整", "en": "SR" },
 	"ui.action_track.rp": { "params": [], "zh-CN": "补员", "en": "RP" },
 	"ui.action_track.ge_reinf": { "params": [], "zh-CN": "德军增援", "en": "German Reinforcement" },
 	"ui.action_track.axis_reinf": { "params": [], "zh-CN": "轴心国增援", "en": "Axis Reinforcement" },
@@ -164,6 +164,7 @@
 	"ui.action.nwe": { "params": [], "zh-CN": "西北欧战区", "en": "Northwest Europe theater" },
 	"ui.action.undo": { "params": [], "zh-CN": "撤销", "en": "Undo" },
 	"ui.action.accept_rollback": { "params": [], "zh-CN": "接受回滚", "en": "Accept rollback" },
+	"ui.action.apply_attrition": { "params": [], "zh-CN": "结算损耗", "en": "Resolve attrition" },
 	"ui.action.reject_rollback": { "params": [], "zh-CN": "拒绝回滚", "en": "Reject rollback" },
 	"ui.action.finish_refit": { "params": [], "zh-CN": "完成整补", "en": "Finish refit" },
 	"ui.action.finish_placement": { "params": [], "zh-CN": "完成放置", "en": "Finish placement" },
@@ -564,12 +565,12 @@
 	},
 	"ui.activation.combat": {
 		"params": [],
-		"zh-CN": "战斗激活",
+		"zh-CN": "激活以战斗",
 		"en": "Combat activation"
 	},
 	"ui.activation.move": {
 		"params": [],
-		"zh-CN": "移动激活",
+		"zh-CN": "激活以移动",
 		"en": "Move activation"
 	},
 	"ui.allied": {
@@ -699,7 +700,7 @@
 	},
 	"ui.strategic_redeployment": {
 		"params": [],
-		"zh-CN": "战略转移",
+		"zh-CN": "战略调整",
 		"en": "Strategic Redeployment"
 	},
 	"ui.submit": {

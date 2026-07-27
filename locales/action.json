@@ -11,12 +11,12 @@
 	},
 	"action.usage.sr": {
 		"params": ["ops"],
-		"zh-CN": "战略调动（{ops}）",
+		"zh-CN": "战略调整（{ops}）",
 		"en": "Strategic Redeployment ({ops})"
 	},
 	"action.usage.rp": {
 		"params": [],
-		"zh-CN": "补充（RP）",
+		"zh-CN": "补员（RP）",
 		"en": "Replacements (RP)"
 	},
 	"action.choose": {

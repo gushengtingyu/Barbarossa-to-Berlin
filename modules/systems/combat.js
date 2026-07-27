@@ -472,10 +472,11 @@ function canCancelRetreat(game, data, map, adjacency, combat) {
 		return !!trenchAllowed
 	const alliedAntwerp = space?.name === "Antwerp" && game.control?.[combat.defender_space] === ALLIED
 	const skagerrak = solelyAcrossSkagerrak(game, data, combat)
+	const devilsGardens = space?.terrain === "desert" && CombatCards.played(combat, combat.defender_side, 73)
 	const normalTerrainAllowed = !axisDefendsInPartisanSpace(game, data, map, combat.defender_space, survivors)
 	return !!(
 		trenchAllowed ||
-		(normalTerrainAllowed && (alliedAntwerp || skagerrak || fortProvidesBenefit(game, data, map, combat.defender_space, side) || space?.kind === "beach" || ["forest", "mountain", "swamp"].includes(space?.terrain)))
+		(normalTerrainAllowed && (alliedAntwerp || skagerrak || devilsGardens || fortProvidesBenefit(game, data, map, combat.defender_space, side) || space?.kind === "beach" || ["forest", "mountain", "swamp"].includes(space?.terrain)))
 	)
 }
 
@@ -522,8 +523,11 @@ function advanceLimit(game, data, map, adjacency, combat, pieceId) {
 	return Number.isInteger(combat.extra_advance_limit) ? Math.min(normal, combat.extra_advance_limit) : normal
 }
 
-function stopsMechanizedAdvance(game, space) {
-	return !!((space?.fort && !game.destroyed_forts?.includes(space.id)) || ["forest", "mountain", "swamp"].includes(space?.terrain))
+function stopsMechanizedAdvance(game, combat, space) {
+	const combatTerrain = space?.id === combat.defender_space
+	const krimCancelsFort = combatTerrain && combat.krim
+	const devilsGardens = combatTerrain && space?.terrain === "desert" && CombatCards.played(combat, combat.defender_side, 73)
+	return !!((space?.fort && !game.destroyed_forts?.includes(space.id) && !krimCancelsFort) || devilsGardens || ["forest", "mountain", "swamp"].includes(space?.terrain))
 }
 
 function stopsWinter42GermanAdvance(game, data, pieceId, space) {
@@ -541,7 +545,7 @@ function nonMechanizedAdvancePaths(game, data, map, adjacency, combat, pieceId) 
 		for (let index = 0; index < retreatPath.length - 1; index++) {
 			const destination = retreatPath[index]
 			const path = [defender].concat(retreatPath.slice(0, index + 1))
-			if (game.action?.attack_spaces?.includes(destination) || !map.canStack(game, data, pieceId, destination)) continue
+			if (game.action?.attack_spaces?.includes(destination) || map.enemyPiecesInSpace(game, data, side, destination).length || !map.canStack(game, data, pieceId, destination)) continue
 			if (path.every((spaceId) => Restrictions.mayEnter(game, data, adjacency, pieceId, spaceId))) paths.set(destination, path)
 		}
 	}
@@ -578,9 +582,10 @@ function legalAdvancePaths(game, data, map, adjacency, combat, pieceId) {
 			const path = current.path.concat(edge.to)
 			if (path.length > limit || map.enemyPiecesInSpace(game, data, side, edge.to).length) continue
 			if (!Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
+			if (!map.canStack(game, data, pieceId, edge.to)) continue
 			const hasCombatMarker = game.action?.attack_spaces?.includes(edge.to)
-			if (!hasCombatMarker && map.canStack(game, data, pieceId, edge.to)) paths.set(edge.to, path)
-			if (stopsMechanizedAdvance(game, next) || stopsWinter42GermanAdvance(game, data, pieceId, next)) continue
+			if (!hasCombatMarker) paths.set(edge.to, path)
+			if (stopsMechanizedAdvance(game, combat, next) || stopsWinter42GermanAdvance(game, data, pieceId, next)) continue
 			if (visited.has(edge.to) && visited.get(edge.to) <= path.length) continue
 			visited.set(edge.to, path.length)
 			queue.push({ space: edge.to, path })

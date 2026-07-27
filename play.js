@@ -35,8 +35,6 @@ const STATE_ACTION_LABELS = Object.freeze({
 	orders_stand_fast: { continue: "ui.action.finish_placement" },
 	orders_axis: { continue: "ui.action.roll" },
 	orders_allied: { continue: "ui.action.roll" },
-	axis_attrition: { continue: "ui.action.resolve" },
-	allied_attrition: { continue: "ui.action.resolve" },
 	draw_discard_allied: { continue: "ui.action.done" },
 	draw_discard_axis: { continue: "ui.action.done" },
 	ops_activate: { done: "ui.action.done" },
@@ -570,10 +568,10 @@ function on_log(text, index) {
 		element.className = "h4"
 		logBoxAxis = index
 	} else if (text.startsWith(".h1")) {
-		text = text.substring(4)
+		text = text.substring(3)
 		element.className = "h1"
 	} else if (text.startsWith(".h2")) {
-		text = text.substring(4)
+		text = text.substring(3)
 		if (text === "AP") element.className = "h2 ap"
 		else if (text === "CP") element.className = "h2 cp"
 		else {
@@ -581,13 +579,13 @@ function on_log(text, index) {
 			if (text === uiText("action.log.phase")) element.classList.add("phase-strong")
 		}
 	} else if (text.startsWith(".h3ap")) {
-		text = text.substring(6)
+		text = text.substring(5)
 		element.className = "h3 ap"
 	} else if (text.startsWith(".h3cp")) {
-		text = text.substring(6)
+		text = text.substring(5)
 		element.className = "h3 cp"
 	} else if (text.startsWith(".h3")) {
-		text = text.substring(4)
+		text = text.substring(3)
 		element.className = "h3"
 	}
 
@@ -1470,7 +1468,7 @@ function updateCardAppearance(element, cardId, compact = false) {
 	element.className = `card ${card.side === "allied" ? "ap" : "cp"}${compact ? " combat-card" : ""}`
 	const direct = isLegal("card", cardId) || cardMenuActions(cardId).length > 0
 	element.classList.toggle("enabled", direct)
-	element.classList.toggle("highlight", direct)
+	element.classList.toggle("highlight", compact ? direct : isLegal("play_event", cardId))
 	element.style.backgroundImage = `url("${cardAsset(cardId)}")`
 	element.title = `${card.num}. ${cardDisplayName(card)}`
 }
@@ -1914,6 +1912,7 @@ function renderActionButtons() {
 		play_sr: "ui.action.sr",
 		play_rp: "ui.action.rp",
 		play_event: "ui.action.event",
+		apply_attrition: "ui.action.apply_attrition",
 		single_beachhead: "ui.action.single_beachhead",
 		double_beachheads: "ui.action.double_beachheads",
 		auto_ops: "ui.action.auto_ops",

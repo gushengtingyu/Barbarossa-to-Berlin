@@ -51,7 +51,7 @@
 	},
 	"neutrals.log.turkey_rp": {
 		"params": ["side"],
-		"zh-CN": "土耳其获得本回合固定2点补充点，由{side}使用。",
+		"zh-CN": "土耳其获得本回合固定2点补员点，由{side}使用。",
 		"en": "Turkey receives a fixed 2 RP this turn, spent by {side}."
 	},
 	"neutrals.log.vichy": {
@@ -76,7 +76,7 @@
 	},
 	"replacements.log.wehrkreis": {
 		"params": ["count", "points"],
-		"zh-CN": "德国军区惩罚：{count} 个军区失控和/或断补，德国补充点减少 {points}。",
+		"zh-CN": "德国军区惩罚：{count} 个军区失控和/或断补，德国补员点减少 {points}。",
 		"en": "Wehrkreis penalty: {count} districts are uncontrolled and/or out of supply; German RP is reduced by {points}."
 	},
 	"stalin.log.captured": {
@@ -86,7 +86,7 @@
 	},
 	"stalin.log.sr": {
 		"params": ["origin", "destination"],
-		"zh-CN": "斯大林由{origin}战略调动至{destination}。",
+		"zh-CN": "斯大林由{origin}战略调整至{destination}。",
 		"en": "Stalin strategically redeploys from {origin} to {destination}."
 	}
 }

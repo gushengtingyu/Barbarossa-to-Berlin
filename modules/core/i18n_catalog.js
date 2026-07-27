@@ -144,14 +144,14 @@
 	},
 	"action.usage.rp": {
 		"params": [],
-		"zh-CN": "补充（RP）",
+		"zh-CN": "补员（RP）",
 		"en": "Replacements (RP)"
 	},
 	"action.usage.sr": {
 		"params": [
 			"ops"
 		],
-		"zh-CN": "战略调动（{ops}）",
+		"zh-CN": "战略调整（{ops}）",
 		"en": "Strategic Redeployment ({ops})"
 	},
 	"activation.choose_space": {
@@ -232,7 +232,7 @@
 	},
 	"activation.log.sr": {
 		"params": [],
-		"zh-CN": "战略调动",
+		"zh-CN": "战略调整",
 		"en": "Strategic Redeployment"
 	},
 	"activation.log.sr_move": {
@@ -265,17 +265,17 @@
 		"params": [
 			"points"
 		],
-		"zh-CN": "选择战略调动单位（剩余 {points} SR）。",
+		"zh-CN": "选择战略调整单位（剩余 {points} SR）。",
 		"en": "Choose a Strategic Redeployment unit ({points} SR remaining)."
 	},
 	"activation.sr.destination": {
 		"params": [],
-		"zh-CN": "选择战略调动目的地。",
+		"zh-CN": "选择战略调整目的地。",
 		"en": "Choose a Strategic Redeployment destination."
 	},
 	"activation.sr.stalin_destination": {
 		"params": [],
-		"zh-CN": "选择斯大林战略调动目的地。",
+		"zh-CN": "选择斯大林战略调整目的地。",
 		"en": "Choose Stalin's Strategic Redeployment destination."
 	},
 	"combat.advance.choose": {
@@ -1167,7 +1167,7 @@
 	},
 	"event.log.strangle": {
 		"params": [],
-		"zh-CN": "绞杀行动：法国境内轴心单位此后处于有限补给，轴心国不得在法国进行战略调动。",
+		"zh-CN": "绞杀行动：法国境内轴心单位此后处于有限补给，轴心国不得在法国进行战略调整。",
 		"en": "Operation Strangle: Axis units in France are now in Limited Supply, and the Axis may not use Strategic Redeployment in France."
 	},
 	"event.log.stuka": {
@@ -1193,7 +1193,7 @@
 		"params": [
 			"bonus"
 		],
-		"zh-CN": "总体战生效：轴心国此后不能自动胜利；德军装甲补充上限从下一回合起提高至 3{bonus}。",
+		"zh-CN": "总体战生效：轴心国此后不能自动胜利；德军装甲补员上限从下一回合起提高至 3{bonus}。",
 		"en": "Totaler Krieg is in effect: the Axis may no longer win an Automatic Victory; the German Panzer replacement limit rises to three beginning next turn{bonus}."
 	},
 	"event.log.us_entry": {
@@ -1758,7 +1758,7 @@
 		"params": [
 			"side"
 		],
-		"zh-CN": "土耳其获得本回合固定2点补充点，由{side}使用。",
+		"zh-CN": "土耳其获得本回合固定2点补员点，由{side}使用。",
 		"en": "Turkey receives a fixed 2 RP this turn, spent by {side}."
 	},
 	"neutrals.log.vichy": {
@@ -1797,7 +1797,7 @@
 			"count",
 			"points"
 		],
-		"zh-CN": "德国军区惩罚：{count} 个军区失控和/或断补，德国补充点减少 {points}。",
+		"zh-CN": "德国军区惩罚：{count} 个军区失控和/或断补，德国补员点减少 {points}。",
 		"en": "Wehrkreis penalty: {count} districts are uncontrolled and/or out of supply; German RP is reduced by {points}."
 	},
 	"stalin.log.captured": {
@@ -1814,7 +1814,7 @@
 			"origin",
 			"destination"
 		],
-		"zh-CN": "斯大林由{origin}战略调动至{destination}。",
+		"zh-CN": "斯大林由{origin}战略调整至{destination}。",
 		"en": "Stalin strategically redeploys from {origin} to {destination}."
 	},
 	"turn.attrition.allied": {
@@ -1953,13 +1953,6 @@
 		"zh-CN": "{side}未完成强制攻势：VP惩罚1点。",
 		"en": "{side} fails its Mandated Offensive: 1 VP penalty."
 	},
-	"turn.log.no_replacement": {
-		"params": [
-			"side"
-		],
-		"zh-CN": "{side}没有合法补充消费，自动结束补充阶段。",
-		"en": "{side} has no legal replacement expenditure; end the Replacement Phase automatically."
-	},
 	"turn.log.order_roll": {
 		"params": [
 			"side",
@@ -2039,7 +2032,7 @@
 	},
 	"turn.phase.replacement": {
 		"params": [],
-		"zh-CN": "补充阶段",
+		"zh-CN": "补员阶段",
 		"en": "Replacement Phase"
 	},
 	"turn.phase.turn_heading": {
@@ -2052,12 +2045,12 @@
 	},
 	"turn.replacement.allied": {
 		"params": [],
-		"zh-CN": "使用盟军补充点。",
+		"zh-CN": "使用盟军补员点。",
 		"en": "Spend Allied Replacement Points."
 	},
 	"turn.replacement.axis": {
 		"params": [],
-		"zh-CN": "使用轴心国补充点。",
+		"zh-CN": "使用轴心国补员点。",
 		"en": "Spend Axis Replacement Points."
 	},
 	"turn.replacement.location": {
@@ -2171,7 +2164,7 @@
 	},
 	"ui.action_track.sr": {
 		"params": [],
-		"zh-CN": "战略调动",
+		"zh-CN": "战略调整",
 		"en": "SR"
 	},
 	"ui.action_track.su_reinf": {
@@ -2193,6 +2186,11 @@
 		"params": [],
 		"zh-CN": "发动",
 		"en": "Activate"
+	},
+	"ui.action.apply_attrition": {
+		"params": [],
+		"zh-CN": "结算损耗",
+		"en": "Resolve attrition"
 	},
 	"ui.action.auto_ops": {
 		"params": [],
@@ -2441,12 +2439,12 @@
 	},
 	"ui.activation.combat": {
 		"params": [],
-		"zh-CN": "战斗激活",
+		"zh-CN": "激活以战斗",
 		"en": "Combat activation"
 	},
 	"ui.activation.move": {
 		"params": [],
-		"zh-CN": "移动激活",
+		"zh-CN": "激活以移动",
 		"en": "Move activation"
 	},
 	"ui.allied": {
@@ -3041,7 +3039,7 @@
 	},
 	"ui.strategic_redeployment": {
 		"params": [],
-		"zh-CN": "战略转移",
+		"zh-CN": "战略调整",
 		"en": "Strategic Redeployment"
 	},
 	"ui.submit": {

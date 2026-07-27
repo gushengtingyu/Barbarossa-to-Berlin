@@ -1,15 +1,30 @@
 "use strict"
 
+function seasonForTurn(turn) {
+	turn = Number(turn)
+	if (turn === 1) return "spring"
+	if (!Number.isInteger(turn) || turn < 2 || turn > 18) return null
+	return ["winter", "spring", "summer", "fall"][turn % 4]
+}
+
 function isSpringTurn(turn) {
-	return [5, 9, 13, 17].includes(Number(turn))
+	return seasonForTurn(turn) === "spring"
 }
 
 function isSummerTurn(turn) {
-	return [2, 6, 10, 14, 18].includes(Number(turn))
+	return seasonForTurn(turn) === "summer"
+}
+
+function isFallTurn(turn) {
+	return seasonForTurn(turn) === "fall"
+}
+
+function isWinterTurn(turn) {
+	return seasonForTurn(turn) === "winter"
 }
 
 function isSpringThaw(game) {
-	return isSpringTurn(game.turn) && [1, 2].includes(game.action_round)
+	return Number(game.turn) !== 1 && isSpringTurn(game.turn) && [1, 2].includes(game.action_round)
 }
 
 function canPlayOpsCard(game) {
@@ -33,9 +48,12 @@ function formationIsWinter42German(game, data, pieceIds) {
 module.exports = {
 	canPlayOpsCard,
 	formationIsWinter42German,
+	isFallTurn,
 	isGermanInSovietUnion,
 	isSpringThaw,
 	isSpringTurn,
 	isSummerTurn,
+	isWinterTurn,
 	isWinter42,
+	seasonForTurn,
 }

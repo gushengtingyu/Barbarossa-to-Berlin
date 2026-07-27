@@ -27,6 +27,55 @@ test("movement uses the unit allowance and never traverses Sea SR nodes", () => 
 		)
 })
 
+test("Rule 10.1 charges one MP across regular and river connections, permits overstack transit, and rejects Sea SR shortcuts", () => {
+	const localData = {
+		spaces: [null, { id: 1, name: "Origin", kind: "land", nation: "fr" }, { id: 2, name: "Crossing", kind: "land", nation: "fr" }, { id: 3, name: "Destination", kind: "land", nation: "fr" }],
+		pieces: [
+			null,
+			{ id: 1, name: "BR mover", side: "allied", nation: "br", size: "scu", mf: 2, rmf: 2 },
+			{ id: 2, name: "BR corps 1", side: "allied", nation: "br", size: "scu", mf: 3, rmf: 3 },
+			{ id: 3, name: "BR corps 2", side: "allied", nation: "br", size: "scu", mf: 3, rmf: 3 },
+			{ id: 4, name: "BR corps 3", side: "allied", nation: "br", size: "scu", mf: 3, rmf: 3 },
+			{ id: 5, name: "GE corps", side: "axis", nation: "ge", size: "scu", mf: 3, rmf: 3 },
+		],
+	}
+	const localAdjacency = [
+		[],
+		[
+			{ to: 2, type: "river" },
+			{ to: 3, type: "sr" },
+		],
+		[
+			{ to: 1, type: "river" },
+			{ to: 3, type: "regular" },
+		],
+		[
+			{ to: 1, type: "sr" },
+			{ to: 2, type: "regular" },
+		],
+	]
+	const game = {
+		turn: 8,
+		action_round: 1,
+		pieces: [null, 1, 2, 2, 2, 0],
+		reduced: [],
+		control: [null, "allied", "allied", "allied"],
+		events: {},
+		options: {},
+		partisans: [],
+		destroyed_forts: [],
+		action: { attack_spaces: [], activation_supply: { 1: "full" } },
+	}
+
+	let paths = Engine.map.legalMovePaths(game, localData, localAdjacency, 1)
+	assert.equal(paths.has(2), false)
+	assert.deepEqual(paths.get(3), [2, 3])
+
+	game.pieces[5] = 2
+	paths = Engine.map.legalMovePaths(game, localData, localAdjacency, 1)
+	assert.equal(paths.has(3), false)
+})
+
 test("Rule 10.1 permits a formation to revisit a space while it still has movement points", () => {
 	const localData = {
 		spaces: [null, { id: 1, kind: "land", nation: "fr" }, { id: 2, kind: "land", nation: "fr" }],
@@ -83,9 +132,16 @@ test("stacking enforces the three-unit, Soviet, Yugoslav, and Hungary-Romania li
 	const destination = space("Vienna")
 	const soviet = data.pieces.find((piece) => piece?.nation === "su" && piece.size === "scu").id
 	const german = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "scu").id
+	const yugoslav = data.pieces.find((piece) => piece?.nation === "yu").id
+	const hungarian = data.pieces.find((piece) => piece?.nation === "hu").id
+	const romanian = data.pieces.find((piece) => piece?.nation === "ro").id
 	game.pieces.fill(0)
 	game.pieces[german] = destination
 	assert.equal(Engine.map.canStack(game, data, soviet, destination), false)
+	assert.equal(Engine.map.canStack(game, data, yugoslav, destination), false)
+	game.pieces.fill(0)
+	game.pieces[hungarian] = destination
+	assert.equal(Engine.map.canStack(game, data, romanian, destination), false)
 	const germanIds = data.pieces
 		.filter((piece) => piece?.nation === "ge" && piece.size === "scu")
 		.slice(0, 4)
@@ -93,6 +149,57 @@ test("stacking enforces the three-unit, Soviet, Yugoslav, and Hungary-Romania li
 	game.pieces.fill(0)
 	for (const id of germanIds.slice(0, 3)) game.pieces[id] = destination
 	assert.equal(Engine.map.canStack(game, data, germanIds[3], destination), false)
+})
+
+test("Rule 9.1 excludes Stalin from stacking, enemy-unit blocking, and Stand Fast unit tracking", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 31, {})
+	const moscow = space("Moscow")
+	const stalin = data.pieces.find((piece) => piece?.name === "Stalin").id
+	const soviets = data.pieces
+		.filter((piece) => piece?.nation === "su" && ["scu", "lcu"].includes(piece.size))
+		.slice(0, 4)
+		.map((piece) => piece.id)
+	const german = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "scu").id
+	const origin = adjacency[moscow].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
+
+	game.pieces.fill(0)
+	game.pieces[stalin] = moscow
+	game.stalin_location = moscow
+	for (const pieceId of soviets.slice(0, 2)) game.pieces[pieceId] = moscow
+	assert.equal(Engine.map.canStack(game, data, soviets[2], moscow), true)
+	game.pieces[soviets[2]] = moscow
+	assert.equal(Engine.map.canStack(game, data, soviets[3], moscow), false)
+	assert.deepEqual(
+		Engine.map.friendlyPiecesInSpace(game, data, "allied", moscow).sort((a, b) => a - b),
+		soviets.slice(0, 3).sort((a, b) => a - b),
+	)
+
+	for (const pieceId of soviets) game.pieces[pieceId] = 0
+	game.pieces[german] = origin
+	game.control[origin] = "axis"
+	game.control[moscow] = "allied"
+	game.action = { attack_spaces: [], activation_supply: { [german]: "full" } }
+	assert.deepEqual(Engine.map.enemyPiecesInSpace(game, data, "axis", moscow), [])
+	assert.equal(Engine.map.legalMoveDestinations(game, data, adjacency, german).includes(moscow), true)
+
+	game.stand_fast[moscow] = "stalin"
+	Engine.orders.recordStandFastUnits(game, data)
+	assert.deepEqual(game.stand_fast_round_units[moscow], [])
+})
+
+test("Rule 9.1 rejects enemy-occupied entry at the shared map gateway without mutating either unit", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 32, {})
+	const origin = space("Mozhaisk")
+	const destination = space("Moscow")
+	const german = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "scu").id
+	const soviet = data.pieces.find((piece) => piece?.nation === "su" && piece.size === "scu").id
+	game.pieces.fill(0)
+	game.pieces[german] = origin
+	game.pieces[soviet] = destination
+
+	assert.throws(() => Engine.map.enterSpace(game, data, german, destination), /enemy-occupied/)
+	assert.equal(game.pieces[german], origin)
+	assert.equal(game.pieces[soviet], destination)
 })
 
 test("activation groups British/Commonwealth together and charges Limited Supply per unit", () => {
@@ -518,6 +625,193 @@ test("Sea SR permits an SCU to cross the reviewed Mediterranean network but not 
 	assert.equal(Engine.map.legalSrPaths(game, data, adjacency, lcu).has(space("Syracuse")), false)
 })
 
+test("Rule 12.2 permits only regular and Sea SR connections, never river connections", () => {
+	const localData = {
+		spaces: [
+			null,
+			{ id: 1, name: "Origin", kind: "land", nation: "ge", supply: "axis" },
+			{ id: 2, name: "Across river", kind: "land", nation: "ge", supply: "axis" },
+			{ id: 3, name: "By rail", kind: "land", nation: "ge", supply: "axis" },
+		],
+		pieces: [null, { id: 1, name: "GE corps", side: "axis", nation: "ge", size: "scu", unit_type: "infantry" }],
+	}
+	const localAdjacency = [
+		[],
+		[
+			{ to: 2, type: "river" },
+			{ to: 3, type: "regular" },
+		],
+		[{ to: 1, type: "river" }],
+		[{ to: 1, type: "regular" }],
+	]
+	const game = {
+		turn: 5,
+		pieces: [null, 1],
+		control: [null, "axis", "axis", "axis"],
+		events: {},
+		options: {},
+		partisans: [],
+		destroyed_forts: [],
+	}
+
+	const paths = Engine.map.legalSrPaths(game, localData, localAdjacency, 1)
+	assert.equal(paths.has(2), false)
+	assert.deepEqual(paths.get(3), [3])
+})
+
+test("Rule 12.5 North Africa limit blocks Sea SR only into Tunisia or Libya", () => {
+	const localData = {
+		spaces: [
+			null,
+			{ id: 1, name: "Origin", kind: "land", nation: "it", supply: "axis" },
+			{ id: 2, name: "Sea", kind: "sr", nation: "sea" },
+			{ id: 3, name: "Egypt", kind: "land", nation: "eg", supply: "axis" },
+			{ id: 4, name: "Tunisia", kind: "land", nation: "tn", supply: "axis" },
+			{ id: 5, name: "Libya", kind: "land", nation: "ly", supply: "axis" },
+		],
+		pieces: [
+			null,
+			{ id: 1, name: "Moving Panzer corps", side: "axis", nation: "ge", size: "scu", unit_type: "mechanized" },
+			{ id: 2, name: "Panzer corps 1", side: "axis", nation: "ge", size: "scu", unit_type: "mechanized" },
+			{ id: 3, name: "Panzer corps 2", side: "axis", nation: "ge", size: "scu", unit_type: "mechanized" },
+		],
+	}
+	const localAdjacency = [
+		[],
+		[{ to: 2, type: "sr" }],
+		[
+			{ to: 1, type: "sr" },
+			{ to: 3, type: "sr" },
+			{ to: 4, type: "sr" },
+		],
+		[{ to: 2, type: "sr" }],
+		[{ to: 2, type: "sr" }],
+		[],
+	]
+	const game = {
+		turn: 5,
+		pieces: [null, 1, 4, 5],
+		control: [null, "axis", null, "axis", "axis", "axis"],
+		events: {},
+		options: {},
+		partisans: [],
+		destroyed_forts: [],
+	}
+
+	const paths = Engine.map.legalSrPaths(game, localData, localAdjacency, 1)
+	assert.equal(paths.has(3), true)
+	assert.equal(paths.has(4), false)
+})
+
+test("Rule 12.2 allows on-map units to SR into a compatible active Beach Head", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 31, {})
+	const rennes = space("Rennes")
+	const beach = space("Beachhead H")
+	const british = data.pieces.find((piece) => piece?.nation === "br" && piece.size === "scu").id
+	const american = data.pieces.find((piece) => piece?.nation === "us" && piece.size === "scu").id
+	game.turn = 10
+	game.pieces.fill(0)
+	game.pieces[british] = rennes
+	game.pieces[american] = rennes
+	game.control = data.spaces.map((entry) => (entry?.kind === "land" ? "allied" : null))
+	game.beachheads[beach] = { type: "br" }
+
+	assert.equal(Engine.map.legalSrPaths(game, data, adjacency, british).has(beach), true)
+	assert.equal(Engine.map.legalSrPaths(game, data, adjacency, american).has(beach), false)
+})
+
+test("Rule 12.3 permits SR into or out of a desert, but never through it", () => {
+	const localData = {
+		spaces: [
+			null,
+			{ id: 1, name: "Supply", kind: "land", nation: "ly", supply: "axis" },
+			{ id: 2, name: "Approach", kind: "land", nation: "ly" },
+			{ id: 3, name: "Desert", kind: "land", nation: "ly", terrain: "desert", supply: "axis" },
+			{ id: 4, name: "Beyond", kind: "land", nation: "ly", supply: "axis" },
+		],
+		pieces: [null, { id: 1, name: "GE corps", side: "axis", nation: "ge", size: "scu", unit_type: "infantry" }],
+	}
+	const localAdjacency = [
+		[],
+		[{ to: 2, type: "regular" }],
+		[
+			{ to: 1, type: "regular" },
+			{ to: 3, type: "regular" },
+		],
+		[
+			{ to: 2, type: "regular" },
+			{ to: 4, type: "regular" },
+		],
+		[{ to: 3, type: "regular" }],
+	]
+	const game = {
+		turn: 5,
+		pieces: [null, 1],
+		control: [null, "axis", "axis", "axis", "axis"],
+		events: {},
+		options: {},
+		partisans: [],
+		destroyed_forts: [],
+	}
+
+	let paths = Engine.map.legalSrPaths(game, localData, localAdjacency, 1)
+	assert.equal(paths.has(3), true)
+	assert.equal(paths.has(4), false)
+	game.pieces[1] = 3
+	paths = Engine.map.legalSrPaths(game, localData, localAdjacency, 1)
+	assert.equal(paths.has(1), true)
+})
+
+test("Rule 12.3 keeps Limited Supply SCUs out of Reserve and OOS units out of SR", () => {
+	const localData = {
+		spaces: [null, { id: 1, name: "Origin", kind: "land", nation: "ge" }, { id: 2, name: "Sea", kind: "sr", nation: "sea" }, { id: 3, name: "Source", kind: "land", nation: "ge", supply: "axis" }],
+		pieces: [null, { id: 1, name: "GE corps", side: "axis", nation: "ge", size: "scu", unit_type: "infantry" }],
+	}
+	const localAdjacency = [
+		[],
+		[{ to: 2, type: "sr" }],
+		[
+			{ to: 1, type: "sr" },
+			{ to: 3, type: "sr" },
+		],
+		[{ to: 2, type: "sr" }],
+	]
+	const game = {
+		turn: 5,
+		pieces: [null, 1],
+		control: [null, "axis", null, "axis"],
+		events: {},
+		options: {},
+		partisans: [],
+		destroyed_forts: [],
+	}
+	assert.equal(Engine.map.traceSupply(game, localData, localAdjacency, "axis", 1, "ge"), "limited")
+	assert.equal(Engine.map.legalSrPaths(game, localData, localAdjacency, 1).has("reserve:axis"), false)
+
+	const fullData = { ...localData, spaces: localData.spaces.slice() }
+	fullData.spaces[1] = { ...fullData.spaces[1], supply: "axis" }
+	assert.equal(Engine.map.traceSupply(game, fullData, localAdjacency, "axis", 1, "ge"), "full")
+	assert.equal(Engine.map.legalSrPaths(game, fullData, localAdjacency, 1).has("reserve:axis"), true)
+	const disconnectedAdjacency = localAdjacency.map((edges) => edges.slice())
+	disconnectedAdjacency[1] = []
+	assert.equal(Engine.map.traceSupply(game, localData, disconnectedAdjacency, "axis", 1, "ge"), "oos")
+	assert.equal(Engine.map.legalSrPaths(game, localData, disconnectedAdjacency, 1).size, 0)
+})
+
+test("Rule 12.5 freezes Soviet LCUs while Germany controls Moscow", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 31, {})
+	const front = data.pieces.find((piece) => piece?.nation === "su" && piece.size === "lcu").id
+	const moscow = space("Moscow")
+	const sverdlovsk = space("Sverdlovsk")
+	game.turn = 5
+	game.pieces[front] = sverdlovsk
+	game.control = data.spaces.map((entry) => (entry?.kind === "land" ? "allied" : null))
+	game.control[moscow] = "axis"
+	assert.equal(Engine.map.legalSrPaths(game, data, adjacency, front).size, 0)
+	game.control[moscow] = "allied"
+	assert.ok(Engine.map.legalSrPaths(game, data, adjacency, front).size > 0)
+})
+
 test("the Leningrad-Tikhvin Corridor of Death is SR-only and follows Sea SR unit limits", () => {
 	const game = Engine.setup.createInitialState(data, "Campaign", 3, {})
 	const leningrad = space("Leningrad")
@@ -597,8 +891,33 @@ test("Rally SR actions enumerate and execute Reserve Box entry destinations", ()
 	assert.equal(game.pieces[pieceId], berlin)
 	assert.equal(game.state, "action_select")
 	assert.equal(game.action, null)
-	assert.ok(renderLog(game).some((entry) => entry === "*战略调动"))
+	assert.ok(renderLog(game).some((entry) => entry === "*战略调整"))
 	assert.ok(renderLog(game).some((entry) => entry.includes(Engine.state.pieceLogRef(game, pieceId)) && entry.includes(`s${berlin}`)))
+})
+
+test("Rule 12.1 charges LCUs three SR points and Rule 7.4 prevents consecutive SR cards", () => {
+	const game = rules.setup(11, "Campaign", {})
+	game.turn = 5
+	game.phase = "action"
+	game.state = "sr_piece"
+	game.active = "Axis"
+	game.action_round = 2
+	game.action = { mode: "sr", points: 2, sr_moved: [], sr_reserve_entries: {}, piece: null }
+	const context = Engine.map.createSrSearchContext(game, data, adjacency)
+	const lcu = data.pieces.find((piece) => piece?.side === "axis" && piece.size === "lcu" && Engine.map.hasLegalSrDestination(game, data, adjacency, piece.id, context)).id
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(lcu), false)
+	game.action.points = 3
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(lcu), true)
+	game.action.sr_moved.push(lcu)
+	assert.equal(rules.view(game, "Axis").actions.piece.includes(lcu), false)
+
+	game.state = "action_select"
+	game.action = null
+	game.hands.axis = [data.cards.find((card) => card?.side === "axis").id]
+	game.action_history.axis = ["sr"]
+	assert.equal(rules.view(game, "Axis").actions.play_sr, undefined)
+	game.action_history.axis = ["sr", "ops"]
+	assert.ok(rules.view(game, "Axis").actions.play_sr.length > 0)
 })
 
 test("Rule 12.4 permits one German Reserve SCU into each non-urban Wehrkreis per SR action", () => {

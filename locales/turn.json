@@ -89,11 +89,6 @@
 		"zh-CN": "{piece}记入{theater}战区被消灭区。",
 		"en": "Record {piece} in the {theater} Eliminated Units Box."
 	},
-	"turn.log.no_replacement": {
-		"params": ["side"],
-		"zh-CN": "{side}没有合法补充消费，自动结束补充阶段。",
-		"en": "{side} has no legal replacement expenditure; end the Replacement Phase automatically."
-	},
 	"turn.log.order_roll": {
 		"params": ["side", "die", "result"],
 		"zh-CN": "{side}：{die} → {result}",
@@ -146,7 +141,7 @@
 	},
 	"turn.phase.replacement": {
 		"params": [],
-		"zh-CN": "补充阶段",
+		"zh-CN": "补员阶段",
 		"en": "Replacement Phase"
 	},
 	"turn.phase.turn_heading": {
@@ -181,12 +176,12 @@
 	},
 	"turn.replacement.allied": {
 		"params": [],
-		"zh-CN": "使用盟军补充点。",
+		"zh-CN": "使用盟军补员点。",
 		"en": "Spend Allied Replacement Points."
 	},
 	"turn.replacement.axis": {
 		"params": [],
-		"zh-CN": "使用轴心国补充点。",
+		"zh-CN": "使用轴心国补员点。",
 		"en": "Spend Axis Replacement Points."
 	},
 	"turn.replacement.location": {

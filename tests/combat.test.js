@@ -350,6 +350,43 @@ test("mechanized advance reaches up to three spaces and stops after restrictive 
 	}
 })
 
+test("mechanized advance cannot pass through a space that would violate stacking", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 31, {})
+	const panzer = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu" && piece.unit_type === "mechanized").id
+	const blockers = data.pieces
+		.filter((piece) => piece?.nation === "ge" && piece.id !== panzer)
+		.slice(0, 3)
+		.map((piece) => piece.id)
+	const spaces = data.spaces.filter((entry) => entry?.kind === "land" && entry.nation === "ge" && entry.terrain === "clear" && !entry.fort).slice(0, 4)
+	const [origin, defender, blocked, beyond] = spaces.map((entry) => entry.id)
+	const localAdjacency = []
+	localAdjacency[origin] = [
+		{ to: defender, type: "regular" },
+		{ to: blocked, type: "regular" },
+	]
+	localAdjacency[defender] = [{ to: origin, type: "regular" }]
+	localAdjacency[blocked] = [
+		{ to: origin, type: "regular" },
+		{ to: beyond, type: "regular" },
+	]
+	localAdjacency[beyond] = [{ to: blocked, type: "regular" }]
+	game.pieces.fill(0)
+	game.pieces[panzer] = origin
+	for (const pieceId of blockers) game.pieces[pieceId] = blocked
+	game.control = data.spaces.map((entry) => (entry ? "axis" : null))
+	game.action = { attack_spaces: [], activation_supply: { [panzer]: "full" } }
+	const combat = {
+		attackers: [panzer],
+		defenders: [],
+		advanced: [],
+		defender_space: defender,
+		retreat_distance: 0,
+	}
+	const paths = Combat.legalAdvancePaths(game, data, Engine.map, localAdjacency, combat, panzer)
+	assert.equal(paths.has(blocked), false)
+	assert.equal(paths.has(beyond), false)
+})
+
 test("retreat length, Shock Armies, Winter 42 and Time of Mud cap advance length", () => {
 	const game = Engine.setup.createInitialState(data, "Campaign", 3, {
 		time_of_mud: true,

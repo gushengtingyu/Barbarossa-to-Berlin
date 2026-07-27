@@ -29,6 +29,47 @@ function loadFrontend() {
 	return { context, window }
 }
 
+test("log headings preserve their first visible character", () => {
+	const { window } = loadFrontend()
+	const cases = [
+		[".h1回合", "h1", "回合"],
+		[".h2消耗阶段", "h2", "消耗阶段"],
+		[".h3补员阶段", "h3", "补员阶段"],
+		[".h3ap盟军行动", "h3 ap", "盟军行动"],
+		[".h3cp轴心国行动", "h3 cp", "轴心国行动"],
+	]
+	for (const [source, className, title] of cases) {
+		const heading = window.on_log(source, 0)
+		assert.equal(heading.className, className)
+		assert.equal(heading.textContent, title)
+	}
+})
+
+test("attrition uses a dedicated action label and hand borders highlight events only", () => {
+	const { context, window } = loadFrontend()
+	const labels = new Map()
+	window.action_button = (verb, label) => labels.set(verb, label)
+	window.view = { state: "axis_attrition", actions: { apply_attrition: 1 } }
+	vm.runInContext("renderActionButtons()", context)
+	assert.equal(labels.get("apply_attrition"), "结算损耗")
+
+	const [opsOnly, eventPlayable] = Engine.data.cards.filter(Boolean).slice(0, 2).map((card) => card.id)
+	window.view = {
+		hand: [opsOnly, eventPlayable],
+		actions: {
+			play_ops: [opsOnly, eventPlayable],
+			play_event: [eventPlayable],
+		},
+		combat_cards: {},
+	}
+	vm.runInContext("rebuildInteractionCache(); updateCards()", context)
+	const opsCard = window.document.querySelector(`.card[data-card-id="${opsOnly}"]`)
+	const eventCard = window.document.querySelector(`.card[data-card-id="${eventPlayable}"]`)
+	assert.equal(opsCard.classList.contains("enabled"), true)
+	assert.equal(opsCard.classList.contains("highlight"), false)
+	assert.equal(eventCard.classList.contains("highlight"), true)
+})
+
 test("reinforcement display uses the published BTB board with accessible card hotspots", () => {
 	const { window } = loadFrontend()
 	const document = window.document
