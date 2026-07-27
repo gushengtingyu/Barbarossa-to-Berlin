@@ -1,6 +1,6 @@
 "use strict"
 
-const { ALLIED, AXIS, DATA_VERSION, RULESET_VERSION, SCHEMA_VERSION } = require("./constants.js")
+const { ALLIED, AXIS, DATA_VERSION, MOSCOW_SPACE_ID, RULESET_VERSION, SCHEMA_VERSION, STALIN_PIECE_ID } = require("./constants.js")
 const I18n = require("./i18n.js")
 
 function clone(value) {
@@ -119,7 +119,7 @@ function normalizeGame(game) {
 	if (game.data_version !== DATA_VERSION) throw new Error(`不支持的数据版本 ${game.data_version}；当前版本为 ${DATA_VERSION}`)
 	if (game.ruleset_version !== RULESET_VERSION) throw new Error(`不支持的规则版本 ${game.ruleset_version}；当前版本为 ${RULESET_VERSION}`)
 	game.options = normalizeOptions(game.options)
-	game.log ||= []
+	if (game.log == null) game.log = []
 	if (!Array.isArray(game.log) || game.log.some((entry) => !entry || typeof entry !== "object" || typeof entry.key !== "string")) throw new Error("invalid structured game log")
 	game.action_log ||= []
 	game.undo ||= []
@@ -169,7 +169,13 @@ function normalizeGame(game) {
 	game.trench_kind ||= {}
 	game.destroyed_forts ||= []
 	for (const spaceId of Object.keys(game.trench)) game.trench_owner[spaceId] ||= game.control?.[spaceId] || null
-	if (!Object.hasOwn(game, "stalin_location")) game.stalin_location = 403
+	if (!Object.hasOwn(game, "stalin_location")) {
+		const legacyLocation = game.pieces?.[STALIN_PIECE_ID]
+		if (game.events.stalin_eliminated) game.stalin_location = null
+		else if (Number.isInteger(legacyLocation) && legacyLocation > 0) game.stalin_location = legacyLocation
+		else game.stalin_location = MOSCOW_SPACE_ID
+	}
+	game.pieces[STALIN_PIECE_ID] = 0
 	game.eliminated_theater ||= {}
 	game.theater_choice ||= null
 	game.replacement ||= null

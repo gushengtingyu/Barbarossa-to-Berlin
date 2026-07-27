@@ -24,11 +24,17 @@ const browserGlobals = {
 	BTB_DATA: "readonly",
 	BTBI18N: "readonly",
 	Image: "readonly",
+	TextDecoder: "readonly",
+	TextEncoder: "readonly",
 	URL: "readonly",
+	Uint8Array: "readonly",
 	alert: "readonly",
+	atob: "readonly",
+	btoa: "readonly",
 	clearTimeout: "readonly",
 	console: "readonly",
 	document: "readonly",
+	fetch: "readonly",
 	globalThis: "readonly",
 	localStorage: "readonly",
 	navigator: "readonly",
@@ -45,7 +51,7 @@ module.exports = [
 	js.configs.recommended,
 	{
 		files: ["**/*.js"],
-		ignores: ["play.js"],
+		ignores: ["play.js", "replay.js"],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: "script",
@@ -56,7 +62,7 @@ module.exports = [
 		},
 	},
 	{
-		files: ["play.js"],
+		files: ["play.js", "replay.js"],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: "script",

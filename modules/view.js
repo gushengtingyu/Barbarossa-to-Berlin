@@ -16,6 +16,8 @@ const Engine = Object.freeze({
 })
 const { data } = Runtime
 const supplyViewCache = new WeakMap()
+const INVALID_STRUCTURED_LOG = "invalid structured game log"
+const REPLAY_DEBUG_LOG_KEY = "core.replay.debug"
 
 function offMapUnits(game) {
 	const result = []
@@ -41,12 +43,41 @@ function offMapUnits(game) {
 	return result
 }
 
-function readNormalized(game) {
+function readNormalizedState(game) {
 	if (!game || typeof game !== "object") throw new Error("game state must be an object")
-	const normalized = Engine.state.normalizeGame(Engine.state.clone(game))
+	const sourceLog = game.log
+	const logCursor = Number.isSafeInteger(sourceLog) && sourceLog >= 0 ? sourceLog : undefined
+	if (sourceLog !== undefined && sourceLog !== null && !Array.isArray(sourceLog) && logCursor === undefined) throw new Error(INVALID_STRUCTURED_LOG)
+	const cloned = Engine.state.clone(game)
+	if (logCursor !== undefined) cloned.log = []
+	const normalized = Engine.state.normalizeGame(cloned)
 	Engine.map.normalizeControlNations(normalized, data)
 	Engine.map.syncPartisanVp(normalized, data)
-	return normalized
+	return { game: normalized, logCursor }
+}
+
+function readNormalized(game) {
+	return readNormalizedState(game).game
+}
+
+function replayDebugTuple(entry) {
+	const params = entry.params
+	if (!params || typeof params !== "object" || Array.isArray(params) || Object.keys(params).length !== 1 || typeof params.entry !== "string") throw new Error("invalid replay debug log entry")
+	let tuple
+	try {
+		tuple = JSON.parse(params.entry)
+	} catch {
+		throw new Error("invalid replay debug log entry")
+	}
+	if (!Array.isArray(tuple)) throw new Error("invalid replay debug log entry")
+	const actionTuple = tuple.length === 4 && Number.isSafeInteger(tuple[0]) && tuple[0] >= 0 && typeof tuple[1] === "string" && tuple[1].length === 2 && typeof tuple[2] === "string" && tuple[2].length > 0
+	const pieTuple = tuple.length === 3 && Number.isSafeInteger(tuple[0]) && tuple[0] >= 0 && tuple[1] === "invoked pie" && typeof tuple[2] === "string"
+	if (!actionTuple && !pieTuple) throw new Error("invalid replay debug log entry")
+	return tuple
+}
+
+function renderLog(locale, log, isReplay) {
+	return log.map((entry) => (isReplay && entry.key === REPLAY_DEBUG_LOG_KEY ? replayDebugTuple(entry) : I18n.render(locale, entry)))
 }
 
 function staticView(game) {
@@ -64,7 +95,8 @@ function staticView(game) {
 
 function playerView(game, player, isReplay = false) {
 	const sourceGame = game
-	game = readNormalized(game)
+	const normalized = readNormalizedState(game)
+	game = normalized.game
 	const locale = game.options.ui_locale
 	const side = Engine.constants.sideForRole(player)
 	const state = GameStates.stateView(game, player, {
@@ -87,7 +119,7 @@ function playerView(game, player, isReplay = false) {
 			axis: Engine.turn.handLimit(game, Engine.constants.AXIS),
 		},
 		prompt: state.prompt,
-		log: game.log.map((entry) => I18n.render(locale, entry)),
+		log: normalized.logCursor === undefined ? renderLog(locale, game.log, isReplay) : normalized.logCursor,
 		pieces: game.pieces,
 		reduced: game.reduced,
 		control: game.control,

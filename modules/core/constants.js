@@ -9,6 +9,8 @@ const SCENARIOS = Object.freeze(["Campaign"])
 const SCHEMA_VERSION = 5
 const DATA_VERSION = 1
 const RULESET_VERSION = 1
+const STALIN_PIECE_ID = 155
+const MOSCOW_SPACE_ID = 403
 
 function sideForRole(role) {
 	if (role === ALLIED_ROLE) return ALLIED
@@ -34,10 +36,12 @@ module.exports = Object.freeze({
 	ALLIED_ROLE,
 	AXIS_ROLE,
 	DATA_VERSION,
+	MOSCOW_SPACE_ID,
 	ROLES,
 	SCENARIOS,
 	SCHEMA_VERSION,
 	RULESET_VERSION,
+	STALIN_PIECE_ID,
 	otherSide,
 	roleForSide,
 	sideForRole,

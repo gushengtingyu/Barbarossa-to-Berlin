@@ -238,5 +238,10 @@
 		"params": [],
 		"zh-CN": "轴心国Campaign胜利",
 		"en": "Axis Campaign Victory"
+	},
+	"turn.victory.resigned": {
+		"params": ["role"],
+		"zh-CN": "{role}认输。",
+		"en": "{role} resigned."
 	}
 }

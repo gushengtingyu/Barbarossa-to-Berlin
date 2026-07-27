@@ -370,10 +370,12 @@ function validatePieces(pieces) {
 
 function validateReferences(tables) {
 	const cardIds = new Set(tables.cards.map((card) => card.id))
-	const pieceIds = new Set(tables.pieces.map((piece) => piece.id))
+	const piecesById = new Map(tables.pieces.map((piece) => [piece.id, piece]))
+	const pieceIds = new Set(piecesById.keys())
 	const spaceIds = new Set(tables.spaces.map((space) => space.id))
 	for (const row of tables.setup) {
 		if (!pieceIds.has(row.piece_id)) throw new Error(`setup: unknown piece ${row.piece_id}`)
+		if (piecesById.get(row.piece_id).size === "marker") throw new Error(`setup: marker piece ${row.piece_id} may not be placed in runtime setup`)
 		if (row.space_id !== undefined && !spaceIds.has(row.space_id)) throw new Error(`setup: unknown space ${row.space_id}`)
 		if (row.space_id === undefined && !row.location) throw new Error(`setup: piece ${row.piece_id} needs space_id or location`)
 	}

@@ -192,6 +192,12 @@ test("supply and map status helpers summarize public state", () => {
 		rlf: 3,
 		rmf: 2,
 	}
+	pieces[4] = {
+		id: 4,
+		name: "测试标记",
+		side: "allied",
+		size: "marker",
+	}
 	const helpers = frontendHelpers(
 		{
 			control: { 7: "allied" },
@@ -210,7 +216,7 @@ test("supply and map status helpers summarize public state", () => {
 		limited: 1,
 		oos: 1,
 	})
-	assert.equal(helpers.spaceStatusText(spaces[7]), "测试城 · 控制：盟军 · 森林 · 城市 · VP 1 · 港口 · 要塞 · 战壕 2 · 坚守 · 游击队 · 2个单位")
+	assert.equal(helpers.spaceStatusText(spaces[7]), "测试城 · 控制：盟军 · 森林 · 城市 · VP 1 · 港口 · 要塞 · 战壕 2 · 坚守 · 游击队 · 1个单位")
 	assert.equal(helpers.pieceStatusText(3), "测试军（减员） · 盟军 · 2-3-2 · 测试城")
 })
 

@@ -216,14 +216,30 @@ function startEndPhases(game) {
 	startAttrition(game, AXIS)
 }
 
-function finish(game, result, messageKey) {
+function finish(game, result, message) {
+	if (game.state === "game_over") return game
+	let descriptor
+	if (typeof message === "string") descriptor = { key: message, params: {} }
+	else if (message && typeof message === "object" && !Array.isArray(message) && typeof message.key === "string") {
+		descriptor = {
+			key: message.key,
+			params: message.params === undefined ? {} : message.params,
+			...(message.format !== undefined ? { format: message.format } : {}),
+		}
+	} else throw new Error("game-over message must be an i18n key or descriptor")
+
+	log(game, descriptor.key, descriptor.params, descriptor.format === undefined ? "" : descriptor.format)
 	game.result = result
-	game.victory = { key: messageKey, params: {} }
+	game.victory = {
+		key: descriptor.key,
+		params: { ...descriptor.params },
+		...(descriptor.format ? { format: descriptor.format } : {}),
+	}
 	game.phase = "game_over"
 	game.state = "game_over"
 	game.active = "None"
 	clearUndo(game)
-	log(game, messageKey)
+	return game
 }
 
 function alliedControlsAllGermanSupplySpaces(game, data) {

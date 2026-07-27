@@ -48,5 +48,10 @@
 		"params": ["side", "count"],
 		"zh-CN": "{side}确认收到{count}处补给警告。",
 		"en": "{side} acknowledges {count} supply warnings."
+	},
+	"core.replay.debug": {
+		"params": ["entry"],
+		"zh-CN": "回放调试：{entry}",
+		"en": "Replay debug: {entry}"
 	}
 }

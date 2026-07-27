@@ -425,7 +425,10 @@ function spaceStatusText(space, viewState = view) {
 	if (trench) parts.push(uiText("ui.space.trench", { level: trench }))
 	if (Boolean(viewState?.stand_fast?.[space.id]) || includesId(viewState?.stand_fast, space.id)) parts.push(uiText("ui.space.stand_fast"))
 	if (includesId(viewState?.partisans, space.id)) parts.push(uiText("ui.space.partisans"))
-	const pieceCount = Object.values(viewState?.pieces || {}).filter((location) => location === space.id).length
+	const pieceCount = Object.entries(viewState?.pieces || {}).filter(([pieceId, location]) => {
+		const piece = BTB.pieces?.[Number(pieceId)]
+		return location === space.id && piece && piece.size !== "marker"
+	}).length
 	if (pieceCount) parts.push(uiText("ui.space.unit_count", { count: pieceCount }))
 	return parts.join(" · ")
 }
@@ -459,6 +462,17 @@ function outOfSupplySpaceIds(viewState = view) {
 	for (const pieceId of viewState?.oos || []) {
 		const location = viewState?.pieces?.[pieceId]
 		if (Number.isInteger(location) && location > 0) result.add(location)
+	}
+	return result
+}
+
+function occupiedUnitSpaceIds(viewState = view) {
+	const result = new Set()
+	for (const [pieceIdText, location] of Object.entries(viewState?.pieces || {})) {
+		if (!Number.isInteger(location) || location <= 0 || !BTB.spaces?.[location]) continue
+		const piece = BTB.pieces?.[Number(pieceIdText)]
+		if (!piece || piece.size === "marker") continue
+		result.add(location)
 	}
 	return result
 }
@@ -899,11 +913,12 @@ function updateMapMarkers() {
 	const layer = document.getElementById("piece-overlay")
 	const activeKeys = new Set()
 	const oosSpaces = outOfSupplySpaceIds()
+	const occupiedUnitSpaces = occupiedUnitSpaceIds()
 	currentMarkerStacks.clear()
 	for (const space of BTB.spaces) {
 		if (!space) continue
 		const markers = []
-		const controlMarker = controlMarkerDescriptor(space)
+		const controlMarker = occupiedUnitSpaces.has(space.id) ? null : controlMarkerDescriptor(space)
 		if (controlMarker) markers.push(controlMarker)
 		const trench = Number(view?.trench?.[space.id] || 0)
 		if (trench > 0)
@@ -1288,7 +1303,7 @@ function updatePieces() {
 	for (const [pieceIdText, location] of Object.entries(view?.pieces || {})) {
 		const pieceId = Number(pieceIdText)
 		const piece = BTB.pieces[pieceId]
-		if (!piece) continue
+		if (!piece || piece.size === "marker") continue
 		const element = ensurePiece(pieceId)
 		const size = pieceSize(piece)
 		setPieceDimensions(element, size)
@@ -1972,6 +1987,11 @@ function on_update() {
 	renderActionButtons()
 }
 
+globalThis.init_replay = function initReplay() {
+	const script = document.createElement("script")
+	script.src = "replay.js"
+	document.body.appendChild(script)
+}
 globalThis.on_update = on_update
 globalThis.on_init = on_init
 globalThis.on_log = on_log

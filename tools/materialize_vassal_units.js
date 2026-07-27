@@ -66,7 +66,7 @@ function buildUnitTables() {
 		id: piece.id,
 		flags: "vassal_identity;counter_scan_reviewed",
 	}))
-	const pieceIds = new Set(pieces.map((piece) => piece.id))
+	const runtimePieceIds = new Set(pieces.filter((piece) => piece.size !== "marker").map((piece) => piece.id))
 	const aliases = new Map([
 		["hellfirepass", "helltirepass"],
 		["palmero", "palermo"],
@@ -74,7 +74,7 @@ function buildUnitTables() {
 	const spacesByName = new Map(data.spaces.filter(Boolean).map((space) => [normalizeName(space.name), space.id]))
 	const setup = []
 	for (const source of draft.setup) {
-		if (!pieceIds.has(source.gpid)) continue
+		if (!runtimePieceIds.has(source.gpid)) continue
 		const normalized = aliases.get(normalizeName(source.location)) || normalizeName(source.location)
 		const spaceId = normalized === "homs" ? 191 : spacesByName.get(normalized)
 		let location = ""

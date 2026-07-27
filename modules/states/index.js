@@ -44,7 +44,11 @@ function registerState(name, spec) {
 	registry.set(name, Object.freeze({ undo: spec.undo !== false, ...spec }))
 }
 
-for (const modulePath of ["./states_turn.js", "./states_action.js", "./states_activation.js", "./states_combat.js", "./event_states.js"]) require(modulePath).register(registerState, runtime)
+require("./states_turn.js").register(registerState, runtime)
+require("./states_action.js").register(registerState, runtime)
+require("./states_activation.js").register(registerState, runtime)
+require("./states_combat.js").register(registerState, runtime)
+require("./event_states.js").register(registerState, runtime)
 
 function stateSpec(name) {
 	const spec = registry.get(name)

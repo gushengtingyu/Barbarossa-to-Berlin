@@ -606,6 +606,13 @@
 		"zh-CN": "无",
 		"en": "none"
 	},
+	"core.replay.debug": {
+		"params": [
+			"entry"
+		],
+		"zh-CN": "回放调试：{entry}",
+		"en": "Replay debug: {entry}"
+	},
 	"core.role.allied": {
 		"params": [],
 		"zh-CN": "盟军",
@@ -2099,6 +2106,13 @@
 		"params": [],
 		"zh-CN": "轴心国Campaign胜利",
 		"en": "Axis Campaign Victory"
+	},
+	"turn.victory.resigned": {
+		"params": [
+			"role"
+		],
+		"zh-CN": "{role}认输。",
+		"en": "{role} resigned."
 	},
 	"turn.voluntary_elimination": {
 		"params": [],

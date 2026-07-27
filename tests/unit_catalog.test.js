@@ -25,8 +25,17 @@ test("reviewed counter catalog covers every combat counter image", () => {
 })
 
 test("unit materializer maps initial stacks without inventing placement choices", () => {
-	const { setup } = buildUnitTables()
-	assert.equal(setup.length, 188)
+	const { pieces, setup } = buildUnitTables()
+	const markerIds = new Set(pieces.filter((piece) => piece.size === "marker").map((piece) => piece.id))
+	assert.equal(setup.length, 187)
+	assert.equal(
+		setup.some((row) => markerIds.has(row.piece_id)),
+		false,
+	)
+	assert.equal(
+		setup.some((row) => row.piece_id === 155),
+		false,
+	)
 	assert.equal(
 		setup.some((row) => row.location === "setup_choice:occupied_france"),
 		true,
