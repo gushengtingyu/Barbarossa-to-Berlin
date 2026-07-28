@@ -151,10 +151,83 @@ function advanceCandidates(game, data, adjacency) {
 	return onMapParticipants(game, "attackers").filter((pieceId) => !game.combat.advanced.includes(pieceId) && Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId).size)
 }
 
-function commonAdvanceDestinations(game, data, adjacency, pieceIds) {
+function uniqueAdvanceRoutes(routes) {
+	const seen = new Set()
+	return routes.filter((route) => {
+		const key = route.join(",")
+		if (seen.has(key)) return false
+		seen.add(key)
+		return true
+	})
+}
+
+function initialAdvanceRoutes(game, data, adjacency, pieceId) {
+	return uniqueAdvanceRoutes([...Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId).values()].map((path) => path.slice()))
+}
+
+function advanceRoutesForPieces(game, data, adjacency, pieceIds) {
+	const stored = game.combat.advance_routes
+	return Object.fromEntries(pieceIds.map((pieceId) => [pieceId, stored?.[pieceId]?.map((route) => route.slice()) || initialAdvanceRoutes(game, data, adjacency, pieceId)]))
+}
+
+function advanceRouteCanStop(routes) {
+	return routes.some((route) => route.length === 0)
+}
+
+function advanceRouteNextSpaces(routes) {
+	return [...new Set(routes.filter((route) => route.length).map((route) => route[0]))]
+}
+
+function advanceRoutesAfterStep(routes, destination) {
+	return routes.filter((route) => route[0] === destination).map((route) => route.slice(1))
+}
+
+function commonRouteNextSpaces(routesByPiece, pieceIds) {
 	if (!pieceIds.length) return []
-	const paths = pieceIds.map((pieceId) => Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId))
-	return [...paths[0].keys()].filter((destination) => paths.every((choices) => choices.has(destination)) && Engine.map.canStackFormation(game, data, pieceIds, destination))
+	const first = advanceRouteNextSpaces(routesByPiece[pieceIds[0]] || [])
+	return first.filter((destination) => pieceIds.slice(1).every((pieceId) => advanceRouteNextSpaces(routesByPiece[pieceId] || []).includes(destination)))
+}
+
+function advanceGroupCanFinish(game, data, routesByPiece, pieceIds) {
+	const required = pieceIds.filter((pieceId) => !advanceRouteCanStop(routesByPiece[pieceId] || []))
+	if (!required.length) return true
+	for (const destination of commonRouteNextSpaces(routesByPiece, required)) {
+		if (!Engine.map.canStackFormation(game, data, required, destination)) continue
+		const nextRoutes = Object.fromEntries(required.map((pieceId) => [pieceId, advanceRoutesAfterStep(routesByPiece[pieceId], destination)]))
+		if (advanceGroupCanFinish(game, data, nextRoutes, required)) return true
+	}
+	return false
+}
+
+function commonAdvanceSteps(game, data, adjacency, pieceIds) {
+	if (!pieceIds.length) return []
+	const routesByPiece = advanceRoutesForPieces(game, data, adjacency, pieceIds)
+	return commonRouteNextSpaces(routesByPiece, pieceIds).filter((destination) => {
+		if (!Engine.map.canStackFormation(game, data, pieceIds, destination)) return false
+		const nextRoutes = Object.fromEntries(pieceIds.map((pieceId) => [pieceId, advanceRoutesAfterStep(routesByPiece[pieceId], destination)]))
+		return advanceGroupCanFinish(game, data, nextRoutes, pieceIds)
+	})
+}
+
+function selectableAdvancePieces(game, data, adjacency) {
+	const selected = game.combat.advance_pieces || []
+	return advanceCandidates(game, data, adjacency).filter((pieceId) => selected.includes(pieceId) || commonAdvanceSteps(game, data, adjacency, selected.concat(pieceId)).length)
+}
+
+function clearAdvanceGroupIfEmpty(game) {
+	if (game.combat.advance_pieces?.length) return
+	delete game.combat.advance_pieces
+	delete game.combat.advance_routes
+}
+
+function completeAdvancePieces(game, pieceIds) {
+	const completed = new Set(pieceIds)
+	for (const pieceId of pieceIds) {
+		if (!game.combat.advanced.includes(pieceId)) game.combat.advanced.push(pieceId)
+		if (game.combat.advance_routes) delete game.combat.advance_routes[pieceId]
+	}
+	game.combat.advance_pieces = (game.combat.advance_pieces || []).filter((pieceId) => !completed.has(pieceId))
+	clearAdvanceGroupIfEmpty(game)
 }
 
 function groupedSelection(handler) {
@@ -189,8 +262,13 @@ const toggleAdvancePiece = groupedSelection(function toggleAdvancePiece(game, ro
 	const pieceId = Number(noun)
 	const selected = (game.combat.advance_pieces ||= [])
 	const index = selected.indexOf(pieceId)
+	if (game.combat.advance_routes) {
+		if (index >= 0 && advanceRouteCanStop(game.combat.advance_routes[pieceId] || [])) completeAdvancePieces(game, [pieceId])
+		return
+	}
 	if (index < 0) selected.push(pieceId)
 	else selected.splice(index, 1)
+	clearAdvanceGroupIfEmpty(game)
 })
 
 const selectAllCombatAttackers = groupedSelection(function selectAllCombatAttackers(game, role, noun, { data, adjacency }) {
@@ -226,6 +304,8 @@ function finishCombat(game, data, adjacency) {
 
 function beginAdvance(game) {
 	game.combat.advanced = []
+	delete game.combat.advance_pieces
+	delete game.combat.advance_routes
 	game.active = roleForSide(game.combat.attacker_side)
 	game.state = "combat_advance"
 }
@@ -783,33 +863,56 @@ function register(registerState) {
 	registerState("combat_advance", {
 		prompt(result, game, role, { data, adjacency }) {
 			const selected = game.combat.advance_pieces || []
-			result.prompt(selected.length ? "combat.advance.destination" : "combat.advance.choose")
-			const pieces = advanceCandidates(game, data, adjacency)
-			if (pieces.length) result.action("piece", pieces)
-			if (selected.length) result.action("move", commonAdvanceDestinations(game, data, adjacency, selected))
-			else result.action("done")
+			const advancing = !!game.combat.advance_routes
+			result.prompt(!selected.length ? "combat.advance.choose" : advancing ? "combat.advance.continue" : "combat.advance.destination")
+			if (!selected.length) {
+				const pieces = advanceCandidates(game, data, adjacency)
+				if (pieces.length) result.action("piece", pieces)
+				result.action("done")
+				return
+			}
+			if (advancing) {
+				const droppable = selected.filter((pieceId) => advanceRouteCanStop(game.combat.advance_routes[pieceId] || []))
+				if (droppable.length) result.action("piece", droppable)
+				if (droppable.length === selected.length) result.action("stop")
+			} else {
+				result.action("piece", selectableAdvancePieces(game, data, adjacency))
+			}
+			result.action("move", commonAdvanceSteps(game, data, adjacency, selected))
 		},
 		piece: toggleAdvancePiece,
 		done(game, role, noun, { data, adjacency }) {
 			finishCombat(game, data, adjacency)
 		},
+		stop(game) {
+			completeAdvancePieces(game, game.combat.advance_pieces.slice())
+		},
 		move(game, role, noun, { data, adjacency }) {
 			const destination = Number(noun)
 			const pieces = game.combat.advance_pieces.slice()
-			Engine.state.log(game, "core.blank")
-			Engine.state.log(game, "combat.log.advance", { space: `s${destination}` }, "bold")
+			const routesByPiece = advanceRoutesForPieces(game, data, adjacency, pieces)
+			game.combat.advance_routes = routesByPiece
+			if (!game.combat.advance_log_started) {
+				Engine.state.log(game, "combat.log.advance_heading", {}, "strong")
+				game.combat.advance_log_started = true
+			}
+			Engine.state.log(
+				game,
+				"combat.log.advance_group",
+				{
+					pieces: I18n.list(pieces.map((pieceId) => Engine.state.pieceLogRef(game, pieceId))),
+					destination: `s${destination}`,
+				},
+				"detail2",
+			)
 			for (const pieceId of pieces) {
-				const paths = Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId)
-				const path = paths.get(destination)
-				Engine.map.movePieceAlongPath(game, data, pieceId, path, { freeStandFastExit: true })
-				game.combat.advanced.push(pieceId)
-				Engine.state.log(game, "combat.log.piece", { piece: Engine.state.pieceLogRef(game, pieceId) }, "detail")
-				if (game.combat.zitadelle_objective && path.includes(game.combat.defender_space) && data.pieces[pieceId]?.nation === "ge" && data.pieces[pieceId]?.size === "lcu" && data.pieces[pieceId]?.unit_type === "mechanized")
+				game.combat.advance_routes[pieceId] = advanceRoutesAfterStep(routesByPiece[pieceId], destination)
+				Engine.map.movePieceAlongPath(game, data, pieceId, [destination], { freeStandFastExit: true })
+				if (game.combat.zitadelle_objective && destination === game.combat.defender_space && data.pieces[pieceId]?.nation === "ge" && data.pieces[pieceId]?.size === "lcu" && data.pieces[pieceId]?.unit_type === "mechanized")
 					game.event.zitadelle_success = true
 			}
-			delete game.combat.advance_pieces
-			game.state = "combat_advance"
-			if (!advanceCandidates(game, data, adjacency).length) finishCombat(game, data, adjacency)
+			const completed = pieces.filter((pieceId) => game.combat.advance_routes[pieceId].every((route) => route.length === 0))
+			if (completed.length) completeAdvancePieces(game, completed)
 		},
 	})
 }

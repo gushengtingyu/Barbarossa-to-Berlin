@@ -1241,7 +1241,44 @@ test("defending units may retreat to different destinations", () => {
 	assert.equal(game.undo.length, 0)
 })
 
-test("combat advance selects and moves a unit group in one action", () => {
+function axisAdvanceGame(seed, attackers, origin, defender, attackSpaces = []) {
+	const game = rules.setup(seed, "Campaign", {})
+	game.pieces.fill(0)
+	for (const pieceId of attackers) game.pieces[pieceId] = origin
+	game.control = data.spaces.map((space) => (space ? "axis" : null))
+	game.active = "Axis"
+	game.state = "combat_advance"
+	game.phase = "action"
+	game.turn = 2
+	game.action_round = 1
+	game.action = {
+		mode: "ops",
+		move_spaces: [],
+		attack_spaces: attackSpaces.slice(),
+		activation_supply: Object.fromEntries(attackers.map((pieceId) => [pieceId, "full"])),
+		moved: [],
+		sr_moved: [],
+		attacked: [],
+		defended: [],
+		used_pieces: [],
+		entrenching: [],
+		piece: null,
+	}
+	game.combat = {
+		origin_spaces: [origin],
+		defender_space: defender,
+		attackers: attackers.slice(),
+		defenders: [],
+		advanced: [],
+		retreat_distance: 0,
+		retreat_paths: {},
+		attacker_side: "axis",
+		defender_side: "allied",
+	}
+	return game
+}
+
+test("combat advance selects and moves a unit group one adjacent step at a time", () => {
 	let game = rules.setup(18, "Campaign", {})
 	const memel = data.spaces.find((space) => space?.name === "Memel").id
 	const konigsberg = data.spaces.find((space) => space?.name === "Konigsberg").id
@@ -1292,9 +1329,118 @@ test("combat advance selects and moves a unit group in one action", () => {
 	assert.equal(game.pieces[attackers[0]], konigsberg)
 	assert.equal(game.pieces[attackers[1]], konigsberg)
 	assert.equal(game.pieces[attackers[2]], memel)
-	assert.ok(renderLog(game).includes(`*推进：s${konigsberg}`))
-	assert.ok(renderLog(game).includes(`> ${Engine.state.pieceLogRef(game, attackers[0])}`))
-	assert.ok(renderLog(game).includes(`> ${Engine.state.pieceLogRef(game, attackers[1])}`))
+	const firstGroup = attackers.slice(0, 2).map((pieceId) => Engine.state.pieceLogRef(game, pieceId))
+	assert.ok(renderLog(game).includes("**挺近：**"))
+	assert.ok(renderLog(game).includes(`>> ${firstGroup.join("、")} → s${konigsberg}`))
+	assert.ok(renderLog(game, "en").includes("**Advance:**"))
+	assert.ok(renderLog(game, "en").includes(`>> ${firstGroup.join(", ")} → s${konigsberg}`))
+
+	game = rules.action(game, "Axis", "piece", attackers[2])
+	game = rules.action(game, "Axis", "move", konigsberg)
+	assert.equal(game.log.filter((entry) => entry.key === "combat.log.advance_heading").length, 1)
+	assert.equal(game.log.filter((entry) => entry.key === "combat.log.advance_group").length, 2)
+	assert.equal(game.state, "combat_advance")
+	assert.equal(rules.view(game, "Axis").actions.done, 1)
+})
+
+test("mechanized combat advance executes and logs every adjacent step with undo", () => {
+	const adjacency = Engine.map.buildAdjacency(data)
+	const origin = data.spaces.find((space) => space?.name === "Memel").id
+	const panzer = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu" && piece.unit_type === "mechanized").id
+	const defender = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
+	let game = axisAdvanceGame(181, [panzer], origin, defender)
+	const routes = [...Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, panzer).values()]
+	const route = routes.find((candidate) => candidate.length === 3)
+	assert.ok(route)
+
+	game = rules.action(game, "Axis", "piece", panzer)
+	let actions = rules.view(game, "Axis").actions
+	assert.ok(actions.move.includes(route[0]))
+	assert.equal(actions.move.includes(route[2]), false)
+
+	game = rules.action(game, "Axis", "move", route[0])
+	assert.equal(game.pieces[panzer], route[0])
+	assert.equal(game.log.filter((entry) => entry.key === "combat.log.advance_group").length, 1)
+	const afterFirstStep = {
+		routes: JSON.stringify(game.combat.advance_routes),
+		logLength: game.log.length,
+	}
+
+	game = rules.action(game, "Axis", "move", route[1])
+	assert.equal(game.pieces[panzer], route[1])
+	game = rules.action(game, "Axis", "undo")
+	assert.equal(game.pieces[panzer], route[0])
+	assert.equal(JSON.stringify(game.combat.advance_routes), afterFirstStep.routes)
+	assert.equal(game.log.length, afterFirstStep.logLength)
+
+	game = rules.action(game, "Axis", "move", route[1])
+	game = rules.action(game, "Axis", "move", route[2])
+	assert.equal(game.pieces[panzer], route[2])
+	assert.equal(game.combat.advance_pieces, undefined)
+	assert.equal(game.combat.advance_routes, undefined)
+	assert.ok(game.combat.advanced.includes(panzer))
+	assert.equal(game.log.filter((entry) => entry.key === "combat.log.advance_heading").length, 1)
+	assert.equal(game.log.filter((entry) => entry.key === "combat.log.advance_group").length, 3)
+	assert.equal(rules.view(game, "Axis").actions.done, 1)
+})
+
+test("a combat advance group may leave units behind and continue with the remainder", () => {
+	const adjacency = Engine.map.buildAdjacency(data)
+	const origin = data.spaces.find((space) => space?.name === "Memel").id
+	const panzers = data.pieces
+		.filter((piece) => piece?.nation === "ge" && piece.size === "lcu" && piece.unit_type === "mechanized")
+		.slice(0, 2)
+		.map((piece) => piece.id)
+	const defender = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
+	let game = axisAdvanceGame(182, panzers, origin, defender)
+	const routes = panzers.map((pieceId) => [...Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId).values()])
+	const route = routes[0].find((candidate) => candidate.length >= 2 && routes[1].some((other) => other.slice(0, 2).join(",") === candidate.slice(0, 2).join(",")))
+	assert.ok(route)
+
+	for (const pieceId of panzers) game = rules.action(game, "Axis", "piece", pieceId)
+	game = rules.action(game, "Axis", "move", route[0])
+	assert.deepEqual(game.combat.advance_pieces, panzers)
+	assert.equal(rules.view(game, "Axis").actions.stop, 1)
+	assert.ok(rules.view(game, "Axis").actions.piece.includes(panzers[1]))
+
+	game = rules.action(game, "Axis", "piece", panzers[1])
+	assert.deepEqual(game.combat.advance_pieces, [panzers[0]])
+	assert.ok(game.combat.advanced.includes(panzers[1]))
+	game = rules.action(game, "Axis", "move", route[1])
+	assert.equal(game.pieces[panzers[0]], route[1])
+	assert.equal(game.pieces[panzers[1]], route[0])
+	const logs = renderLog(game).filter((entry) => entry.startsWith(">> "))
+	assert.ok(logs.includes(`>> ${panzers.map((pieceId) => Engine.state.pieceLogRef(game, pieceId)).join("、")} → s${route[0]}`))
+	assert.ok(logs.includes(`>> ${Engine.state.pieceLogRef(game, panzers[0])} → s${route[1]}`))
+})
+
+test("combat advance cannot stop on a Combat marker used as an intermediate step", () => {
+	const adjacency = Engine.map.buildAdjacency(data)
+	const origin = data.spaces.find((space) => space?.name === "Memel").id
+	const panzer = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu" && piece.unit_type === "mechanized").id
+	const defender = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
+	let game = axisAdvanceGame(183, [panzer], origin, defender)
+	const unrestricted = [...Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, panzer).values()]
+	const candidate = unrestricted.find((route) => route.length >= 2)
+	assert.ok(candidate)
+	game.action.attack_spaces = [candidate[0]]
+	const route = [...Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, panzer).values()].find((path) => path.length >= 2 && path[0] === candidate[0])
+	assert.ok(route)
+
+	game = rules.action(game, "Axis", "piece", panzer)
+	game = rules.action(game, "Axis", "move", route[0])
+	const actions = rules.view(game, "Axis").actions
+	assert.equal(actions.stop, undefined)
+	assert.equal(actions.piece, undefined)
+	assert.ok(actions.move.includes(route[1]))
+	game = rules.action(game, "Axis", "move", route[1])
+	assert.equal(game.pieces[panzer], route[1])
+	assert.equal(rules.view(game, "Axis").actions.stop, 1)
+	game = rules.action(game, "Axis", "stop")
+	assert.equal(game.combat.advance_pieces, undefined)
+	assert.equal(game.combat.advance_routes, undefined)
+	assert.ok(game.combat.advanced.includes(panzer))
+	assert.equal(rules.view(game, "Axis").actions.done, 1)
 })
 
 test("Axis strategic-objective attack restrictions follow persistent events and Nordlicht's play round", () => {

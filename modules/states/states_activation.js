@@ -130,13 +130,22 @@ function resolveEntrenchAtSpace(game, role, data, spaceId) {
 	else game.state = "ops_combat"
 }
 
-function logPieceMove(game, pieceId, origin, destination) {
-	if (game.action.move_log_origin !== origin) {
+function logMoveGroup(game, pieceIds, origin, destination) {
+	if (!pieceIds.length) return
+	if (!game.action.move.log_started) {
 		Engine.state.log(game, "core.blank")
 		Engine.state.log(game, "activation.log.move_from", { origin: `s${origin}` })
-		game.action.move_log_origin = origin
+		game.action.move.log_started = true
 	}
-	Engine.state.log(game, "activation.log.move_piece", { piece: Engine.state.pieceLogRef(game, pieceId), destination: `s${destination}` }, "detail")
+	Engine.state.log(
+		game,
+		"activation.log.move_group",
+		{
+			pieces: I18n.list(pieceIds.map((pieceId) => Engine.state.pieceLogRef(game, pieceId))),
+			destination: `s${destination}`,
+		},
+		"detail",
+	)
 }
 
 function beginMoveSelection(game, pieceId) {
@@ -158,9 +167,9 @@ function moveSelectionCandidates(game, data, adjacency, side) {
 
 function dropMovePieces(game, pieceIds) {
 	const move = game.action.move
+	logMoveGroup(game, pieceIds, move.origin, move.current)
 	for (const pieceId of pieceIds) {
 		if (!game.action.moved.includes(pieceId)) game.action.moved.push(pieceId)
-		logPieceMove(game, pieceId, move.origin, move.current)
 	}
 	move.pieces = move.pieces.filter((pieceId) => !pieceIds.includes(pieceId))
 	game.action.piece = move.pieces[0] ?? null

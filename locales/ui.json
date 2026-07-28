@@ -159,6 +159,7 @@
 	"ui.action.done": { "params": [], "zh-CN": "完成", "en": "Done" },
 	"ui.action.roll": { "params": [], "zh-CN": "掷骰", "en": "Roll" },
 	"ui.action.stop": { "params": [], "zh-CN": "停止移动", "en": "Stop moving" },
+	"ui.action.stop_advance": { "params": [], "zh-CN": "停止当前推进", "en": "Stop advancing" },
 	"ui.action.pass": { "params": [], "zh-CN": "跳过", "en": "Pass" },
 	"ui.action.med": { "params": [], "zh-CN": "地中海战区", "en": "Mediterranean theater" },
 	"ui.action.nwe": { "params": [], "zh-CN": "西北欧战区", "en": "Northwest Europe theater" },

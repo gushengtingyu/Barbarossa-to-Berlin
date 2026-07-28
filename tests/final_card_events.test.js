@@ -196,6 +196,9 @@ test("Fall Zitadelle gives Soviet defensive fire +2 and settles its conditional 
 	assert.ok(rules.view(advancing, "Axis").actions.move.includes(targets[0]))
 	const advanceVp = advancing.vp
 	advancing = rules.action(advancing, "Axis", "move", targets[0])
+	assert.equal(advancing.vp, advanceVp)
+	assert.equal(rules.view(advancing, "Axis").actions.done, 1)
+	advancing = rules.action(advancing, "Axis", "done")
 	assert.equal(advancing.vp, advanceVp + 1)
 	assert.ok(rules.view(advancing, "Axis").log.some((entry) => entry.includes("堡垒行动成功")))
 

@@ -456,7 +456,8 @@ test("the last OPS activation advances immediately and movement uses compact log
 	game = rules.action(game, "Axis", "move", destination)
 	if (rules.view(game, "Axis").actions.stop) game = rules.action(game, "Axis", "stop")
 	assert.ok(rules.view(game, "Axis").log.includes(`从 s${memel} 移动`))
-	assert.ok(rules.view(game, "Axis").log.includes(`> ${Engine.state.pieceLogRef(game, pieceId)} → s${destination}`))
+	assert.ok(rules.view(game, "Axis").log.includes(`> ${Engine.state.pieceLogRef(game, pieceId)} -> s${destination}`))
+	assert.ok(renderLog(game, "en").includes(`Moved from s${memel}`))
 })
 
 test("a movement group selects, moves, and stops multiple units together", () => {
@@ -496,8 +497,17 @@ test("a movement group selects, moves, and stops multiple units together", () =>
 	assert.equal(game.state, "ops_move")
 	assert.ok(game.action.moved.includes(pieces[0]))
 	assert.ok(game.action.moved.includes(pieces[1]))
-	assert.ok(rules.view(game, "Axis").log.includes(`> ${Engine.state.pieceLogRef(game, pieces[0])} → s${firstStep}`))
-	assert.ok(rules.view(game, "Axis").log.includes(`> ${Engine.state.pieceLogRef(game, pieces[1])} → s${firstStep}`))
+	const firstGroup = pieces.slice(0, 2).map((pieceId) => Engine.state.pieceLogRef(game, pieceId))
+	assert.ok(renderLog(game).includes(`> ${firstGroup.join("、")} -> s${firstStep}`))
+	assert.ok(renderLog(game, "en").includes(`> ${firstGroup.join(", ")} -> s${firstStep}`))
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_group").length, 1)
+
+	game = rules.action(game, "Axis", "piece", pieces[2])
+	assert.ok(rules.view(game, "Axis").actions.move.includes(firstStep))
+	game = rules.action(game, "Axis", "move", firstStep)
+	game = rules.action(game, "Axis", "stop")
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_from").length, 2)
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_group").length, 2)
 })
 
 test("a completed move activation removes its marker before the combat step", () => {
@@ -569,7 +579,14 @@ test("a slower unit automatically drops from a moving group while faster units c
 	assert.deepEqual(game.action.move.pieces, [fast])
 	assert.equal(game.action.move.current, konigsberg)
 	assert.ok(rules.view(game, "Axis").actions.move.length > 0)
-	assert.ok(renderLog(game).includes(`> ${Engine.state.pieceLogRef(game, slow)} → s${konigsberg}`))
+	assert.ok(renderLog(game).includes(`> ${Engine.state.pieceLogRef(game, slow)} -> s${konigsberg}`))
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_from").length, 1)
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_group").length, 1)
+	assert.equal(rules.view(game, "Axis").actions.stop, 1)
+	game = rules.action(game, "Axis", "stop")
+	assert.ok(renderLog(game).includes(`> ${Engine.state.pieceLogRef(game, fast)} -> s${konigsberg}`))
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_from").length, 1)
+	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_group").length, 2)
 })
 
 test("movement return restores the unit-selection checkpoint without replay noise", () => {

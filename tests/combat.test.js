@@ -340,6 +340,7 @@ test("mechanized advance reaches up to three spaces and stops after restrictive 
 		retreat_path: [],
 	}
 	const paths = Combat.legalAdvancePaths(game, data, Engine.map, adjacency, combat, pieceId)
+	assert.deepEqual(paths.get(defender), [defender])
 	assert.ok([...paths.values()].some((path) => path.length === 3))
 	for (const path of paths.values()) {
 		assert.ok(path.length <= 3)

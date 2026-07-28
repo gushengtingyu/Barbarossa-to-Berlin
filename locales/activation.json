@@ -27,7 +27,12 @@
 	"activation.log.move_from": {
 		"params": ["origin"],
 		"zh-CN": "从 {origin} 移动",
-		"en": "Move from {origin}"
+		"en": "Moved from {origin}"
+	},
+	"activation.log.move_group": {
+		"params": ["pieces", "destination"],
+		"zh-CN": "{pieces} -> {destination}",
+		"en": "{pieces} -> {destination}"
 	},
 	"activation.log.move_piece": {
 		"params": ["piece", "destination"],

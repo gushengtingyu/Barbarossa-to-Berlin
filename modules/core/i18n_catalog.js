@@ -205,7 +205,15 @@
 			"origin"
 		],
 		"zh-CN": "从 {origin} 移动",
-		"en": "Move from {origin}"
+		"en": "Moved from {origin}"
+	},
+	"activation.log.move_group": {
+		"params": [
+			"pieces",
+			"destination"
+		],
+		"zh-CN": "{pieces} -> {destination}",
+		"en": "{pieces} -> {destination}"
 	},
 	"activation.log.move_piece": {
 		"params": [
@@ -283,10 +291,15 @@
 		"zh-CN": "选择推进单位。",
 		"en": "Choose advancing units."
 	},
+	"combat.advance.continue": {
+		"params": [],
+		"zh-CN": "选择下一相邻空间；也可留下部分单位或停止当前推进组。",
+		"en": "Choose the next adjacent space; you may also leave units behind or stop the current advance group."
+	},
 	"combat.advance.destination": {
 		"params": [],
-		"zh-CN": "选择一起推进的单位，再选择目的地。",
-		"en": "Choose units to advance together, then choose their destination."
+		"zh-CN": "选择一起推进的单位，再选择相邻空间。",
+		"en": "Choose units to advance together, then choose an adjacent space."
 	},
 	"combat.attacker.cards": {
 		"params": [],
@@ -375,6 +388,19 @@
 		],
 		"zh-CN": "推进：{space}",
 		"en": "Advance: {space}"
+	},
+	"combat.log.advance_group": {
+		"params": [
+			"pieces",
+			"destination"
+		],
+		"zh-CN": "{pieces} → {destination}",
+		"en": "{pieces} → {destination}"
+	},
+	"combat.log.advance_heading": {
+		"params": [],
+		"zh-CN": "挺近：",
+		"en": "Advance:"
 	},
 	"combat.log.attacker": {
 		"params": [],
@@ -2426,6 +2452,11 @@
 		"params": [],
 		"zh-CN": "停止移动",
 		"en": "Stop moving"
+	},
+	"ui.action.stop_advance": {
+		"params": [],
+		"zh-CN": "停止当前推进",
+		"en": "Stop advancing"
 	},
 	"ui.action.undo": {
 		"params": [],

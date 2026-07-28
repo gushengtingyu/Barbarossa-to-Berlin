@@ -584,7 +584,7 @@ function legalAdvancePaths(game, data, map, adjacency, combat, pieceId) {
 			if (!Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
 			if (!map.canStack(game, data, pieceId, edge.to)) continue
 			const hasCombatMarker = game.action?.attack_spaces?.includes(edge.to)
-			if (!hasCombatMarker) paths.set(edge.to, path)
+			if (!hasCombatMarker && !paths.has(edge.to)) paths.set(edge.to, path)
 			if (stopsMechanizedAdvance(game, combat, next) || stopsWinter42GermanAdvance(game, data, pieceId, next)) continue
 			if (visited.has(edge.to) && visited.get(edge.to) <= path.length) continue
 			visited.set(edge.to, path.length)

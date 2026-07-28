@@ -50,7 +50,7 @@ const STATE_ACTION_LABELS = Object.freeze({
 	combat_defender_cc: { continue: "ui.action.done" },
 	combat_retreat_option: { continue: "ui.action.retreat" },
 	combat_retreat: { done: "ui.action.finish_retreat" },
-	combat_advance: { done: "ui.action.end_advance" },
+	combat_advance: { stop: "ui.action.stop_advance", done: "ui.action.end_advance" },
 })
 const PIECE_SIZES = Object.freeze({ lcu: 58, scu: 46 })
 const REINFORCEMENT_PIECE_SIZES = Object.freeze({ lcu: 75, scu: 60 })
