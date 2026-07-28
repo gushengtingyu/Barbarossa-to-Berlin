@@ -53,7 +53,10 @@ test("attrition uses a dedicated action label and hand borders highlight events 
 	vm.runInContext("renderActionButtons()", context)
 	assert.equal(labels.get("apply_attrition"), "结算损耗")
 
-	const [opsOnly, eventPlayable] = Engine.data.cards.filter(Boolean).slice(0, 2).map((card) => card.id)
+	const [opsOnly, eventPlayable] = Engine.data.cards
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((card) => card.id)
 	window.view = {
 		hand: [opsOnly, eventPlayable],
 		actions: {
@@ -224,6 +227,57 @@ test("an over-capacity off-map pool expands on demand without replacing counter 
 	assert.equal(document.getElementById("focus-box").style.display, "block")
 	assert.equal(new Set(counters.map((counter) => `${counter.style.left}:${counter.style.top}`)).size, counters.length)
 	assert.equal(document.querySelector(`.piece[title^="#${axisPieces[0].id} "]`), firstCounter)
+})
+
+test("a legal counter in a normal off-map pool sends its piece action immediately", () => {
+	const { context, window } = loadFrontend()
+	const sent = []
+	window.send_action = (...args) => sent.push(args)
+	const target = Engine.data.pieces.find((piece) => piece?.side === "allied" && piece.size === "lcu")
+	const pieces = Array(Engine.data.pieces.length).fill("removed")
+	pieces[target.id] = "eliminated:allied"
+	window.view = {
+		actions: { piece: [target.id] },
+		pieces,
+		reduced: [],
+		neutrals: {},
+		off_map_units: [],
+	}
+	vm.runInContext("rebuildInteractionCache(); updatePieces()", context)
+	const counter = window.document.querySelector(`.piece[title^="#${target.id} "]`)
+	assert.equal(counter.classList.contains("highlight"), true)
+
+	counter.dispatchEvent(new window.Event("click"))
+	assert.deepEqual(sent, [["piece", target.id]])
+})
+
+test("a legal counter in an expanded over-capacity pool sends its piece action", () => {
+	const { context, window } = loadFrontend()
+	const document = window.document
+	const sent = []
+	window.send_action = (...args) => sent.push(args)
+	const alliedPieces = Engine.data.pieces.filter((piece) => piece?.side === "allied" && piece.size !== "marker").slice(0, 30)
+	const target = alliedPieces.find((piece) => piece.size === "lcu")
+	const pieces = Array(Engine.data.pieces.length).fill("removed")
+	for (const piece of alliedPieces) pieces[piece.id] = "eliminated:allied"
+	window.view = {
+		actions: { piece: [target.id] },
+		pieces,
+		reduced: [],
+		neutrals: {},
+		off_map_units: [],
+	}
+	vm.runInContext("rebuildInteractionCache(); updatePieces()", context)
+	const counter = document.querySelector(`.piece[title^="#${target.id} "]`)
+	assert.equal(counter.classList.contains("highlight"), true)
+
+	counter.dispatchEvent(new window.Event("click"))
+	assert.equal(document.getElementById("focus-box").style.display, "block")
+	assert.deepEqual(sent, [])
+
+	counter.dispatchEvent(new window.Event("click"))
+	assert.deepEqual(sent, [["piece", target.id]])
+	assert.equal(document.getElementById("focus-box").style.display, "block")
 })
 
 test("published chart keeps its aspect ratio and scrolls safely on narrow screens", () => {

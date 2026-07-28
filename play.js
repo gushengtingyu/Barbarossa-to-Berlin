@@ -801,8 +801,8 @@ function ensurePiece(pieceId) {
 			return
 		}
 		const offMapKey = element.dataset.offMapKey
-		if (offMapKey && offMapStackNeedsFocus(offMapKey, currentOffMapStacks.get(offMapKey))) {
-			focusOffMapStack(focusedOffMapStack === offMapKey ? null : offMapKey)
+		if (offMapKey && focusedOffMapStack !== offMapKey && offMapStackNeedsFocus(offMapKey, currentOffMapStacks.get(offMapKey))) {
+			focusOffMapStack(offMapKey)
 			return
 		}
 		const spaceId = Number(element.dataset.spaceId)
