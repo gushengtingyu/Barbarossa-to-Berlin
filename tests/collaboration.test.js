@@ -21,6 +21,7 @@ function makeActionGame(seed = 301, options = {}) {
 
 test("rollback proposals require the opponent and rejection restores the original live state", () => {
 	let game = makeActionGame()
+	Engine.state.pushUndo(game)
 	const before = JSON.stringify(game)
 	const view = rules.view(game, "Axis")
 	assert.deepEqual(view.actions.propose_rollback, [0])
@@ -61,12 +62,14 @@ test("accepted rollback restores the checkpoint, preserves the current PRNG seed
 
 test("rollback PRNG audit entries reproduce exactly without exposing discarded actions", () => {
 	const game = rules.setup(303, "Campaign", {})
+	game.undo = [{ state: "transient" }]
 	Engine.collaboration.applyRollbackAudit(game, {
 		seed: 246813579,
 		name: I18n.message("core.rollback.action_round", { turn: 2, round: 1, side: I18n.message("core.role.axis") }),
 		proposer: "Axis",
 		reviewer: "Allied",
 	})
+	assert.deepEqual(game.undo, [])
 	const replayed = rules.replay(303, "Campaign", {}, game.action_log)
 	assert.equal(JSON.stringify(replayed), JSON.stringify(game))
 })

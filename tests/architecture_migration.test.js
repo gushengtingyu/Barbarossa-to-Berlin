@@ -83,6 +83,12 @@ const EXPECTED_STATES = [
 	"review_rollback_proposal",
 ]
 
+function setupCampaignOpening(seed = 2) {
+	let game = rules.setup(seed, "Campaign", {})
+	while (game.state === "axis_setup_occupied_france") game = rules.action(game, "Axis", "space", rules.view(game, "Axis").actions.space[0])
+	return rules.action(game, "Axis", "card", game.opening_cards[0])
+}
+
 test("workflow registry owns every reachable state exactly once", () => {
 	assert.deepEqual(States.registeredStates().slice().sort(), EXPECTED_STATES.slice().sort())
 	assert.equal(States.stateEntries().length, EXPECTED_STATES.length)
@@ -115,6 +121,40 @@ test("state projection provides Chinese prompts and actions only to the active r
 	game.state = "allied_mulligan"
 	game.active = "Allied"
 	assert.equal(rules.view(game, "Axis").prompt, "等待 盟军 行动")
+})
+
+test("Campaign setup offers the Allied mulligan before Turn 1 when cards 2 and 24 are absent", () => {
+	const game = setupCampaignOpening()
+	const initialReinforcements = [2, 24].map((number) => Engine.cards.findCard(Engine.data, "allied", number))
+
+	assert.equal(
+		game.hands.allied.some((cardId) => initialReinforcements.includes(cardId)),
+		false,
+	)
+	assert.equal(game.state, "allied_mulligan")
+	assert.equal(game.active, "Allied")
+	assert.equal(game.phase, "setup")
+	assert.equal(game.action_round, 0)
+})
+
+test("Allied may pass the initial mulligan without changing any card pile", () => {
+	let game = setupCampaignOpening()
+	const before = {
+		hand: game.hands.allied.slice(),
+		deck: game.decks.allied.slice(),
+		discard: game.discards.allied.slice(),
+	}
+
+	assert.equal(rules.view(game, "Allied").actions.pass, 1)
+	game = rules.action(game, "Allied", "pass")
+
+	assert.equal(game.state, "turn1_stalin_orders")
+	assert.equal(game.active, "Axis")
+	assert.equal(game.phase, "action")
+	assert.equal(game.action_round, 6)
+	assert.deepEqual(game.hands.allied, before.hand)
+	assert.deepEqual(game.decks.allied, before.deck)
+	assert.deepEqual(game.discards.allied, before.discard)
 })
 
 test("rule 4 Allied mulligan may retain one card and refill to seven", () => {
@@ -166,6 +206,27 @@ test("rule 4 second failed Allied mulligan exchanges a 3+ OPS card for card 24",
 	assert.ok(game.hands.allied.includes(card24))
 	assert.ok(game.discards.allied.includes(exchange))
 	assert.ok(!game.decks.allied.includes(card24))
+})
+
+test("Allied may pass the second mulligan exchange without changing any card pile", () => {
+	let game = setupCampaignOpening()
+	game.state = "allied_mulligan_exchange"
+	const before = {
+		hand: game.hands.allied.slice(),
+		deck: game.decks.allied.slice(),
+		discard: game.discards.allied.slice(),
+	}
+
+	assert.equal(rules.view(game, "Allied").actions.pass, 1)
+	game = rules.action(game, "Allied", "pass")
+
+	assert.equal(game.state, "turn1_stalin_orders")
+	assert.equal(game.active, "Axis")
+	assert.equal(game.phase, "action")
+	assert.equal(game.action_round, 6)
+	assert.deepEqual(game.hands.allied, before.hand)
+	assert.deepEqual(game.decks.allied, before.deck)
+	assert.deepEqual(game.discards.allied, before.discard)
 })
 
 test("view, static_view and query are read-only and clone public structures", () => {

@@ -16,8 +16,8 @@
 	},
 	"turn.cards.discard": {
 		"params": ["note"],
-		"zh-CN": "弃牌至手牌上限{note}。",
-		"en": "Discard down to the hand limit{note}."
+		"zh-CN": "你可以弃置任意数量的手牌，然后补至手牌上限；若当前超限，必须先弃至上限{note}。",
+		"en": "You may discard any number of cards before drawing to the hand limit; if over the limit, you must discard down to it{note}."
 	},
 	"turn.cards.total_war": {
 		"params": [],
@@ -41,13 +41,13 @@
 	},
 	"turn.draw.exchange": {
 		"params": [],
-		"zh-CN": "弃一张 3+ OPS 牌，换取盟军第24号牌。",
-		"en": "Discard a 3+ OPS card to receive Allied card 24."
+		"zh-CN": "重抽后仍没有盟军第2号或第24号牌。你可以弃一张 3+ OPS 牌换取盟军第24号牌，或跳过。",
+		"en": "You still have neither Allied card 2 nor 24 after redrawing. You may discard a 3+ OPS card to receive Allied card 24, or pass."
 	},
 	"turn.draw.redraw": {
 		"params": [],
-		"zh-CN": "保留一张牌并重抽，或重抽全部手牌。",
-		"en": "Keep one card and redraw, or redraw the entire hand."
+		"zh-CN": "初始手牌没有盟军第2号或第24号牌。你可以保留一张牌后重抽、重抽全部手牌，或跳过。",
+		"en": "Your initial hand contains neither Allied card 2 nor 24. You may keep one card and redraw, redraw the entire hand, or pass."
 	},
 	"turn.eliminated_theater": {
 		"params": ["piece"],

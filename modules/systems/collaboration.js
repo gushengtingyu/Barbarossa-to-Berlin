@@ -134,6 +134,21 @@ function consumeSkipActionLog(game) {
 	return true
 }
 
+function markPreserveUndo(game) {
+	Object.defineProperty(game, "__preserve_undo", {
+		value: true,
+		writable: true,
+		configurable: true,
+	})
+	return game
+}
+
+function consumePreserveUndo(game) {
+	if (!game.__preserve_undo) return false
+	delete game.__preserve_undo
+	return true
+}
+
 function applyRollbackAudit(game, audit) {
 	if (!audit || !Number.isInteger(audit.seed)) throw new Error("invalid rollback audit entry")
 	if (audit.rollback_count !== undefined) {
@@ -142,6 +157,7 @@ function applyRollbackAudit(game, audit) {
 		game.rollback = audit.rollback_count ? (game.rollback || []).slice(-audit.rollback_count) : []
 		game.rollback_state = encodeRollbackStates(audit.rollback_count ? states.slice(-audit.rollback_count) : [])
 	}
+	game.undo = []
 	game.seed = audit.seed
 	log(game, "core.log.rollback_accepted", { name: audit.name })
 	game.action_log.push({
@@ -187,7 +203,7 @@ function rejectRollback(game, reviewer) {
 	game.active = proposal.resume_active
 	game.action_log.length = proposal.action_log_length
 	delete game.rollback_proposal
-	return markSkipActionLog(game)
+	return markPreserveUndo(markSkipActionLog(game))
 }
 
 function publicRollbackPoints(game) {
@@ -281,6 +297,7 @@ module.exports = Object.freeze({
 	canProposeRollback,
 	checkpointLabel,
 	consumeActionBoundary,
+	consumePreserveUndo,
 	consumeSkipActionLog,
 	decodeRollbackStates,
 	finishSupplyWarningReview,

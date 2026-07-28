@@ -119,7 +119,8 @@ function applyAction(game, role, verb, noun) {
 	if (spec.undo) State.pushUndo(game, typeof undoGroup === "string" ? `${game.active}:${game.state}:${undoGroup}` : null)
 	const next = handler(game, role, noun, runtime) || game
 	const changedPlayers = (activeBefore === "Allied" || activeBefore === "Axis") && (next.active === "Allied" || next.active === "Axis") && activeBefore !== next.active
-	if (changedPlayers || next.seed !== seedBefore) State.clearUndo(next)
+	const preserveUndo = Collaboration.consumePreserveUndo(next)
+	if (!preserveUndo && (changedPlayers || next.seed !== seedBefore)) State.clearUndo(next)
 	return next
 }
 

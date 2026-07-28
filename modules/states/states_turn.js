@@ -158,12 +158,16 @@ function register(registerState) {
 			result.prompt("turn.draw.redraw")
 			result.action("card", game.hands[ALLIED].slice())
 			result.action("discard_all")
+			result.action("pass")
 		},
 		card(game, role, noun, { data }) {
 			finishAlliedMulligan(game, data, Number(noun))
 		},
 		discard_all(game, role, noun, { data }) {
 			finishAlliedMulligan(game, data)
+		},
+		pass(game) {
+			startAxisTurnOne(game)
 		},
 	})
 
@@ -175,6 +179,7 @@ function register(registerState) {
 				"card",
 				game.hands[ALLIED].filter((cardId) => Engine.cards.cardOps(data, cardId) >= 3),
 			)
+			result.action("pass")
 		},
 		card(game, role, noun, { data }) {
 			const discarded = Number(noun)
@@ -185,6 +190,9 @@ function register(registerState) {
 			game.decks[ALLIED].splice(deckIndex, 1)
 			game.hands[ALLIED].push(reinforcement)
 			Engine.state.clearUndo(game)
+			startAxisTurnOne(game)
+		},
+		pass(game) {
 			startAxisTurnOne(game)
 		},
 	})
