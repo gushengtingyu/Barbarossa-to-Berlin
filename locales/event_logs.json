@@ -227,12 +227,12 @@
 	"event.log.panzer_refit_complete": {
 		"params": ["pieces"],
 		"zh-CN": "装甲部队整补完成：{pieces}恢复满编；本行动轮不能激活其所在格。",
-		"en": "Panzer Refit complete: {pieces} return to full strength; their spaces may not be activated this Action Round."
+		"en": "Panzer Refit complete: {pieces} restored to full strength; affected spaces may not be activated this Action Round."
 	},
 	"event.log.panzer_refit_select": {
 		"params": [],
-		"zh-CN": "装甲部队整补：选择 3 个有补给的减员德国装甲单位。",
-		"en": "Panzer Refit: choose three supplied reduced German Panzer units."
+		"zh-CN": "装甲部队整补：选择 1 至 3 个有补给的减员德国装甲单位。",
+		"en": "Panzer Refit: choose one to three supplied reduced German Panzer units."
 	},
 	"event.log.partisan_expanded": {
 		"params": [],

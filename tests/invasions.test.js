@@ -43,6 +43,40 @@ function startInvasion(number, turn = 6) {
 	return { game, cardId }
 }
 
+function combatGame(state, active, attackSpaces) {
+	const game = rules.setup(2001, "Campaign", {})
+	game.pieces.fill(Engine.unitLocations.REMOVED)
+	game.reduced = []
+	game.turn = 6
+	game.phase = "action"
+	game.action_round = 2
+	game.state = state
+	game.active = active
+	const beach = space("Beachhead D")
+	game.beachheads[beach] = { type: "allied", card_id: 16 }
+	game.control[beach] = "allied"
+	game.action = {
+		mode: "ops",
+		points: 1,
+		attack_spaces: attackSpaces,
+		move_spaces: [],
+		activation_cost: {},
+		activation_supply: {},
+		moved: [],
+		sr_moved: [],
+		attacked: [],
+		defended: [],
+		used_pieces: [],
+		entrenching: [],
+		piece: null,
+	}
+	return game
+}
+
+function beachheadRemovalLogs(game) {
+	return game.log.filter((entry) => entry?.key === "invasions.log.beachhead_removed")
+}
+
 test("optional Rule 7.62 blocks Allied invasions before Summer 1942 but not from that turn onward", () => {
 	const { game, cardId } = prepareInvasion(1, 5)
 	game.options.no_invasions_before_summer_42 = true
@@ -92,11 +126,18 @@ test("Rule 7.63 Sledgehammer creates one Allied beachhead, lands every printed u
 	assert.equal(game.invasion_usage.used, cardId)
 	assert.equal(game.state, "event_invasion_advance")
 
-	const advance = rules.view(game, "Allied").actions.piece[0]
-	game = rules.action(game, "Allied", "piece", advance)
-	assert.equal(game.pieces[advance], space("Calais"))
+	for (const advance of landed) {
+		assert.equal(rules.view(game, "Allied").actions.piece.includes(advance), true)
+		game = rules.action(game, "Allied", "piece", advance)
+		assert.equal(game.pieces[advance], space("Calais"))
+	}
+	assert.equal(game.beachheads[beach].type, "allied")
+	assert.equal(game.control[beach], "allied")
 	game = rules.action(game, "Allied", "continue")
 	game = rules.action(game, "Allied", "done")
+	assert.deepEqual(Engine.map.friendlyPiecesInSpace(game, data, "allied", beach), [])
+	assert.equal(game.beachheads[beach].type, "allied")
+	assert.equal(game.control[beach], "allied")
 	assert.equal(game.active, "Axis")
 	assert.equal(game.invasion, null)
 	assert.equal(game.removed.allied.includes(cardId), true)
@@ -384,6 +425,203 @@ test("an occupied landing connection forces the invasion combat before the Allie
 	assert.ok(actions.piece.length > 0)
 	assert.ok(actions.piece.every((pieceId) => game.pieces[pieceId] === space("Beachhead D")))
 	assert.equal(actions.done, undefined)
+})
+
+test("combat advance may empty an invasion beach without removing its beachhead", () => {
+	const beach = space("Beachhead D")
+	const land = space("Calais")
+	const retreat = space("Antwerp")
+	const allied = piece("BR SCU")
+	const axis = piece("GE SCU")
+	let game = combatGame("combat_retreat", "Axis", [beach])
+	game.pieces[allied] = beach
+	game.pieces[axis] = retreat
+	game.control[land] = "axis"
+	game.control[retreat] = "axis"
+	game.invasion = {
+		card_id: 16,
+		beaches: [{ space_id: beach, connected_land: land }],
+		landing_units: [{ piece_id: allied }],
+		reserve_units: [],
+	}
+	game.combat = {
+		origin_spaces: [beach],
+		defender_space: land,
+		attackers: [allied],
+		defenders: [axis],
+		retreated_defenders: [],
+		attacker_side: "allied",
+		defender_side: "axis",
+		defender_loss: 1,
+		attacker_loss: 0,
+		retreat_distance: 1,
+		retreat_pending: [],
+		retreat_paths: { [axis]: [retreat] },
+		retreat_vacated: [land],
+	}
+
+	game = rules.action(game, "Axis", "done")
+	assert.equal(game.state, "combat_advance")
+	game = rules.action(game, "Allied", "piece", allied)
+	assert.equal(rules.view(game, "Allied").actions.move.includes(land), true)
+	game = rules.action(game, "Allied", "move", land)
+	assert.equal(game.pieces[allied], land)
+	assert.equal(game.beachheads[beach].type, "allied")
+	assert.equal(game.control[beach], "allied")
+	assert.equal(beachheadRemovalLogs(game).length, 0)
+})
+
+test("combat losses remove a beachhead when its last Allied unit is eliminated as attacker or defender", () => {
+	const beach = space("Beachhead D")
+	const land = space("Calais")
+	const allied = piece("BR SCU")
+	const axis = piece("GE SCU")
+	for (const scenario of [
+		{
+			state: "combat_defender_losses",
+			attackSpaces: [land],
+			originSpaces: [land],
+			defenderSpace: beach,
+			attackers: [axis],
+			defenders: [allied],
+			attackerSide: "axis",
+			defenderSide: "allied",
+			defenderLoss: 1,
+			attackerLoss: 0,
+		},
+		{
+			state: "combat_attacker_losses",
+			attackSpaces: [beach],
+			originSpaces: [beach],
+			defenderSpace: land,
+			attackers: [allied],
+			defenders: [axis],
+			attackerSide: "allied",
+			defenderSide: "axis",
+			defenderLoss: 0,
+			attackerLoss: 1,
+		},
+	]) {
+		let game = combatGame(scenario.state, "Allied", scenario.attackSpaces)
+		game.pieces[allied] = beach
+		game.pieces[axis] = land
+		Engine.combat.setReduced(game, allied, true)
+		game.combat = {
+			origin_spaces: scenario.originSpaces,
+			defender_space: scenario.defenderSpace,
+			attackers: scenario.attackers,
+			defenders: scenario.defenders,
+			retreated_defenders: [],
+			attacker_side: scenario.attackerSide,
+			defender_side: scenario.defenderSide,
+			defender_loss: scenario.defenderLoss,
+			attacker_loss: scenario.attackerLoss,
+			defender_loss_taken: 0,
+			attacker_loss_taken: 0,
+			southwest_loss_taken: false,
+		}
+
+		assert.equal(rules.view(game, "Allied").actions.piece.includes(allied), true)
+		game = rules.action(game, "Allied", "piece", allied)
+		assert.equal(game.beachheads[beach], undefined)
+		assert.equal(game.control[beach], "neutral")
+		assert.equal(beachheadRemovalLogs(game).length, 1)
+	}
+})
+
+test("an LCU replacement surviving in the beach space preserves the beachhead", () => {
+	const beach = space("Beachhead D")
+	const land = space("Calais")
+	const army = piece("BR 1 Army")
+	const replacement = piece("BR SCU")
+	const axis = piece("GE SCU")
+	let game = combatGame("combat_attacker_losses", "Allied", [beach])
+	game.pieces[army] = beach
+	game.pieces[replacement] = Engine.unitLocations.reserve("allied")
+	game.pieces[axis] = land
+	Engine.combat.setReduced(game, army, true)
+	game.combat = {
+		origin_spaces: [beach],
+		defender_space: land,
+		attackers: [army],
+		defenders: [axis],
+		retreated_defenders: [],
+		attacker_side: "allied",
+		defender_side: "axis",
+		defender_loss: 0,
+		attacker_loss: 3,
+		defender_loss_taken: 0,
+		attacker_loss_taken: 0,
+		southwest_loss_taken: false,
+	}
+
+	game = rules.action(game, "Allied", "piece", army)
+	assert.equal(game.pieces[replacement], beach)
+	assert.equal(game.beachheads[beach].type, "allied")
+	assert.equal(game.control[beach], "allied")
+	assert.equal(beachheadRemovalLogs(game).length, 0)
+})
+
+test("a previously retreated unit eliminated by combat removes its unsupported beachhead", () => {
+	const beach = space("Beachhead D")
+	const land = space("Calais")
+	const allied = piece("BR SCU")
+	const attackers = ["GE 11 Army", "GE 2 Army", "GE 16 Army"].map(piece)
+	let game = combatGame("combat_defender_cc", "Allied", [land])
+	game.pieces[allied] = beach
+	for (const attacker of attackers) game.pieces[attacker] = land
+	game.control[land] = "axis"
+	game.combat = {
+		origin_spaces: [land],
+		defender_space: beach,
+		attackers,
+		defenders: [],
+		retreated_defenders: [allied],
+		attacker_side: "axis",
+		defender_side: "allied",
+		cc_played: { allied: [], axis: [] },
+		cc_from_hand: { allied: [], axis: [] },
+	}
+
+	game = rules.action(game, "Allied", "continue")
+	assert.equal(game.combat.defender_loss > 0, true)
+	assert.equal(game.pieces[allied], Engine.unitLocations.eliminated("allied"))
+	assert.equal(game.beachheads[beach], undefined)
+	assert.equal(game.control[beach], "neutral")
+	assert.equal(beachheadRemovalLogs(game).length, 1)
+})
+
+test("failed retreat elimination removes the beachhead when its last Allied unit is lost", () => {
+	const beach = space("Beachhead D")
+	const land = space("Calais")
+	const allied = piece("BR SCU")
+	const axis = piece("GE SCU")
+	let game = combatGame("combat_retreat_option", "Allied", [land])
+	game.pieces[allied] = beach
+	game.pieces[axis] = land
+	game.control[land] = "axis"
+	game.combat = {
+		origin_spaces: [land],
+		defender_space: beach,
+		attackers: [axis],
+		defenders: [allied],
+		retreated_defenders: [],
+		attacker_side: "axis",
+		defender_side: "allied",
+		defender_loss: 1,
+		attacker_loss: 0,
+		defender_loss_taken: 0,
+		attacker_loss_taken: 0,
+		southwest_loss_taken: false,
+	}
+
+	game = rules.action(game, "Allied", "continue")
+	assert.equal(game.state, "combat_retreat")
+	assert.deepEqual(game.combat.retreat_pending, [])
+	assert.equal(game.pieces[allied], Engine.unitLocations.eliminated("allied"))
+	assert.equal(game.beachheads[beach], undefined)
+	assert.equal(game.control[beach], "neutral")
+	assert.equal(beachheadRemovalLogs(game).length, 1)
 })
 
 test("beachhead supply is Full within two spaces and Limited beyond, with nationality-specific SR entry", () => {

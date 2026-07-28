@@ -107,12 +107,15 @@ test("Casablanca applies neutral VP once and later control changes use effective
 	assert.equal(game.vp, initialVp - neutralVp)
 	assert.equal(game.removed.allied.includes(prepared.id), true)
 
-	const neutralSpace = data.spaces.find((space) => space?.vp && game.control[space.id] === "neutral")
+	const neutralSpace = data.spaces.find((space) => space?.name === "Marseille")
+	assert.equal(game.control[neutralSpace.id], "neutral")
 	const afterEvent = game.vp
-	Engine.map.setControl(game, data, neutralSpace.id, "allied", "br")
-	assert.equal(game.vp, afterEvent)
 	Engine.map.setControl(game, data, neutralSpace.id, "axis", "ge")
 	assert.equal(game.vp, afterEvent + Number(neutralSpace.vp))
+	assert.equal(Engine.map.setControl(game, data, neutralSpace.id, "axis", "ge"), false)
+	assert.equal(game.vp, afterEvent + Number(neutralSpace.vp))
+	Engine.map.setControl(game, data, neutralSpace.id, "allied", "br")
+	assert.equal(game.vp, afterEvent)
 })
 
 test("Italy Defects removes every Italian unit and leaves German-garrisoned spaces Axis controlled", () => {

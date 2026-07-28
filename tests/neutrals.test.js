@@ -2,6 +2,7 @@
 
 const test = require("node:test")
 const assert = require("node:assert/strict")
+const { renderLog } = require("./i18n_helpers.js")
 const Engine = require("../modules/engine.js")
 const rules = require("../rules.js")
 
@@ -36,7 +37,8 @@ test("Rule 17.3 blocks Vichy territory until activation and enables the two Axis
 	Engine.map.movePieceAlongPath(game, data, german, [space("Lyon"), marseille])
 	assert.equal(game.control[space("Lyon")], "axis")
 	assert.equal(game.control[marseille], "axis")
-	assert.equal(game.vp, 7)
+	assert.equal(game.vp, 8)
+	assert.match(renderLog(game).at(-1), new RegExp(`s${marseille}.*VP\\+1`))
 })
 
 test("Axis declaration of war on Turkey applies the pre-Casablanca penalty and gives deployment control to Allied", () => {

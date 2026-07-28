@@ -58,11 +58,29 @@ test("language and card-art options are independent and use one authoritative ca
 	assert.deepEqual(State.normalizeOptions({ card_language: "EN" }), {
 		ui_locale: "zh-CN",
 		card_language: "EN",
+		disable_optional_rules: false,
+		allied_2_24_exclusive_1941: true,
+		no_invasions_before_summer_42: true,
+		sunny_italy: true,
+		time_of_mud: true,
+	})
+	const disabled = State.normalizeOptions({
+		disable_optional_rules: "true",
+		allied_2_24_exclusive_1941: true,
+		no_invasions_before_summer_42: true,
+		sunny_italy: true,
+		time_of_mud: true,
+	})
+	assert.deepEqual(disabled, {
+		ui_locale: "zh-CN",
+		card_language: "CN",
+		disable_optional_rules: true,
 		allied_2_24_exclusive_1941: false,
 		no_invasions_before_summer_42: false,
 		sunny_italy: false,
 		time_of_mud: false,
 	})
+	assert.deepEqual(State.normalizeOptions(disabled), disabled)
 	const options = State.normalizeOptions({ ui_locale: "en-US", card_language: "CN" })
 	assert.equal(options.ui_locale, "en")
 	assert.equal(options.card_language, "CN")

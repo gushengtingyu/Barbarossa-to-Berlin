@@ -4,6 +4,8 @@ const fs = require("node:fs")
 const path = require("node:path")
 const test = require("node:test")
 const assert = require("node:assert/strict")
+const vm = require("node:vm")
+const { parseHTML } = require("linkedom")
 
 const ROOT = path.resolve(__dirname, "..")
 const read = (name) => fs.readFileSync(path.join(ROOT, name), "utf8")
@@ -13,12 +15,52 @@ test("create page is localized and exposes only implemented options", () => {
 	assert.match(html, /outside\.css/)
 	assert.doesNotMatch(html, /class="campaign-note"/)
 	assert.match(html, /id="Campaign"/)
-	for (const option of ["ui_locale", "card_language", "allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+	for (const option of ["ui_locale", "card_language", "disable_optional_rules", "allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
 		assert.match(html, new RegExp(`name="${option}"`), option)
 	}
+	const disableAll = html.match(/<input[^>]*name="disable_optional_rules"[^>]*>/)?.[0]
+	assert.ok(disableAll)
+	assert.doesNotMatch(disableAll, /\bchecked\b/)
+	for (const option of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+		const input = html.match(new RegExp(`<input[^>]*name="${option}"[^>]*>`))?.[0]
+		assert.ok(input, option)
+		assert.match(input, /\bchecked\b/, option)
+		assert.match(input, /\bdisabled\b/, option)
+		assert.match(input, /\bdata-optional-rule\b/, option)
+	}
+	assert.match(html, /control\.disabled = true/)
 	assert.doesNotMatch(html, /name="english_cards"/)
 	assert.match(html, /class="option-help-popup"/)
 	assert.match(html, /select\[name='scenario'\]/)
+})
+
+test("create page disable-all control turns every optional rule off and back on", () => {
+	const html = read("create.html")
+	const { window } = parseHTML(`<html><body>${html}</body></html>`)
+	Object.defineProperty(window, "localStorage", {
+		value: { getItem: () => null, setItem: () => {} },
+		configurable: true,
+	})
+	window.BTBI18N = {
+		setLocale: () => {},
+		translateDocument: () => {},
+	}
+	const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1]
+	assert.ok(script)
+	vm.runInContext(script, vm.createContext(window))
+
+	const disableAll = window.document.querySelector('input[name="disable_optional_rules"]')
+	const optionalRules = [...window.document.querySelectorAll("input[data-optional-rule]")]
+	assert.equal(optionalRules.length, 4)
+	assert.equal(optionalRules.every((control) => control.checked && control.disabled), true)
+
+	disableAll.checked = true
+	disableAll.dispatchEvent(new window.Event("change"))
+	assert.equal(optionalRules.every((control) => !control.checked && control.disabled), true)
+
+	disableAll.checked = false
+	disableAll.dispatchEvent(new window.Event("change"))
+	assert.equal(optionalRules.every((control) => control.checked && control.disabled), true)
 })
 
 test("about page presents finished game information, credits, and local reference links", () => {

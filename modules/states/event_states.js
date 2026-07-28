@@ -409,7 +409,7 @@ function register(registerState) {
 				"piece",
 				[...legal].filter((pieceId) => selected.length < 3 || selected.includes(pieceId)),
 			)
-			if (selected.length === 3) result.action("continue")
+			if (selected.length >= 1 && selected.length <= 3) result.action("continue")
 		},
 		piece(game, role, noun, { data }) {
 			Engine.events.togglePanzerRefitPiece(game, data, Number(noun))

@@ -70,16 +70,27 @@ test("Rule 5.1 adjusts VP exactly once when an Axis VP space changes control", (
 	assert.match(renderLog(game).at(-1), /s6.*VP\+1/)
 })
 
-test("Rule 5.1 does not adjust VP when neutral Vichy is invaded", () => {
-	const game = Engine.setup.createInitialState(data, "Campaign", 103, {})
+test("Rule 5.1 scores neutral Vichy VP spaces by Axis control", () => {
 	for (const name of ["Marseille", "Tunis"]) {
 		const space = data.spaces.find((entry) => entry?.name === name)
-		const before = game.vp
-		assert.equal(game.control[space.id], "neutral")
-		assert.equal(Engine.map.setControl(game, data, space.id, AXIS), true)
-		assert.equal(game.vp, before)
-		assert.equal(Engine.map.setControl(game, data, space.id, ALLIED), true)
-		assert.equal(game.vp, before)
+		assert.equal(space.vp, 1)
+
+		const axisFirst = Engine.setup.createInitialState(data, "Campaign", 103, {})
+		assert.equal(axisFirst.control[space.id], "neutral")
+		assert.equal(Engine.map.setControl(axisFirst, data, space.id, AXIS), true)
+		assert.equal(axisFirst.vp, 8)
+		assert.match(renderLog(axisFirst).at(-1), new RegExp(`s${space.id}.*VP\\+1`))
+		assert.equal(Engine.map.setControl(axisFirst, data, space.id, ALLIED), true)
+		assert.equal(axisFirst.vp, 7)
+		assert.match(renderLog(axisFirst).at(-1), new RegExp(`s${space.id}.*VP-1`))
+
+		const alliedFirst = Engine.setup.createInitialState(data, "Campaign", 107, {})
+		assert.equal(alliedFirst.control[space.id], "neutral")
+		assert.equal(Engine.map.setControl(alliedFirst, data, space.id, ALLIED), true)
+		assert.equal(alliedFirst.vp, 7)
+		assert.equal(Engine.map.setControl(alliedFirst, data, space.id, AXIS), true)
+		assert.equal(alliedFirst.vp, 8)
+		assert.match(renderLog(alliedFirst).at(-1), new RegExp(`s${space.id}.*VP\\+1`))
 	}
 })
 

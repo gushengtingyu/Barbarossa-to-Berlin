@@ -682,6 +682,21 @@
 		"zh-CN": "选规",
 		"en": "Optional rules"
 	},
+	"create.rule.disable_all": {
+		"params": [],
+		"zh-CN": "关闭全部选规（默认全部启用）",
+		"en": "Disable all optional rules (all enabled by default)"
+	},
+	"create.rule.disable_all_help": {
+		"params": [],
+		"zh-CN": "四条选规默认全部启用；勾选后将全部关闭。",
+		"en": "All four optional rules are enabled by default; select this setting to disable all of them."
+	},
+	"create.rule.disable_all_help_label": {
+		"params": [],
+		"zh-CN": "查看关闭全部选规说明",
+		"en": "View the disable-all optional rules setting"
+	},
 	"create.rule.invasion": {
 		"params": [],
 		"zh-CN": "1942年夏季前禁止盟军入侵",
@@ -1063,12 +1078,12 @@
 			"pieces"
 		],
 		"zh-CN": "装甲部队整补完成：{pieces}恢复满编；本行动轮不能激活其所在格。",
-		"en": "Panzer Refit complete: {pieces} return to full strength; their spaces may not be activated this Action Round."
+		"en": "Panzer Refit complete: {pieces} restored to full strength; affected spaces may not be activated this Action Round."
 	},
 	"event.log.panzer_refit_select": {
 		"params": [],
-		"zh-CN": "装甲部队整补：选择 3 个有补给的减员德国装甲单位。",
-		"en": "Panzer Refit: choose three supplied reduced German Panzer units."
+		"zh-CN": "装甲部队整补：选择 1 至 3 个有补给的减员德国装甲单位。",
+		"en": "Panzer Refit: choose one to three supplied reduced German Panzer units."
 	},
 	"event.log.partisan_expanded": {
 		"params": [],
@@ -1401,8 +1416,8 @@
 		"params": [
 			"count"
 		],
-		"zh-CN": "装甲部队整补：选择 3 个有补给的减员德国装甲单位（{count}/3）。",
-		"en": "Panzer Refit: choose three supplied reduced German Panzer units ({count}/3)."
+		"zh-CN": "装甲部队整补：选择 1 至 3 个有补给的减员德国装甲单位（{count}/3）。",
+		"en": "Panzer Refit: choose one to three supplied reduced German Panzer units ({count}/3)."
 	},
 	"events.partisan_sweep.complete": {
 		"params": [],

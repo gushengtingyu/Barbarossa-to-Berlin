@@ -151,8 +151,8 @@
 	},
 	"events.panzer_refit.select": {
 		"params": ["count"],
-		"zh-CN": "装甲部队整补：选择 3 个有补给的减员德国装甲单位（{count}/3）。",
-		"en": "Panzer Refit: choose three supplied reduced German Panzer units ({count}/3)."
+		"zh-CN": "装甲部队整补：选择 1 至 3 个有补给的减员德国装甲单位（{count}/3）。",
+		"en": "Panzer Refit: choose one to three supplied reduced German Panzer units ({count}/3)."
 	},
 	"events.partisan_sweep.complete": {
 		"params": [],

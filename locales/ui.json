@@ -457,6 +457,21 @@
 		"zh-CN": "选规",
 		"en": "Optional rules"
 	},
+	"create.rule.disable_all": {
+		"params": [],
+		"zh-CN": "关闭全部选规（默认全部启用）",
+		"en": "Disable all optional rules (all enabled by default)"
+	},
+	"create.rule.disable_all_help_label": {
+		"params": [],
+		"zh-CN": "查看关闭全部选规说明",
+		"en": "View the disable-all optional rules setting"
+	},
+	"create.rule.disable_all_help": {
+		"params": [],
+		"zh-CN": "四条选规默认全部启用；勾选后将全部关闭。",
+		"en": "All four optional rules are enabled by default; select this setting to disable all of them."
+	},
 	"create.rule.reinforcement": {
 		"params": [],
 		"zh-CN": "1941年苏军增援限制",

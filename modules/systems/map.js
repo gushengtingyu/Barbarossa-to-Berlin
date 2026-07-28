@@ -131,10 +131,6 @@ function removeTrench(game, spaceId) {
 	return true
 }
 
-function isVichyVpSpace(space) {
-	return space?.side === "neutral" && space?.vp && ["fr", "tn"].includes(space.nation)
-}
-
 function partisanVpAdjustment(game, data) {
 	let adjustment = 0
 	for (const spaceId of new Set(game.partisans || [])) {
@@ -163,7 +159,7 @@ function effectiveControl(game, spaceId, control = game.control?.[spaceId], spac
 
 function adjustVpForControl(game, space, previousControl, side, writeLog = true) {
 	const value = Number(space?.vp) || 0
-	if (!value || previousControl === side || (isVichyVpSpace(space) && !game.events?.casablanca)) return 0
+	if (!value || previousControl === side) return 0
 	const previousEffective = effectiveControl(game, space.id, previousControl, space)
 	const nextEffective = effectiveControl(game, space.id, side, space)
 	if (previousEffective === nextEffective) return 0

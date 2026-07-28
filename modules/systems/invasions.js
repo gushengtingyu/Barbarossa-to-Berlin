@@ -649,7 +649,7 @@ function removeBeachhead(game, data, spaceId, reason = null) {
 	if (reason) {
 		const reasons = {
 			已无盟军单位可追溯补给: { "zh-CN": "已无盟军单位可向其追溯补给", en: "is no longer reachable by any Allied unit tracing supply" },
-			守军已全部消灭: { "zh-CN": "守军已全部消灭", en: "has lost all defending units" },
+			滩头部队已在战斗中全部消灭: { "zh-CN": "内盟军单位已在战斗中全部消灭", en: "has lost all Allied units there in combat" },
 			遭轴心国攻击且没有守军: { "zh-CN": "遭轴心国攻击且没有守军", en: "is undefended when attacked by the Axis" },
 			由盟军自愿撤除: { "zh-CN": "由盟军自愿撤除", en: "is voluntarily removed by the Allies" },
 		}
@@ -709,12 +709,10 @@ function removableBeachheads(game, data, map, adjacency) {
 		.filter((spaceId) => canRemoveVoluntarily(game, data, map, adjacency, spaceId))
 }
 
-function removeDefeatedBeachhead(game, data, map, combat) {
-	const candidates = new Set([combat?.defender_space, ...(combat?.origin_spaces || [])])
-	for (const spaceId of candidates) {
-		if (!activeBeachhead(game, spaceId)) continue
-		if (!map.friendlyPiecesInSpace(game, data, ALLIED, spaceId).length) removeBeachhead(game, data, spaceId, "守军已全部消灭")
-	}
+function removeDefeatedBeachhead(game, data, map, spaceId) {
+	spaceId = Number(spaceId)
+	if (!activeBeachhead(game, spaceId) || map.friendlyPiecesInSpace(game, data, ALLIED, spaceId).length) return false
+	return removeBeachhead(game, data, spaceId, "滩头部队已在战斗中全部消灭")
 }
 
 module.exports = {

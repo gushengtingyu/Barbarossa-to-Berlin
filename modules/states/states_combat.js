@@ -212,7 +212,6 @@ function resumeCombatOperations(game, data, adjacency, side) {
 function finishCombat(game, data, adjacency) {
 	const completed = game.combat
 	const side = completed.attacker_side
-	Engine.invasions.removeDefeatedBeachhead(game, data, Engine.map, completed)
 	for (const origin of completed.origin_spaces) if (!game.action.attacked.includes(origin)) game.action.attacked.push(origin)
 	if (!game.action.defended.includes(completed.defender_space)) game.action.defended.push(completed.defender_space)
 	game.last_combat = completed
@@ -288,8 +287,10 @@ function retreatDestinations(game, data, adjacency) {
 
 function eliminateFailedRetreat(game, data, pieceId) {
 	const pieceRef = Engine.state.pieceLogRef(game, pieceId)
+	const originSpaceId = game.pieces[pieceId]
 	Engine.logistics.eliminateForAttrition(game, data, pieceId)
 	Engine.state.log(game, "combat.log.failed_retreat", { piece: pieceRef })
+	Engine.invasions.removeDefeatedBeachhead(game, data, Engine.map, originSpaceId)
 }
 
 function prepareRetreat(game, data, adjacency) {
@@ -315,7 +316,6 @@ function finishLosses(game, data, adjacency) {
 	const survivingDefenders = onMapParticipants(game, "defenders")
 	if (Engine.combat.winner(combat) === combat.attacker_side) {
 		if (!survivingDefenders.length) {
-			Engine.invasions.removeDefeatedBeachhead(game, data, Engine.map, combat)
 			return beginAdvance(game)
 		}
 		if (Engine.combat.canCancelRetreat(game, data, Engine.map, adjacency, combat)) {
@@ -377,6 +377,11 @@ function logStepLoss(game, pieceId, outcome) {
 	} else Engine.state.log(game, outcome.permanent ? "combat.log.eliminated_permanent" : "combat.log.eliminated", params, "detail2")
 }
 
+function removeDefeatedBeachheadAfterLoss(game, data, outcome) {
+	if (!outcome?.eliminated) return false
+	return Engine.invasions.removeDefeatedBeachhead(game, data, Engine.map, outcome.origin_space_id)
+}
+
 function resolveSelectedCombat(game, data, adjacency) {
 	const combat = game.combat
 	const attackers = combat.attackers.filter((pieceId) => Engine.combat.isOnMap(game, pieceId))
@@ -404,8 +409,9 @@ function resolveSelectedCombat(game, data, adjacency) {
 		for (const pieceId of combat.retreated_defenders)
 			if (Engine.combat.isOnMap(game, pieceId)) {
 				const pieceRef = Engine.state.pieceLogRef(game, pieceId, true)
-				Engine.combat.eliminatePreviouslyRetreated(game, data, pieceId)
+				const outcome = Engine.combat.eliminatePreviouslyRetreated(game, data, pieceId)
 				Engine.state.log(game, "combat.log.previously_retreated_eliminated", { piece: pieceRef }, "detail2")
+				removeDefeatedBeachheadAfterLoss(game, data, { ...outcome, eliminated: true })
 			}
 	Engine.orders.fulfillForCombat(game, data, combat)
 	for (const pieceId of combat.attackers) if (!game.action.used_pieces.includes(pieceId)) game.action.used_pieces.push(pieceId)
@@ -633,8 +639,9 @@ function register(registerState) {
 		piece(game, role, noun, { data, adjacency }) {
 			const pieceId = Number(noun)
 			const pieceRef = Engine.state.pieceLogRef(game, pieceId)
-			Engine.combat.applyStepLoss(game, data, game.combat, pieceId)
+			const outcome = Engine.combat.applyStepLoss(game, data, game.combat, pieceId)
 			Engine.state.log(game, "combat.log.panzerfaust", { piece: pieceRef })
+			removeDefeatedBeachheadAfterLoss(game, data, outcome)
 			resolveSelectedCombat(game, data, adjacency)
 		},
 	})
@@ -653,6 +660,7 @@ function register(registerState) {
 			const outcome = Engine.combat.applyStepLoss(game, data, game.combat, pieceId, remaining)
 			game.combat.defender_loss_taken += outcome.cost
 			logStepLoss(game, pieceId, outcome)
+			removeDefeatedBeachheadAfterLoss(game, data, outcome)
 			pauseForEliminatedTheater(game, data, adjacency, pieceId, outcome, "combat_defender_losses")
 		},
 		continue(game) {
@@ -677,6 +685,7 @@ function register(registerState) {
 			const outcome = Engine.combat.applyStepLoss(game, data, game.combat, pieceId, remaining)
 			game.combat.attacker_loss_taken += outcome.cost
 			logStepLoss(game, pieceId, outcome)
+			removeDefeatedBeachheadAfterLoss(game, data, outcome)
 			pauseForEliminatedTheater(game, data, adjacency, pieceId, outcome, "combat_attacker_losses")
 		},
 		continue(game, role, noun, { data, adjacency }) {
@@ -701,6 +710,7 @@ function register(registerState) {
 			const pieceId = Number(noun)
 			const outcome = Engine.combat.applyStepLoss(game, data, game.combat, pieceId)
 			logStepLoss(game, pieceId, outcome)
+			removeDefeatedBeachheadAfterLoss(game, data, outcome)
 			game.combat.retreat_cancelled = true
 			pauseForEliminatedTheater(game, data, adjacency, pieceId, outcome, "combat_retreat_option")
 		},

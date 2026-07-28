@@ -89,6 +89,25 @@ test("card language is a create-game option and opening choices are visible acti
 	assert.deepEqual(opening.log, [])
 })
 
+test("all four optional rules default on and the master setting disables all of them", () => {
+	const optionNames = ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]
+	const enabled = rules.setup(8, "Campaign", {})
+	assert.equal(enabled.options.disable_optional_rules, false)
+	for (const name of optionNames) assert.equal(enabled.options[name], true, name)
+
+	const disabled = rules.setup(8, "Campaign", {
+		disable_optional_rules: "true",
+		allied_2_24_exclusive_1941: true,
+		no_invasions_before_summer_42: true,
+		time_of_mud: true,
+		sunny_italy: true,
+	})
+	assert.equal(disabled.options.disable_optional_rules, true)
+	for (const name of optionNames) assert.equal(disabled.options[name], false, name)
+	assert.deepEqual(rules.static_view(disabled).options, disabled.options)
+	assert.deepEqual(rules.replay(disabled.initial_seed, disabled.scenario, disabled.options, []), disabled)
+})
+
 test("setup and opening deal are deterministic", () => {
 	let first = finishCampaignSetup(rules.setup(42, "Campaign", {}))
 	let second = finishCampaignSetup(rules.setup(42, "Campaign", {}))

@@ -848,7 +848,7 @@ function togglePanzerRefitPiece(game, data, pieceId) {
 
 function completePanzerRefit(game, data) {
 	const selected = game.event?.panzer_refit_pieces
-	if (!Array.isArray(selected) || selected.length !== 3 || selected.some((pieceId) => !legalPanzerRefitPieces(game, data).includes(pieceId))) throw new Error("Panzer Refit requires three legal pieces")
+	if (!Array.isArray(selected) || selected.length < 1 || selected.length > 3 || selected.some((pieceId) => !legalPanzerRefitPieces(game, data).includes(pieceId))) throw new Error("Panzer Refit requires one to three legal pieces")
 	const spaces = [...new Set(selected.map((pieceId) => game.pieces[pieceId]))]
 	for (const pieceId of selected) Combat.setReduced(game, pieceId, false)
 	game.event.blocked_activation_spaces = spaces
@@ -1456,7 +1456,7 @@ register(59, {
 
 register(61, {
 	name: "Panzer Refit",
-	canPlay: (game, data) => !Weather.isSpringThaw(game) && legalPanzerRefitPieces(game, data).length >= 3,
+	canPlay: (game, data) => !Weather.isSpringThaw(game) && legalPanzerRefitPieces(game, data).length >= 1,
 	play(game, data, cardId) {
 		game.event = { card_id: cardId, panzer_refit_pieces: [] }
 		log(game, "event.log.panzer_refit_select")
