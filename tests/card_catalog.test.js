@@ -19,4 +19,10 @@ test("rulebook card catalog covers both 55-card decks", () => {
 	const partisans = cards.find((card) => card.side === "allied" && card.num === 19)
 	assert.equal(partisans.name, "Partisans")
 	assert.equal(partisans.ops, 3)
+	const alliedFiveOpsCards = cards.filter((card) => card.side === "allied" && card.ops === 5)
+	assert.equal(alliedFiveOpsCards.length, 12)
+	assert.equal(
+		alliedFiveOpsCards.every((card) => card.rp_su === 5),
+		true,
+	)
 })

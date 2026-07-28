@@ -31,6 +31,12 @@ test("CSV sources build a deterministic data module", () => {
 	)
 	assert.equal(first.data.cards[1].name_zh, "火炬行动")
 	assert.equal(first.data.cards[56].name_zh, "巴巴罗萨")
+	const alliedFiveOpsCards = first.data.cards.filter((card) => card?.side === "allied" && card.ops === 5)
+	assert.equal(alliedFiveOpsCards.length, 12)
+	assert.equal(
+		alliedFiveOpsCards.every((card) => card.rp_su === 5),
+		true,
+	)
 	assert.equal(serialize(first.data), serialize(second.data))
 })
 

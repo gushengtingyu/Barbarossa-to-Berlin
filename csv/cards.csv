@@ -5,39 +5,39 @@ id,side,num,ops,remove,cc,dual,dual_condition,rp_ge,rp_axis,rp_br,rp_usa,rp_su,n
 4,allied,4,4,true,false,false,,,,2,2,4,Soviet Reinforcements,苏军增援
 5,allied,5,4,true,false,false,,,,2,2,4,British Reinforcements,英国增援
 6,allied,6,4,true,false,false,,,,2,2,4,FDR Declares War,罗斯福宣战
-7,allied,7,5,true,false,false,stalin_in_moscow,,,2,3,6,Industrial Evacuation,工业疏散
+7,allied,7,5,true,false,false,stalin_in_moscow,,,2,3,5,Industrial Evacuation,工业疏散
 8,allied,8,2,false,true,false,,,,1,1,2,Fortified Boxes,筑垒盒式阵地
 9,allied,9,4,true,false,false,,,,2,2,4,US Build-Up,美国扩军
 10,allied,10,2,false,true,false,,,,1,1,2,NKVD Boosts Morale,内务人民委员部鼓舞士气
 11,allied,11,3,true,false,false,,,,1,2,3,Sorge,佐尔格
 12,allied,12,3,false,false,false,,,,1,2,3,Bomber Command,轰炸机司令部
 13,allied,13,3,true,false,false,stalin_in_moscow,,,1,2,3,Siberians,西伯利亚部队
-14,allied,14,5,true,false,false,,,,2,3,6,Lend-Lease,租借法案
+14,allied,14,5,true,false,false,,,,2,3,5,Lend-Lease,租借法案
 15,allied,15,3,true,false,true,,,,1,2,3,Casablanca,卡萨布兰卡会议
-16,allied,16,5,true,false,false,,,,2,3,6,Sledgehammer,大锤行动
+16,allied,16,5,true,false,false,,,,2,3,5,Sledgehammer,大锤行动
 17,allied,17,2,false,true,false,,,,1,1,2,Zhukov,朱可夫
 18,allied,18,2,false,true,false,,,,1,1,2,T-34,T-34
 19,allied,19,3,true,false,false,,,,1,2,3,Partisans,游击队
 20,allied,20,2,false,true,false,,,,1,1,2,Paradrop,空降
 21,allied,21,4,true,false,false,,,,2,2,4,British Reinforcement,英国增援
-22,allied,22,5,true,false,true,,,,2,3,6,Operation Uranus,天王星行动
+22,allied,22,5,true,false,true,,,,2,3,5,Operation Uranus,天王星行动
 23,allied,23,4,true,false,false,,,,2,2,4,Clearing the Scheldt,清扫斯海尔德河口
 24,allied,24,3,true,false,false,,,,1,2,3,Soviet Reinforcements,苏军增援
-25,allied,25,5,false,false,true,,,,2,3,6,Enigma,恩尼格玛
-26,allied,26,5,true,false,false,,,,2,3,6,British Reinforcements,英国增援
+25,allied,25,5,false,false,true,,,,2,3,5,Enigma,恩尼格玛
+26,allied,26,5,true,false,false,,,,2,3,5,British Reinforcements,英国增援
 27,allied,27,2,true,false,false,,,,1,1,2,Italy Defects,意大利倒戈
 28,allied,28,2,false,false,false,,,,1,1,2,US 8th Air Force,美国第 8 航空队
 29,allied,29,3,true,false,true,,,,1,2,3,Romania Defects,罗马尼亚倒戈
 30,allied,30,2,true,false,true,,,,1,1,2,Bulgaria Defects,保加利亚倒戈
 31,allied,31,4,true,false,true,,,,2,2,4,Soviet Reinforcements,苏军增援
-32,allied,32,5,false,false,true,,,,2,3,6,IX Tac-Air,第九战术航空队
-33,allied,33,5,true,false,false,,,,2,3,6,Overlord,霸王行动
-34,allied,34,5,true,false,false,,,,2,3,6,Husky,哈士奇行动
-35,allied,35,5,true,false,true,,,,2,3,6,Bagration,巴格拉季昂行动
+32,allied,32,5,false,false,true,,,,2,3,5,IX Tac-Air,第九战术航空队
+33,allied,33,5,true,false,false,,,,2,3,5,Overlord,霸王行动
+34,allied,34,5,true,false,false,,,,2,3,5,Husky,哈士奇行动
+35,allied,35,5,true,false,true,,,,2,3,5,Bagration,巴格拉季昂行动
 36,allied,36,3,true,false,false,,,,1,2,3,ASW Victory,反潜战胜利
 37,allied,37,4,true,false,true,,,,2,2,4,Soviet Reinforcements,苏军增援
 38,allied,38,3,true,false,false,,,,1,2,3,US Reinforcements,美国增援
-39,allied,39,5,true,false,true,,,,2,3,6,Soviet Reinforcements,苏军增援
+39,allied,39,5,true,false,true,,,,2,3,5,Soviet Reinforcements,苏军增援
 40,allied,40,3,true,false,false,,,,1,2,3,US Reinforcements,美国增援
 41,allied,41,3,true,false,false,,,,1,2,3,US Reinforcements,美国增援
 42,allied,42,3,true,false,false,,,,1,2,3,Tito,铁托
@@ -53,7 +53,7 @@ id,side,num,ops,remove,cc,dual,dual_condition,rp_ge,rp_axis,rp_br,rp_usa,rp_su,n
 52,allied,52,4,true,false,false,,,,2,2,4,Anvil-Dragoon,铁砧-龙骑兵行动
 53,allied,53,4,true,false,false,,,,2,2,4,P-51 Mustang,P-51“野马”
 54,allied,54,2,true,false,false,,,,1,1,2,Finland Withdraws,芬兰退出战争
-55,allied,55,5,false,false,true,,,,2,3,6,Patton,巴顿
+55,allied,55,5,false,false,true,,,,2,3,5,Patton,巴顿
 56,axis,1,5,true,false,false,,4,2,,,,Barbarossa,巴巴罗萨
 57,axis,2,4,true,false,false,,3,1,,,,Von Paulus Pause,保卢斯停顿
 58,axis,3,2,true,false,true,,2,0,,,,OKH Conference,陆军总部会议
