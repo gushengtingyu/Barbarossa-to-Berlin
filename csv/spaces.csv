@@ -165,7 +165,7 @@ id,name,x,y,w,h,kind,nation,side,terrain,urban,vp,fort,supply,port,resource,capi
 166,Deir Ez Zor,2254,1780,59,58,land,sy,allied,desert,false,,false,,false,,false,,
 167,Ramadi,2376,1885,59,57,land,iq,allied,desert,false,,false,,false,,false,,
 168,Tikrit,2425,1789,60,57,land,iq,allied,clear,false,,false,,false,,false,,
-169,Mosul,2395,1688,59,59,land,iq,allied,clear,false,,false,,false,,false,,
+169,Mosul,2395,1688,59,59,land,iq,allied,clear,false,,false,,false,oil,false,,
 170,Zengan,2646,1669,58,57,land,ir,allied,clear,false,,false,,false,,false,,
 171,Kermanshah,2592,1835,58,57,land,ir,allied,mountain,false,,false,,false,,false,,
 172,Kirkuk,2493,1745,60,56,land,iq,allied,clear,false,,false,,false,,false,,
@@ -257,7 +257,7 @@ id,name,x,y,w,h,kind,nation,side,terrain,urban,vp,fort,supply,port,resource,capi
 316,Perekop,1935,1058,59,59,land,su,allied,clear,false,,false,,false,,false,,
 317,Sevastopol,1914,1142,63,58,land,su,allied,clear,false,1,true,,true,,false,,
 318,Kerch,2029,1090,65,64,land,su,allied,clear,false,,false,,true,,false,,
-319,Maikop,2177,1155,61,61,land,su,allied,mountain,false,1,false,,true,oil,false,,fall_blau
+319,Maikop,2177,1155,61,61,land,su,allied,mountain,false,1,false,,true,,false,,fall_blau
 320,Armavir,2349,1132,62,60,land,su,allied,clear,false,,false,,false,,false,,fall_blau
 321,Mozdok,2438,1143,59,61,land,su,allied,clear,false,,false,,false,,false,,
 322,Astrakhan,2639,1050,62,59,land,su,allied,swamp,false,,false,,true,,false,,

@@ -165,7 +165,7 @@ id,flags
 166,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 167,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 168,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
-169,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
+169,legacy_layout;auto_map_fill;resource_reviewed;reviewed;map_symbol_reviewed
 170,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 171,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 172,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
@@ -257,7 +257,7 @@ id,flags
 316,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 317,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 318,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
-319,legacy_layout;auto_map_fill;resource_reviewed;reviewed;map_symbol_reviewed
+319,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 320,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 321,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed
 322,legacy_layout;auto_map_fill;reviewed;map_symbol_reviewed

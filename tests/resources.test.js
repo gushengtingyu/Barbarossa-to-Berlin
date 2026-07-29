@@ -19,7 +19,7 @@ test("the map resource symbols identify exactly two Iron and three Oil spaces", 
 	)
 	assert.deepEqual(
 		Engine.resources.resourceSpaces(data, "oil").map((id) => data.spaces[id].name),
-		["Bucharest", "Baku", "Maikop"],
+		["Bucharest", "Baku", "Mosul"],
 	)
 })
 
@@ -27,6 +27,14 @@ test("initial Campaign resource control leaves both hand limits at seven", () =>
 	const game = Engine.setup.createInitialState(data, "Campaign", 4, {})
 	assert.equal(Engine.resources.handLimit(game, data, Engine.map, adjacency, "axis"), 7)
 	assert.equal(Engine.resources.handLimit(game, data, Engine.map, adjacency, "allied"), 7)
+})
+
+test("Axis control of Maikop does not reduce the Allied hand limit", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 4, {})
+	game.control[space("Maikop")] = "axis"
+	assert.equal(Engine.resources.handLimit(game, data, Engine.map, adjacency, "allied"), 7)
+	game.control[space("Mosul")] = "axis"
+	assert.equal(Engine.resources.handLimit(game, data, Engine.map, adjacency, "allied"), 6)
 })
 
 test("Oil control changes the two sides' hand limits and respects Full Supply for Axis", () => {

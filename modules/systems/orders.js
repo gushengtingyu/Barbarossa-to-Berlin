@@ -5,6 +5,10 @@ const Random = require("../core/random.js")
 const Neutrals = require("./neutrals.js")
 
 const MANDATED_OFFENSIVES = Object.freeze(["okw_mo", "allied_mo", "soviet_mo"])
+const RULE_83_THEATER_MOS = Object.freeze(new Set(["okw_mo", "allied_mo"]))
+const NORTH_AFRICA_NATIONS = Object.freeze(new Set(["dz", "tn", "ly", "eg"]))
+// Rule 8.3 treats the Soviet Union, North Africa, and the Middle East as outside Europe.
+const NON_EUROPE_NATIONS = Object.freeze(new Set(["su", "dz", "tn", "ly", "eg", "ir", "sy", "lb", "jo", "iq", "ps"]))
 
 function isCombatUnit(piece) {
 	return ["scu", "lcu"].includes(piece?.size)
@@ -50,6 +54,31 @@ function mandatedOffensivePieces(game, data, result) {
 	return []
 }
 
+function isNorthAfricaSpace(space) {
+	return space?.kind === "land" && NORTH_AFRICA_NATIONS.has(space.nation)
+}
+
+function isEuropeLandSpace(space) {
+	return space?.kind === "land" && typeof space.nation === "string" && !NON_EUROPE_NATIONS.has(space.nation)
+}
+
+function isEuropeLocation(data, adjacency, location) {
+	const space = data.spaces[location]
+	if (isEuropeLandSpace(space)) return true
+	if (space?.kind !== "beach") return false
+	return (adjacency[location] || []).some((edge) => edge.type !== "sr" && isEuropeLandSpace(data.spaces[edge.to]))
+}
+
+// Rule 8.3: ignore Axis and Allied MOs when the Axis has no units in
+// North Africa and the Allies have none in Europe.
+function rule83TheaterVacuum(game, data, adjacency) {
+	if (!Array.isArray(game?.pieces) || !data?.spaces || !data?.pieces || !adjacency) return false
+	const pieces = onMapPieces(game, data, () => true)
+	const axisInNorthAfrica = pieces.some(({ piece, location }) => Neutrals.effectivePieceSide(game, piece) === AXIS && isNorthAfricaSpace(data.spaces[location]))
+	const alliesInEurope = pieces.some(({ piece, location }) => Neutrals.effectivePieceSide(game, piece) === ALLIED && isEuropeLocation(data, adjacency, location))
+	return !axisInNorthAfrica && !alliesInEurope
+}
+
 function mandatedOffensivePossible(game, data, adjacency, result) {
 	if (!MANDATED_OFFENSIVES.includes(result) || !data?.spaces || !data?.pieces || !adjacency) return true
 	const attackingSide = result === "okw_mo" ? AXIS : ALLIED
@@ -67,8 +96,10 @@ function mandatedOffensivePossible(game, data, adjacency, result) {
 	return false
 }
 
-function ignoreImpossibleMandatedOffensive(game, data, adjacency, order) {
-	if (!MANDATED_OFFENSIVES.includes(order.result) || mandatedOffensivePossible(game, data, adjacency, order.result)) return order
+function normalizeMandatedOffensive(game, data, adjacency, order) {
+	if (!MANDATED_OFFENSIVES.includes(order.result)) return order
+	const theaterVacuum = RULE_83_THEATER_MOS.has(order.result) && rule83TheaterVacuum(game, data, adjacency)
+	if (!theaterVacuum && mandatedOffensivePossible(game, data, adjacency, order.result)) return order
 	order.rolled_result = order.result
 	order.result = "none"
 	order.fulfilled = true
@@ -88,14 +119,14 @@ function rollAxis(game, data = null, adjacency = null) {
 		result,
 		fulfilled: result === "none" || result === "hitler_orders",
 	}
-	return ignoreImpossibleMandatedOffensive(game, data, adjacency, game.orders.axis)
+	return normalizeMandatedOffensive(game, data, adjacency, game.orders.axis)
 }
 
 function rollAllied(game, data = null, adjacency = null) {
 	const die = Random.random(game, 6) + 1
 	const result = die <= 2 ? "allied_mo" : die === 3 ? "soviet_mo" : "stalin_orders"
 	game.orders.allied = { die, result, fulfilled: result === "stalin_orders" }
-	return ignoreImpossibleMandatedOffensive(game, data, adjacency, game.orders.allied)
+	return normalizeMandatedOffensive(game, data, adjacency, game.orders.allied)
 }
 
 function adjacentSuppliedEnemy(game, data, map, logistics, adjacency, side, spaceId, nation = null) {
