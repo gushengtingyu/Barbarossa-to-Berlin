@@ -109,6 +109,9 @@ function normalizeControlNations(game, data) {
 	game.control_nation ||= []
 	game.control_nation[0] ??= null
 	for (let spaceId = 1; spaceId < data.spaces.length; spaceId++) {
+		// Poland is no longer a runtime map nationality. Recompute legacy
+		// control markers in spaces now authored as part of Germany.
+		if (game.control_nation[spaceId] === "pl" && data.spaces[spaceId]?.nation === "ge") game.control_nation[spaceId] = inferredControlNation(game, data, spaceId)
 		if (game.control_nation[spaceId]) continue
 		game.control_nation[spaceId] = inferredControlNation(game, data, spaceId)
 	}

@@ -71,6 +71,11 @@ test("all fifteen combat cards use their printed formation, posture, and terrain
 	game = combatGame("allied", suMech, geMech, germany)
 	game.hands.axis = [99]
 	assert.deepEqual(Engine.combatCards.available(game, data, fullSupplyMap, noAdjacency, game.combat, "axis"), [99])
+
+	const warsaw = data.spaces.find((space) => space?.name === "Warsaw").id
+	game = combatGame("allied", suMech, geMech, warsaw)
+	game.hands.axis = [99]
+	assert.deepEqual(Engine.combatCards.available(game, data, fullSupplyMap, noAdjacency, game.combat, "axis"), [99])
 })
 
 test("OOS defenders receive no combat cards and usage limits cover an action round and Paradrop's turn", () => {
@@ -147,6 +152,11 @@ test("combat card DRMs, Devil's Gardens, Panzerfaust, retention, discard, and re
 	for (const cardId of [73, 98, 102]) Engine.combatCards.play(game, data, "axis", cardId)
 	assert.equal(Engine.combatCards.drm(game.combat, "allied"), 2)
 	assert.equal(Engine.combatCards.drm(game.combat, "axis"), 1)
+	assert.deepEqual(Engine.combatCards.drmFactors(game.combat, "allied"), [
+		{ reason: "combat_card", amount: 1, card_id: 17 },
+		{ reason: "combat_card", amount: 1, card_id: 18 },
+	])
+	assert.deepEqual(Engine.combatCards.drmFactors(game.combat, "axis"), [{ reason: "combat_card", amount: 1, card_id: 102 }])
 	assert.equal(Engine.combatCards.attackerTerrainShift(game.combat), -1)
 	assert.equal(Engine.combat.canCancelRetreat(game, data, fullSupplyMap, noAdjacency, game.combat), true)
 	assert.deepEqual(Engine.combatCards.panzerfaustTargets(game, data, game.combat), [suMech])

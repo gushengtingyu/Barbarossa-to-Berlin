@@ -18,6 +18,8 @@ function loadFrontend() {
 	window.view = {}
 	window.send_action = () => {}
 	window.action_button = () => {}
+	const queries = []
+	window.send_query = (query) => queries.push(query)
 	window.innerWidth = 1200
 	window.HTMLElement.prototype.scrollIntoView = function scrollIntoView() {
 		this.dataset.scrolledIntoView = "true"
@@ -26,7 +28,7 @@ function loadFrontend() {
 	vm.runInContext(fs.readFileSync("modules/core/i18n_catalog.js", "utf8"), context)
 	vm.runInContext(fs.readFileSync("modules/core/i18n.js", "utf8"), context)
 	vm.runInContext(fs.readFileSync("play.js", "utf8"), context)
-	return { context, window }
+	return { context, queries, window }
 }
 
 test("log headings preserve their first visible character", () => {
@@ -43,6 +45,22 @@ test("log headings preserve their first visible character", () => {
 		assert.equal(heading.className, className)
 		assert.equal(heading.textContent, title)
 	}
+})
+
+test("PUG-style combat details retain interactive dice, card, unit, and space references", () => {
+	const { window } = loadFrontend()
+	const card = Engine.data.cards.find((entry) => entry?.id === 56)
+	const piece = Engine.data.pieces.find((entry) => entry?.size === "lcu")
+	const space = Engine.data.spaces.find((entry) => entry?.kind === "land")
+	const modifier = window.on_log(`>> 掷骰修正：+1 事件c${card.id}`, 0)
+	const fire = window.on_log(`> B3 + 1 = 4 × 5→4列 = 2`, 1)
+	const retreat = window.on_log(`>> P${piece.id}：s${space.id} → s${space.id}`, 2)
+
+	assert.equal(modifier.className, "i detail align")
+	assert.equal(modifier.querySelector(".cardtip").textContent, card.name_zh)
+	assert.equal(fire.querySelector(".die.cp.d3").getAttribute("aria-label"), "掷骰 3")
+	assert.equal(retreat.querySelectorAll(".piecetip").length, 1)
+	assert.equal(retreat.querySelectorAll(".spacetip").length, 2)
 })
 
 test("attrition uses a dedicated action label and hand borders highlight events only", () => {
@@ -71,6 +89,66 @@ test("attrition uses a dedicated action label and hand borders highlight events 
 	assert.equal(opsCard.classList.contains("enabled"), true)
 	assert.equal(opsCard.classList.contains("highlight"), false)
 	assert.equal(eventCard.classList.contains("highlight"), true)
+})
+
+test("deck counters query side card overviews without exposing hidden card faces", () => {
+	const { context, queries, window } = loadFrontend()
+	const document = window.document
+	window.view = {
+		hand_count: { allied: 7, axis: 7 },
+		deck_count: { allied: 18, axis: 17 },
+	}
+	vm.runInContext("updateInfo()", context)
+
+	const alliedButton = document.getElementById("allied_deck_size")
+	const axisButton = document.getElementById("axis_deck_size")
+	assert.equal(alliedButton.tagName, "BUTTON")
+	assert.equal(axisButton.tagName, "BUTTON")
+	assert.equal(alliedButton.getAttribute("aria-controls"), "card_list_panel")
+	assert.match(alliedButton.getAttribute("aria-label"), /盟军/)
+	assert.match(axisButton.getAttribute("aria-label"), /轴心国/)
+	vm.runInContext(alliedButton.getAttribute("onclick"), context)
+	vm.runInContext(axisButton.getAttribute("onclick"), context)
+	assert.deepEqual(queries, ["allied_cards", "axis_cards"])
+
+	const alliedCards = Engine.data.cards.filter((card) => card?.side === "allied").slice(0, 3)
+	window.on_reply("allied_cards", {
+		side: "allied",
+		discard: { count: 4, cards: null },
+		removed: { count: 1, cards: [alliedCards[0].id] },
+		hand_or_deck: { count: 25, cards: null },
+	})
+	const panel = document.getElementById("card_list_panel")
+	let sections = [...document.querySelectorAll("#card_list_body section")]
+	assert.equal(panel.hidden, false)
+	assert.match(document.getElementById("card_list_title").textContent, /盟军/)
+	assert.equal(sections.length, 3)
+	assert.match(sections[0].querySelector("h3").textContent, /4/)
+	assert.equal(sections[0].querySelectorAll(".card-back").length, 1)
+	assert.equal(sections[0].querySelectorAll(".card:not(.card-back)").length, 0)
+	assert.match(sections[0].querySelector(".card-back").style.backgroundImage, /card_allied_back\.webp/)
+	assert.equal(sections[0].querySelector(".card-back").hasAttribute("data-card-id"), false)
+	assert.equal(sections[0].querySelector(".card-back").getAttribute("aria-hidden"), "true")
+	assert.match(sections[0].querySelector(".card-query-hidden-label").textContent, /4/)
+	assert.equal(sections[1].querySelectorAll(".card:not(.card-back)").length, 1)
+	assert.equal(sections[2].querySelectorAll(".card-back").length, 1)
+	assert.equal(sections[2].querySelectorAll(".card:not(.card-back)").length, 0)
+	assert.match(sections[2].querySelector(".card-query-hidden-label").textContent, /25/)
+
+	window.on_reply("allied_cards", {
+		side: "allied",
+		discard: { count: 1, cards: [alliedCards[0].id] },
+		removed: { count: 0, cards: [] },
+		hand_or_deck: { count: 2, cards: [alliedCards[1].id, alliedCards[2].id] },
+	})
+	sections = [...document.querySelectorAll("#card_list_body section")]
+	assert.equal(sections.length, 3)
+	assert.equal(document.querySelectorAll("#card_list_body .card-back").length, 0)
+	assert.equal(sections[0].querySelectorAll(".card").length, 1)
+	assert.match(sections[1].querySelector(".card-query-empty").textContent, /无卡牌/)
+	assert.equal(sections[2].querySelectorAll(".card").length, 2)
+	window.hideCardQuery()
+	assert.equal(panel.hidden, true)
 })
 
 test("reinforcement display uses the published BTB board with accessible card hotspots", () => {

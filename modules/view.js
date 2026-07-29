@@ -247,9 +247,34 @@ function supplyQuery(game, side) {
 	return { side, pieces }
 }
 
+function cardsQuery(game, viewerSide, cardSide) {
+	const maySeePrivateCards = viewerSide === cardSide
+	const discard = game.discards[cardSide]
+	const removed = game.removed[cardSide]
+	const handOrDeck = [...game.decks[cardSide], ...game.hands[cardSide]]
+	const sortedCopy = (cards) => cards.slice().sort((a, b) => a - b)
+	return {
+		side: cardSide,
+		discard: {
+			count: discard.length,
+			cards: maySeePrivateCards ? sortedCopy(discard) : null,
+		},
+		removed: {
+			count: removed.length,
+			cards: sortedCopy(removed),
+		},
+		hand_or_deck: {
+			count: handOrDeck.length,
+			cards: maySeePrivateCards ? sortedCopy(handOrDeck) : null,
+		},
+	}
+}
+
 function query(game, player, what) {
 	game = readNormalized(game)
 	const side = Engine.constants.sideForRole(player)
+	if (what === "allied_cards") return cardsQuery(game, side, Engine.constants.ALLIED)
+	if (what === "axis_cards") return cardsQuery(game, side, Engine.constants.AXIS)
 	if (what === "discard" && side) return game.discards[side]
 	if (what === "removed") return game.removed
 	if (what === "hand" && side) return game.hands[side]

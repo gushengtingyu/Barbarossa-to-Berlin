@@ -69,6 +69,32 @@ test("control_nation is public, follows the first occupying nation, and normaliz
 	assert.deepEqual(rules.view(normalized, "Observer").control_nation, normalized.control_nation)
 })
 
+test("legacy Polish control markers normalize to the corrected German geography", () => {
+	const game = rules.setup(304, "Campaign", {})
+	const warsaw = spaceNamed("Warsaw")
+	const radom = spaceNamed("Radom")
+	const lublin = spaceNamed("Lublin")
+	const tarnow = spaceNamed("Tarnow")
+	for (const spaceId of [warsaw, radom, lublin, tarnow]) clearSpace(game, spaceId)
+
+	const italian = data.pieces.find((piece) => piece?.nation === "it" && piece.side === "axis").id
+	const soviet = data.pieces.find((piece) => piece?.nation === "su" && piece.side === "allied").id
+	game.pieces[italian] = radom
+	game.pieces[soviet] = lublin
+	game.control[warsaw] = "axis"
+	game.control[radom] = "axis"
+	game.control[lublin] = "allied"
+	game.control[tarnow] = "allied"
+	for (const spaceId of [warsaw, radom, lublin, tarnow]) game.control_nation[spaceId] = "pl"
+
+	const normalized = rules.normalize_game(game)
+	assert.equal(normalized.control_nation[warsaw], "ge")
+	assert.equal(normalized.control_nation[radom], "it")
+	assert.equal(normalized.control_nation[lublin], "su")
+	assert.equal(normalized.control_nation[tarnow], null)
+	assert.equal(rules.view(normalized, "Observer").control_nation.includes("pl"), false)
+})
+
 test("STAVKA retains conditional OPS and can be taken back before another public action", () => {
 	const prepared = prepareEvent("allied", 3, 4)
 	const moscow = spaceNamed("Moscow")

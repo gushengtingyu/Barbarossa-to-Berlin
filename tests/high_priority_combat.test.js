@@ -25,6 +25,7 @@ function combatGame(overrides = {}) {
 		reduced: [],
 		trench: {},
 		trench_owner: {},
+		trench_kind: {},
 		destroyed_forts: [],
 		partisans: [],
 		events: {},
@@ -47,6 +48,8 @@ test("OOS defenders retain ordinary terrain and No Retreat while Western trenche
 	let profile = Combat.preview(game, data, map, adjacency, combat)
 	assert.equal(profile.attacker_shift, -1)
 	assert.equal(profile.defender_shift, -1)
+	assert.deepEqual(profile.attacker_shift_factors, [{ reason: "terrain", amount: -1, terrain: "mountain" }])
+	assert.deepEqual(profile.defender_shift_factors, [{ reason: "oos", amount: -1 }])
 	assert.equal(Combat.canCancelRetreat(game, data, map, adjacency, combat), true)
 
 	game.trench[2] = 1
@@ -54,10 +57,12 @@ test("OOS defenders retain ordinary terrain and No Retreat while Western trenche
 	profile = Combat.preview(game, data, map, adjacency, combat)
 	assert.equal(profile.attacker_shift, -1)
 	assert.equal(profile.defender_shift, -1)
+	assert.deepEqual(profile.attacker_shift_factors, [{ reason: "terrain", amount: -1, terrain: "mountain" }])
+	assert.deepEqual(profile.defender_shift_factors, [{ reason: "oos", amount: -1 }])
 	assert.equal(Combat.canCancelRetreat(game, data, map, adjacency, combat), true)
 })
 
-test("Barbarossa cancels Soviet trench Def1R for the full turn while von Paulus only cancels No Retreat", () => {
+test("Barbarossa preserves Soviet trench Att shifts while cancelling Def1R and No Retreat", () => {
 	const data = {
 		spaces: [null, { id: 1, name: "Attack", kind: "land", nation: "ge", terrain: "clear" }, { id: 2, name: "Defense", kind: "land", nation: "su", terrain: "clear" }],
 		pieces: [null, { id: 1, side: "axis", nation: "ge", size: "lcu", cf: 5, lf: 3, mf: 3, rcf: 3, rlf: 3, rmf: 3 }, { id: 2, side: "allied", nation: "su", size: "lcu", cf: 3, lf: 3, mf: 3, rcf: 2, rlf: 3, rmf: 3 }],
@@ -69,10 +74,24 @@ test("Barbarossa cancels Soviet trench Def1R for the full turn while von Paulus 
 		turn: 1,
 		trench: { 2: 1 },
 		trench_owner: { 2: "allied" },
+		trench_kind: { 2: "soviet" },
 		events: { barbarossa: true },
 	})
 	let profile = Combat.preview(barbarossa, data, map, adjacency, combat)
-	assert.equal(profile.attacker_shift, 0)
+	assert.equal(profile.attacker_shift, -1)
+	assert.equal(profile.defender_shift, 0)
+	assert.equal(Combat.canCancelRetreat(barbarossa, data, map, adjacency, combat), false)
+
+	barbarossa.trench[2] = 2
+	profile = Combat.preview(barbarossa, data, map, adjacency, combat)
+	assert.equal(profile.attacker_shift, -2)
+	assert.equal(profile.defender_shift, 0)
+	assert.equal(Combat.canCancelRetreat(barbarossa, data, map, adjacency, combat), false)
+
+	barbarossa.trench[2] = 1
+	barbarossa.trench_kind = {}
+	profile = Combat.preview(barbarossa, data, map, adjacency, combat)
+	assert.equal(profile.attacker_shift, -1)
 	assert.equal(profile.defender_shift, 0)
 	assert.equal(Combat.canCancelRetreat(barbarossa, data, map, adjacency, combat), false)
 
@@ -80,12 +99,48 @@ test("Barbarossa cancels Soviet trench Def1R for the full turn while von Paulus 
 		turn: 1,
 		trench: { 2: 1 },
 		trench_owner: { 2: "allied" },
+		trench_kind: { 2: "soviet" },
 		events: { von_paulus_pause: true },
 	})
 	profile = Combat.preview(pause, data, map, adjacency, combat)
 	assert.equal(profile.attacker_shift, -1)
 	assert.equal(profile.defender_shift, 1)
 	assert.equal(Combat.canCancelRetreat(pause, data, map, adjacency, combat), false)
+})
+
+test("Barbarossa trench cancellation follows Soviet trench identity, including mixed defenders", () => {
+	const data = {
+		spaces: [null, { id: 1, name: "Attack", kind: "land", nation: "ge", terrain: "clear" }, { id: 2, name: "Defense", kind: "land", nation: "su", terrain: "clear" }],
+		pieces: [
+			null,
+			{ id: 1, side: "axis", nation: "ge", size: "lcu", cf: 5, lf: 3, mf: 3, rcf: 3, rlf: 3, rmf: 3 },
+			{ id: 2, side: "allied", nation: "su", size: "lcu", cf: 3, lf: 3, mf: 3, rcf: 2, rlf: 3, rmf: 3 },
+			{ id: 3, side: "allied", nation: "br", size: "scu", cf: 1, lf: 1, mf: 3, rcf: 1, rlf: 1, rmf: 3 },
+		],
+	}
+	const adjacency = [[], [{ to: 2, type: "regular" }], [{ to: 1, type: "regular" }]]
+	const map = combatMap()
+	const barbarossa = combatGame({
+		turn: 1,
+		pieces: [0, 1, 2, 2],
+		trench: { 2: 1 },
+		trench_owner: { 2: "allied" },
+		trench_kind: { 2: "soviet" },
+		events: { barbarossa: true },
+	})
+	const mixedCombat = { origin_spaces: [1], defender_space: 2, attackers: [1], defenders: [2, 3] }
+	let profile = Combat.preview(barbarossa, data, map, adjacency, mixedCombat)
+	assert.equal(profile.attacker_shift, -1)
+	assert.equal(profile.defender_shift, 0)
+	assert.equal(Combat.canCancelRetreat(barbarossa, data, map, adjacency, mixedCombat), false)
+
+	barbarossa.pieces = [0, 1, 0, 2]
+	barbarossa.trench_kind[2] = "british"
+	const britishCombat = { origin_spaces: [1], defender_space: 2, attackers: [1], defenders: [3] }
+	profile = Combat.preview(barbarossa, data, map, adjacency, britishCombat)
+	assert.equal(profile.attacker_shift, -1)
+	assert.equal(profile.defender_shift, 1)
+	assert.equal(Combat.canCancelRetreat(barbarossa, data, map, adjacency, britishCombat), true)
 })
 
 test("Allied Antwerp and attacks solely across either Skagerrak connection permit No Retreat", () => {
@@ -263,7 +318,7 @@ test("Winter 42 German mechanized advance halts upon entering the Soviet Union",
 	const data = {
 		spaces: [
 			null,
-			{ id: 1, name: "Border origin", kind: "land", nation: "pl", terrain: "clear" },
+			{ id: 1, name: "Border origin", kind: "land", nation: "ge", terrain: "clear" },
 			{ id: 2, name: "Soviet border", kind: "land", nation: "su", terrain: "clear" },
 			{ id: 3, name: "Soviet rear", kind: "land", nation: "su", terrain: "clear" },
 		],

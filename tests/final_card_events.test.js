@@ -101,6 +101,9 @@ test("Enigma writes the complete Axis hand to the public log without extra UI st
 	const occupied = prepareAction(25, "allied", 2501)
 	occupied.control[space("Berlin")] = "allied"
 	assert.equal(Engine.events.canPlayEvent(occupied, data, 25), false)
+	const occupiedWarsaw = prepareAction(25, "allied", 2503)
+	occupiedWarsaw.control[space("Warsaw")] = "allied"
+	assert.equal(Engine.events.canPlayEvent(occupiedWarsaw, data, 25), false)
 	const thaw = prepareAction(25, "allied", 2502, 5)
 	thaw.action_round = 1
 	assert.equal(Engine.events.canPlayEvent(thaw, data, 25), false)

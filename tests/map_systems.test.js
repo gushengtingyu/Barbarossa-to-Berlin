@@ -873,6 +873,21 @@ test("Full Supply SCUs may SR between the map and Reserve while LCUs may not", (
 	assert.equal(Engine.map.legalSrPaths(game, data, adjacency, lcu).size, 0)
 })
 
+test("a German Reserve SCU can SR into Warsaw when the full starting stack frees a slot", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 3, {})
+	const warsaw = space("Warsaw")
+	const reserveScu = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "scu" && game.pieces[piece.id] === "reserve:axis").id
+	assert.equal(Engine.map.friendlyPiecesInSpace(game, data, "axis", warsaw).length, 3)
+	assert.equal(Engine.map.legalSrPaths(game, data, adjacency, reserveScu).has(warsaw), false)
+
+	const occupant = Engine.map.friendlyPiecesInSpace(game, data, "axis", warsaw)[0]
+	game.pieces[occupant] = "eliminated:axis"
+	const paths = Engine.map.legalSrPaths(game, data, adjacency, reserveScu)
+	assert.deepEqual(paths.get(warsaw), [warsaw])
+	Engine.map.movePieceAlongPath(game, data, reserveScu, paths.get(warsaw))
+	assert.equal(game.pieces[reserveScu], warsaw)
+})
+
 test("shared SR search context preserves legal-destination results", () => {
 	const game = Engine.setup.createInitialState(data, "Campaign", 31, {})
 	game.turn = 5

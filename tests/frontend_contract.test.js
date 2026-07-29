@@ -154,6 +154,21 @@ test("replacement and card-query summaries omit empty groups", () => {
 			{ title: "轴心国移出游戏", cards: [65] },
 		],
 	)
+	assert.deepEqual(
+		plain(
+			helpers.cardQueryGroups("allied_cards", {
+				side: "allied",
+				discard: { count: 2, cards: [8, 10] },
+				removed: { count: 1, cards: [20] },
+				hand_or_deck: { count: 7, cards: null },
+			}),
+		),
+		[
+			{ title: "弃牌堆", cards: [8, 10], count: 2, hidden: false, side: "allied", alwaysShow: true },
+			{ title: "移出游戏卡牌", cards: [20], count: 1, hidden: false, side: "allied", alwaysShow: true },
+			{ title: "手牌或牌库", cards: [], count: 7, hidden: true, side: "allied", alwaysShow: true },
+		],
+	)
 })
 
 test("card queries use a non-modal panel while rollback confirmation remains modal", () => {

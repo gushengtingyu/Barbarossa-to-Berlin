@@ -224,6 +224,10 @@ function cardAsset(cardId) {
 	return `cards.${cardLanguage}/card_${card.side}_${String(card.num).padStart(2, "0")}.webp`
 }
 
+function cardBackAsset(side) {
+	return `cards.${cardLanguage}/card_${side}_back.webp`
+}
+
 function cardDisplayName(card) {
 	if (!card) return ""
 	return cardLanguage === "CN" ? card.name_zh || card.name : card.name
@@ -388,6 +392,21 @@ function cardQueryGroups(query, params) {
 				cards: Array.isArray(params?.axis) ? params.axis : [],
 			},
 		]
+	if (query === "allied_cards" || query === "axis_cards") {
+		const side = query === "allied_cards" ? "allied" : "axis"
+		const group = (title, pile) => {
+			const cards = Array.isArray(pile?.cards) ? pile.cards : []
+			return {
+				title,
+				cards,
+				count: Math.max(cards.length, Number(pile?.count) || 0),
+				hidden: pile?.cards === null,
+				side,
+				alwaysShow: true,
+			}
+		}
+		return [group(uiText("ui.cards.discard"), params?.discard), group(uiText("ui.cards.removed"), params?.removed), group(uiText("ui.cards.hand_or_deck"), params?.hand_or_deck)]
+	}
 	return null
 }
 
@@ -1519,25 +1538,51 @@ function queryCardElement(cardId) {
 	return element
 }
 
+function queryHiddenPileElement(side, count) {
+	const wrapper = document.createElement("div")
+	const card = document.createElement("div")
+	const label = document.createElement("span")
+	const description = uiText("ui.cards.hidden_count", { count })
+	wrapper.className = "card-query-hidden"
+	card.className = `card query-card card-back ${side === "allied" ? "ap" : "cp"}`
+	card.style.backgroundImage = `url("${cardBackAsset(side)}")`
+	card.setAttribute("aria-hidden", "true")
+	label.className = "card-query-hidden-label"
+	label.textContent = description
+	wrapper.append(card, label)
+	return wrapper
+}
+
 function showCardQuery(title, groups) {
 	const panel = document.getElementById("card_list_panel")
 	const body = document.getElementById("card_list_body")
 	document.getElementById("card_list_title").textContent = title
 	body.replaceChildren()
-	let cardCount = 0
+	let sectionCount = 0
 	for (const group of groups) {
-		if (!group.cards.length) continue
-		cardCount += group.cards.length
+		const cards = Array.isArray(group.cards) ? group.cards : []
+		const count = Math.max(cards.length, Number(group.count) || 0)
+		if (!group.alwaysShow && count === 0) continue
+		sectionCount++
 		const section = document.createElement("section")
 		const heading = document.createElement("h3")
 		const list = document.createElement("div")
-		heading.textContent = uiText("ui.cards.group_count", { title: group.title, count: group.cards.length })
+		heading.textContent = uiText("ui.cards.group_count", { title: group.title, count })
 		list.className = "card-query-list"
-		list.replaceChildren(...group.cards.map(queryCardElement).filter(Boolean))
+		if (group.hidden && count > 0) {
+			list.replaceChildren(queryHiddenPileElement(group.side, count))
+		} else if (cards.length > 0) {
+			list.replaceChildren(...cards.map(queryCardElement).filter(Boolean))
+		} else {
+			const empty = document.createElement("p")
+			empty.className = "card-query-empty"
+			empty.textContent = uiText("ui.cards.none")
+			list.replaceChildren(empty)
+		}
 		section.append(heading, list)
 		body.append(section)
 	}
-	if (!cardCount) {
+	if (!sectionCount) {
 		const empty = document.createElement("p")
 		empty.className = "card-query-empty"
 		empty.textContent = uiText("ui.cards.none")
@@ -1554,7 +1599,14 @@ function hideCardQuery() {
 function on_reply(query, params) {
 	const groups = cardQueryGroups(query, params)
 	if (groups) {
-		showCardQuery(uiText(query === "discard" ? "ui.cards.discard" : "ui.cards.removed"), groups)
+		let title
+		if (query === "discard") title = uiText("ui.cards.discard")
+		else if (query === "removed") title = uiText("ui.cards.removed")
+		else {
+			const side = query === "allied_cards" ? "allied" : "axis"
+			title = uiText("ui.cards.side_overview", { side: sideLabel(side) })
+		}
+		showCardQuery(title, groups)
 		return
 	}
 	if (query === "allied_supply" || query === "axis_supply") showSupplyOverlay(query, params)
@@ -1771,8 +1823,14 @@ function updateInfo() {
 	alliedHand.textContent = uiText("ui.cards.count", { count: view?.hand_count?.allied ?? 0 })
 	alliedHand.title = ""
 	document.getElementById("axis_hand").textContent = uiText("ui.cards.count", { count: view?.hand_count?.axis ?? 0 })
-	document.getElementById("allied_deck_size").textContent = uiText("ui.cards.deck_count", { side: uiText("core.role.allied"), count: view?.deck_count?.allied ?? 0 })
-	document.getElementById("axis_deck_size").textContent = uiText("ui.cards.deck_count", { side: uiText("core.role.axis"), count: view?.deck_count?.axis ?? 0 })
+	for (const side of ["allied", "axis"]) {
+		const label = sideLabel(side)
+		const element = document.getElementById(`${side}_deck_size`)
+		const description = uiText("ui.cards.view_side_piles", { side: label })
+		element.textContent = uiText("ui.cards.deck_count", { side: label, count: view?.deck_count?.[side] ?? 0 })
+		element.title = description
+		element.setAttribute("aria-label", description)
+	}
 	const rpSummary = replacementPointSummary(view?.rp)
 	const rpElement = document.getElementById("rp_summary")
 	rpElement.textContent = rpSummary

@@ -251,6 +251,40 @@ test("map attributes cover every space and preserve combined terrain symbols", (
 	assert.equal(data.spaces[30].terrain, "forest")
 })
 
+test("the six former Polish spaces belong to Germany without changing their printed attributes", () => {
+	const { data } = build()
+	const spaces = data.spaces.filter(Boolean)
+	const ids = [96, 97, 306, 307, 308, 309]
+	assert.deepEqual(
+		ids.map((id) => {
+			const space = data.spaces[id]
+			return {
+				id: space.id,
+				name: space.name,
+				nation: space.nation,
+				side: space.side,
+				supply: Boolean(space.supply),
+				resource: Boolean(space.resource),
+				urban: Boolean(space.urban),
+				vp: Number(space.vp) || 0,
+				wehrkreis: space.wehrkreis || null,
+			}
+		}),
+		[
+			{ id: 96, name: "Lodz Kalisch", nation: "ge", side: "axis", supply: false, resource: false, urban: false, vp: 0, wehrkreis: null },
+			{ id: 97, name: "Krakow", nation: "ge", side: "axis", supply: false, resource: false, urban: false, vp: 0, wehrkreis: "K" },
+			{ id: 306, name: "Warsaw", nation: "ge", side: "axis", supply: false, resource: false, urban: true, vp: 1, wehrkreis: null },
+			{ id: 307, name: "Radom", nation: "ge", side: "axis", supply: false, resource: false, urban: false, vp: 0, wehrkreis: null },
+			{ id: 308, name: "Lublin", nation: "ge", side: "axis", supply: false, resource: false, urban: false, vp: 0, wehrkreis: null },
+			{ id: 309, name: "Tarnow", nation: "ge", side: "axis", supply: false, resource: false, urban: false, vp: 0, wehrkreis: null },
+		],
+	)
+	assert.equal(
+		spaces.some((space) => space.nation === "pl"),
+		false,
+	)
+})
+
 test("printed map symbols and special attack restrictions are represented as authored facts", () => {
 	const { data } = build()
 	const spaces = data.spaces.filter(Boolean)

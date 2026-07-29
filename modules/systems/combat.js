@@ -79,13 +79,20 @@ function defenderSupplyStatus(game, data, map, adjacency, pieceId, spaceId = gam
 	return map.traceSupply(game, data, adjacency, side, spaceId, data.pieces[pieceId].nation)
 }
 
-function sovietTrenchDefenseCancelled(game, data, defenders) {
-	return game.turn === 1 && !!game.events?.barbarossa && defenders.length > 0 && defenders.every((pieceId) => data.pieces[pieceId]?.nation === "su")
+function isSovietTrench(game, data, spaceId) {
+	if (!game.trench?.[spaceId]) return false
+	const kind = game.trench_kind?.[spaceId]
+	if (kind) return kind === "soviet"
+	// Legacy saves predate trench_kind; Tobruk is their only Allied non-Soviet trench.
+	return game.trench_owner?.[spaceId] === ALLIED && data.spaces[spaceId]?.name !== "Tobruk"
+}
+
+function sovietTrenchDefenderShiftCancelled(game, data, spaceId) {
+	return game.turn === 1 && !!game.events?.barbarossa && isSovietTrench(game, data, spaceId)
 }
 
 function trenchProvidesBenefit(game, data, map, adjacency, spaceId, defenders) {
 	if (!game.trench?.[spaceId] || !defenders.length) return false
-	if (sovietTrenchDefenseCancelled(game, data, defenders)) return false
 	const side = sideOf(game, data, map, defenders)
 	if (game.trench_owner?.[spaceId] && game.trench_owner[spaceId] !== side) return false
 	const oos = defenders.some((pieceId) => defenderSupplyStatus(game, data, map, adjacency, pieceId, spaceId) === "oos")
@@ -96,17 +103,15 @@ function axisDefendsInPartisanSpace(game, data, map, spaceId, defenders) {
 	return !!game.partisans?.includes(spaceId) && sideOf(game, data, map, defenders) === AXIS
 }
 
-function attackerTerrainShift(game, data, map, adjacency, spaceId, defenders) {
+function defensiveTerrainReason(game, data, map, spaceId, defenders) {
+	if (axisDefendsInPartisanSpace(game, data, map, spaceId, defenders)) return null
 	const space = data.spaces[spaceId]
 	const side = sideOf(game, data, map, defenders)
-	const normalTerrainAllowed = !axisDefendsInPartisanSpace(game, data, map, spaceId, defenders)
-	let shift = normalTerrainAllowed && (["mountain", "swamp"].includes(space?.terrain) || space?.urban || fortProvidesBenefit(game, data, map, spaceId, side) || space?.kind === "beach") ? -1 : 0
-	if (trenchProvidesBenefit(game, data, map, adjacency, spaceId, defenders)) shift -= Number(game.trench[spaceId]) || 0
-	return shift
-}
-
-function defenderTerrainShift(game, data, map, adjacency, spaceId, defenders) {
-	return trenchProvidesBenefit(game, data, map, adjacency, spaceId, defenders) ? 1 : 0
+	if (["mountain", "swamp"].includes(space?.terrain)) return space.terrain
+	if (space?.urban) return "urban"
+	if (fortProvidesBenefit(game, data, map, spaceId, side)) return "fort"
+	if (space?.kind === "beach") return "beach"
+	return null
 }
 
 function attackersAcrossRiver(game, adjacency, combat, attackers) {
@@ -196,20 +201,30 @@ function fireProfile(game, data, map, adjacency, combat, includeCombatCards) {
 	const attackerStrength = attackers.reduce((sum, pieceId) => sum + combatStrength(game, data, pieceId), 0)
 	const defenderStrength = defenders.reduce((sum, pieceId) => sum + combatStrength(game, data, pieceId), 0)
 	const riverAttack = attackersAcrossRiver(game, adjacency, combat, attackers)
-	let attackerShift = attackerTerrainShift(game, data, map, adjacency, combat.defender_space, allDefenders)
-	if (includeCombatCards) attackerShift += CombatCards.attackerTerrainShift(combat)
-	let defenderShift = defenderTerrainShift(game, data, map, adjacency, combat.defender_space, allDefenders)
+	let attackerShiftFactors = []
+	let defenderShiftFactors = []
+	const terrainReason = defensiveTerrainReason(game, data, map, combat.defender_space, allDefenders)
+	if (terrainReason) attackerShiftFactors.push({ reason: "terrain", amount: -1, terrain: terrainReason })
+	const trench = trenchProvidesBenefit(game, data, map, adjacency, combat.defender_space, allDefenders) ? Number(game.trench[combat.defender_space]) || 0 : 0
+	if (trench) {
+		attackerShiftFactors.push({ reason: "trench", amount: -trench })
+		if (!sovietTrenchDefenderShiftCancelled(game, data, combat.defender_space)) defenderShiftFactors.push({ reason: "trench", amount: 1 })
+	}
+	if (includeCombatCards && CombatCards.attackerTerrainShift(combat)) attackerShiftFactors.push({ reason: "combat_card", amount: -1, card_id: 73 })
 	const winter42Attackers = Weather.formationIsWinter42German(game, data, attackers)
 	const winter42Defenders = Weather.formationIsWinter42German(game, data, allDefenders)
 	if (winter42Defenders) {
-		const trench = trenchProvidesBenefit(game, data, map, adjacency, combat.defender_space, allDefenders) ? Number(game.trench[combat.defender_space]) || 0 : 0
-		attackerShift = trench ? -trench : 0
+		attackerShiftFactors = trench ? [{ reason: "trench", amount: -trench }] : []
 	}
-	if (riverAttack) attackerShift--
-	if (winter42Attackers) attackerShift--
-	if (winter42Defenders) defenderShift--
-	if (attackers.some((pieceId) => attackerSupplyStatus(game, data, map, adjacency, pieceId) === "oos")) attackerShift--
-	if (allDefenders.some((pieceId) => defenderSupplyStatus(game, data, map, adjacency, pieceId) === "oos")) defenderShift--
+	if (riverAttack) attackerShiftFactors.push({ reason: "river", amount: -1 })
+	if (winter42Attackers) attackerShiftFactors.push({ reason: "winter_1942", amount: -1 })
+	if (winter42Defenders) defenderShiftFactors.push({ reason: "winter_1942", amount: -1 })
+	if (attackers.some((pieceId) => attackerSupplyStatus(game, data, map, adjacency, pieceId) === "oos")) attackerShiftFactors.push({ reason: "oos", amount: -1 })
+	if (allDefenders.some((pieceId) => defenderSupplyStatus(game, data, map, adjacency, pieceId) === "oos")) defenderShiftFactors.push({ reason: "oos", amount: -1 })
+	const attackerShift = attackerShiftFactors.reduce((sum, factor) => sum + factor.amount, 0)
+	const defenderShift = defenderShiftFactors.reduce((sum, factor) => sum + factor.amount, 0)
+	const attackerBaseColumn = baseColumn(attackerTable, attackerStrength)
+	const defenderBaseColumn = baseColumn(defenderTable, defenderStrength)
 	const attackerColumn = shiftedColumn(attackerTable, attackerStrength, attackerShift)
 	const defenderColumn = shiftedColumn(defenderTable, defenderStrength, defenderShift)
 	const attackerSide = sideOf(game, data, map, attackers)
@@ -224,8 +239,12 @@ function fireProfile(game, data, map, adjacency, combat, includeCombatCards) {
 		attacker_strength: attackerStrength,
 		defender_strength: defenderStrength,
 		river_attack: riverAttack,
+		attacker_base_column: attackerBaseColumn,
+		defender_base_column: defenderBaseColumn,
 		attacker_shift: attackerShift,
 		defender_shift: defenderShift,
+		attacker_shift_factors: attackerShiftFactors,
+		defender_shift_factors: defenderShiftFactors,
 		attacker_column: attackerColumn,
 		defender_column: defenderColumn,
 	}
@@ -241,8 +260,14 @@ function resolve(game, data, map, adjacency, combat) {
 	const allDefenders = [...new Set(defenders.concat((combat.retreated_defenders || []).filter((pieceId) => isOnMap(game, pieceId))))]
 	const attackerRawDie = Random.random(game, 6) + 1
 	const defenderRawDie = Random.random(game, 6) + 1
-	const attackerDrm = eventAttackDrm(game, data, map, attackers, allDefenders) + CombatCards.drm(combat, attackerSide)
-	const defenderDrm = eventDefenderDrm(game, data, map, combat) + CombatCards.drm(combat, defenderSide)
+	const attackerDrmFactors = CombatCards.drmFactors(combat, attackerSide)
+	const defenderDrmFactors = CombatCards.drmFactors(combat, defenderSide)
+	const attackerEventDrm = eventAttackDrm(game, data, map, attackers, allDefenders)
+	const defenderEventDrm = eventDefenderDrm(game, data, map, combat)
+	if (attackerEventDrm) attackerDrmFactors.unshift({ reason: "event", amount: attackerEventDrm, card_id: game.event?.card_id || null })
+	if (defenderEventDrm) defenderDrmFactors.unshift({ reason: "event", amount: defenderEventDrm, card_id: game.event?.card_id || null })
+	const attackerDrm = attackerDrmFactors.reduce((sum, factor) => sum + factor.amount, 0)
+	const defenderDrm = defenderDrmFactors.reduce((sum, factor) => sum + factor.amount, 0)
 	const attackerDie = Math.max(1, Math.min(6, attackerRawDie + attackerDrm))
 	const defenderDie = Math.max(1, Math.min(6, defenderRawDie + defenderDrm))
 	Object.assign(combat, {
@@ -251,6 +276,8 @@ function resolve(game, data, map, adjacency, combat) {
 		defender_die_raw: defenderRawDie,
 		attacker_drm: attackerDrm,
 		defender_drm: defenderDrm,
+		attacker_drm_factors: attackerDrmFactors,
+		defender_drm_factors: defenderDrmFactors,
 		attacker_die: attackerDie,
 		defender_die: defenderDie,
 		defender_loss: fireResult(attackerTable, attackerColumn, attackerDie),
@@ -458,7 +485,7 @@ function canCancelRetreat(game, data, map, adjacency, combat) {
 	const space = data.spaces[combat.defender_space]
 	const survivors = combat.defenders.filter((pieceId) => isOnMap(game, pieceId))
 	const side = sideOf(game, data, map, survivors)
-	const sovietTrenchNoRetreatCancelled = game.turn === 1 && (game.events?.barbarossa || game.events?.von_paulus_pause) && survivors.length > 0 && survivors.every((pieceId) => data.pieces[pieceId]?.nation === "su")
+	const sovietTrenchNoRetreatCancelled = game.turn === 1 && (game.events?.barbarossa || game.events?.von_paulus_pause) && isSovietTrench(game, data, combat.defender_space)
 	const trenchAllowed = trenchProvidesBenefit(game, data, map, adjacency, combat.defender_space, survivors) && !sovietTrenchNoRetreatCancelled
 	const hedgehogsAllowed = game.events?.hedgehogs_turn === game.turn && data.spaces[combat.defender_space]?.nation === "su" && survivors.length > 0 && survivors.every((pieceId) => data.pieces[pieceId]?.nation === "ge")
 	if (hedgehogsAllowed) return true

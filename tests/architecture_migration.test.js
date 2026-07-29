@@ -282,6 +282,68 @@ test("view, static_view and query are read-only and clone public structures", ()
 	assert.equal(game.discards.axis.includes(999), false)
 })
 
+test("side card queries disclose only authorized piles and return sorted clones", () => {
+	const game = rules.setup(12, "Campaign", {})
+	game.discards.allied = [9, 2, 7]
+	game.removed.allied = [11, 4]
+	game.decks.allied = [8, 1, 6]
+	game.hands.allied = [5, 3]
+	game.discards.axis = [64, 58]
+	game.removed.axis = [71, 57]
+	game.decks.axis = [66, 56]
+	game.hands.axis = [63, 60]
+	const before = JSON.stringify(game)
+
+	const alliedOwn = rules.query(game, "Allied", "allied_cards")
+	const alliedOpponent = rules.query(game, "Axis", "allied_cards")
+	const alliedObserver = rules.query(game, "Observer", "allied_cards")
+	const axisOwn = rules.query(game, "Axis", "axis_cards")
+	const axisOpponent = rules.query(game, "Allied", "axis_cards")
+	const axisObserver = rules.query(game, "Observer", "axis_cards")
+
+	assert.deepEqual(alliedOwn, {
+		side: "allied",
+		discard: { count: 3, cards: [2, 7, 9] },
+		removed: { count: 2, cards: [4, 11] },
+		hand_or_deck: { count: 5, cards: [1, 3, 5, 6, 8] },
+	})
+	assert.deepEqual(axisOwn, {
+		side: "axis",
+		discard: { count: 2, cards: [58, 64] },
+		removed: { count: 2, cards: [57, 71] },
+		hand_or_deck: { count: 4, cards: [56, 60, 63, 66] },
+	})
+	for (const hidden of [alliedOpponent, alliedObserver]) {
+		assert.deepEqual(hidden, {
+			side: "allied",
+			discard: { count: 3, cards: null },
+			removed: { count: 2, cards: [4, 11] },
+			hand_or_deck: { count: 5, cards: null },
+		})
+	}
+	for (const hidden of [axisOpponent, axisObserver]) {
+		assert.deepEqual(hidden, {
+			side: "axis",
+			discard: { count: 2, cards: null },
+			removed: { count: 2, cards: [57, 71] },
+			hand_or_deck: { count: 4, cards: null },
+		})
+	}
+	assert.equal(JSON.stringify(game), before)
+
+	alliedOwn.discard.cards.push(999)
+	alliedOwn.removed.cards.push(999)
+	alliedOwn.hand_or_deck.cards.push(999)
+	alliedOpponent.removed.cards.push(998)
+	axisOwn.discard.cards.push(999)
+	axisOwn.removed.cards.push(999)
+	axisOwn.hand_or_deck.cards.push(999)
+	axisObserver.removed.cards.push(998)
+	assert.equal(JSON.stringify(game), before)
+	assert.deepEqual(alliedObserver.removed.cards, [4, 11])
+	assert.deepEqual(axisOpponent.removed.cards, [57, 71])
+})
+
 test("view normalization does not mutate additive fields in an older game", () => {
 	const game = rules.setup(10, "Campaign", {})
 	delete game.rp.tu

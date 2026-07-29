@@ -104,7 +104,7 @@ test("Yalta requires every Soviet VP space and one Greater Germany VP space, and
 	assert.equal(Engine.events.canPlayEvent(current, data, 51), false)
 	current.control[space("Memel")] = "allied"
 	assert.equal(Engine.events.canPlayEvent(current, data, 51), false)
-	current.control[space("Berlin")] = "allied"
+	current.control[space("Warsaw")] = "allied"
 	assert.equal(Engine.events.canPlayEvent(current, data, 51), true)
 	const vp = current.vp
 	Engine.events.playEvent(current, data, 51)

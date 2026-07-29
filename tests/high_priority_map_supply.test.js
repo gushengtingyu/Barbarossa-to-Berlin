@@ -90,7 +90,7 @@ test("a Limited supply source does not hide a reachable Full supply source", () 
 
 test("Winter 42 blocks a German Panzer entering a Soviet Combat marker from outside the USSR", () => {
 	const localData = {
-		spaces: [null, { id: 1, name: "Outside USSR", kind: "land", nation: "pl" }, { id: 2, name: "Inside USSR", kind: "land", nation: "su" }],
+		spaces: [null, { id: 1, name: "Outside USSR", kind: "land", nation: "ge" }, { id: 2, name: "Inside USSR", kind: "land", nation: "su" }],
 		pieces: [null, { id: 1, name: "German Panzer", side: "axis", nation: "ge", size: "lcu", unit_type: "mechanized", mf: 4, rmf: 4 }],
 	}
 	const localAdjacency = [[], [{ to: 2, type: "regular" }], [{ to: 1, type: "regular" }]]

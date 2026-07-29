@@ -36,7 +36,7 @@
 			<li data-action="entrench" data-i18n="ui.entrench">掘壕</li>
 		</menu>
 
-		<div id="card_list_panel" class="card-list-panel" hidden>
+		<div id="card_list_panel" class="card-list-panel" role="region" aria-labelledby="card_list_title" hidden>
 			<div class="card-list-panel-head">
 				<strong id="card_list_title" data-i18n="ui.cards">卡牌</strong>
 				<button type="button" onclick="hideCardQuery()" aria-label="关闭" data-i18n-aria-label="ui.close">×</button>
@@ -133,8 +133,8 @@
 				</div>
 			</div>
 			<div id="turn_info">
-				<div id="allied_deck_size"></div>
-				<div id="axis_deck_size"></div>
+				<button class="deck-query-button" id="allied_deck_size" type="button" onclick="send_query('allied_cards')" aria-controls="card_list_panel"></button>
+				<button class="deck-query-button" id="axis_deck_size" type="button" onclick="send_query('axis_cards')" aria-controls="card_list_panel"></button>
 				<div id="rp_summary" hidden></div>
 			</div>
 			<div id="log"></div>

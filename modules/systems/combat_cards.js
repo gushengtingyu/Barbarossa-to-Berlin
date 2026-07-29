@@ -143,11 +143,15 @@ function played(combat, side, cardId) {
 }
 
 function drm(combat, side) {
+	return drmFactors(combat, side).reduce((sum, factor) => sum + factor.amount, 0)
+}
+
+function drmFactors(combat, side) {
 	const position = isAttacker(combat, side) ? "attacker" : "defender"
-	return (combat.cc_played?.[side] || []).reduce((sum, cardId) => {
+	return (combat.cc_played?.[side] || []).flatMap((cardId) => {
 		const effect = CARDS[cardId]?.drm
-		return sum + (effect === "both" || effect === position ? 1 : 0)
-	}, 0)
+		return effect === "both" || effect === position ? [{ reason: "combat_card", amount: 1, card_id: cardId }] : []
+	})
 }
 
 function attackerTerrainShift(combat) {
@@ -192,6 +196,7 @@ module.exports = {
 	available,
 	discardAtEndOfTurn,
 	drm,
+	drmFactors,
 	eligible,
 	finalize,
 	isMechanized,

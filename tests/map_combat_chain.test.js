@@ -486,9 +486,12 @@ test("multi-space combat requires a participating mechanized unit in every addit
 	assert.equal(game.state, "combat_attacker_cc")
 	game = rules.action(game, "Axis", "continue")
 	game = rules.action(game, "Allied", "continue")
-	assert.ok(renderLog(game).includes("**进攻方开火：**"))
-	assert.ok(renderLog(game).includes("**防守方开火：**"))
-	assert.doesNotMatch(renderLog(game).join("\n"), /(?:进攻方|防守方)开火（/)
+	const combatLog = renderLog(game)
+	assert.ok(combatLog.includes("**火力列位移：**"))
+	assert.ok(combatLog.some((entry) => /^\*\*进攻方开火（\d+ CF，(?:LCU|SCU)）：\*\*$/.test(entry)))
+	assert.ok(combatLog.some((entry) => /^\*\*防守方开火（\d+ CF，(?:LCU|SCU)）：\*\*$/.test(entry)))
+	assert.equal(combatLog.filter((entry) => entry === ">> 掷骰修正：无").length, 2)
+	assert.ok(combatLog.some((entry) => /^\*\d+:\d+ (?:进攻方获胜|防守方获胜|平局)$/.test(entry)))
 })
 
 test("multi-space combat automatically chooses the primary origin regardless of click order", () => {
@@ -1179,7 +1182,66 @@ test("units that already retreated this round do not add defensive strength", ()
 	game = rules.action(game, "Axis", "continue")
 	game = rules.action(game, "Allied", "continue")
 	assert.equal(game.combat.defender_strength, Engine.combat.combatStrength(game, data, defenders[1]))
+	assert.ok(renderLog(game).some((entry) => entry.includes(`此前已退却（0 CF）：${Engine.state.pieceLogRef(game, defenders[0])}`)))
 	if (game.combat.defender_loss >= 1) assert.equal(Engine.combat.isOnMap(game, defenders[0]), false)
+})
+
+test("retreat start and cancellation decisions are explicit in the combat log", () => {
+	const adjacency = Engine.map.buildAdjacency(data)
+	const target = data.spaces.find((space) => space?.kind === "land" && space.terrain === "clear" && !space.urban && !space.fort && (adjacency[space.id] || []).some((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land"))
+	const origin = adjacency[target.id].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
+	const attacker = data.pieces.find((piece) => piece?.side === "axis" && piece.size === "lcu").id
+	const defenders = data.pieces
+		.filter((piece) => piece?.side === "allied" && piece.size === "scu")
+		.slice(0, 2)
+		.map((piece) => piece.id)
+	const makeGame = () => {
+		const game = rules.setup(171, "Campaign", {})
+		game.pieces.fill(0)
+		game.pieces[attacker] = origin
+		for (const pieceId of defenders) game.pieces[pieceId] = target.id
+		game.control = data.spaces.map((space) => (space ? "allied" : null))
+		game.active = "Axis"
+		game.phase = "action"
+		game.turn = 8
+		game.action_round = 2
+		game.action = {
+			mode: "ops",
+			attack_spaces: [origin],
+			attacked: [],
+			defended: [],
+			used_pieces: [attacker],
+		}
+		game.combat = {
+			origin_spaces: [origin],
+			defender_space: target.id,
+			attackers: [attacker],
+			defenders: defenders.slice(),
+			retreated_defenders: [],
+			attacker_side: "axis",
+			defender_side: "allied",
+			defender_loss: 2,
+			attacker_loss: 0,
+			defender_loss_taken: 2,
+			attacker_loss_taken: 0,
+		}
+		return game
+	}
+
+	let game = makeGame()
+	game.state = "combat_attacker_losses"
+	game = rules.action(game, "Axis", "continue")
+	assert.equal(game.state, "combat_retreat")
+	assert.ok(renderLog(game).includes("**防守方撤退（2格）：**"))
+	assert.ok(renderLog(game, "en").includes("**Defender retreat (2 spaces):**"))
+
+	game = makeGame()
+	game.active = "Allied"
+	game.state = "combat_retreat_option"
+	assert.ok(rules.view(game, "Allied").actions.piece.includes(defenders[0]))
+	game = rules.action(game, "Allied", "piece", defenders[0])
+	assert.ok(renderLog(game).includes("*防守方追加损失并取消撤退。"))
+	assert.ok(renderLog(game, "en").includes("*The defender takes an additional loss and cancels the retreat."))
 })
 
 test("defending units may retreat to different destinations", () => {
@@ -1227,11 +1289,14 @@ test("defending units may retreat to different destinations", () => {
 	assert.equal(game.pieces[defenders[0]], firstOrigin)
 	assert.equal(game.state, "combat_retreat_piece")
 	game = rules.action(game, "Axis", "move", firstChoices[0])
+	assert.ok(renderLog(game).includes(`>> ${Engine.state.pieceLogRef(game, defenders[0])}：s${target.id} → s${firstChoices[0]}`))
 	game = rules.action(game, "Axis", "piece", defenders[1])
 	const secondChoices = rules.view(game, "Axis").actions.move
 	const secondDestination = secondChoices.find((spaceId) => spaceId !== firstChoices[0])
 	assert.ok(secondDestination)
 	game = rules.action(game, "Axis", "move", secondDestination)
+	assert.ok(renderLog(game).includes(`>> ${Engine.state.pieceLogRef(game, defenders[1])}：s${target.id} → s${secondDestination}`))
+	assert.ok(renderLog(game, "en").includes(`>> ${Engine.state.pieceLogRef(game, defenders[1])}: s${target.id} → s${secondDestination}`))
 	assert.equal(game.state, "combat_retreat")
 	assert.equal(rules.view(game, "Axis").actions.done, 1)
 	assert.equal(rules.view(game, "Axis").actions.undo, 1)
@@ -1330,9 +1395,9 @@ test("combat advance selects and moves a unit group one adjacent step at a time"
 	assert.equal(game.pieces[attackers[1]], konigsberg)
 	assert.equal(game.pieces[attackers[2]], memel)
 	const firstGroup = attackers.slice(0, 2).map((pieceId) => Engine.state.pieceLogRef(game, pieceId))
-	assert.ok(renderLog(game).includes("**挺近：**"))
+	assert.ok(renderLog(game).includes("**战后推进：**"))
 	assert.ok(renderLog(game).includes(`>> ${firstGroup.join("、")} → s${konigsberg}`))
-	assert.ok(renderLog(game, "en").includes("**Advance:**"))
+	assert.ok(renderLog(game, "en").includes("**Advance after combat:**"))
 	assert.ok(renderLog(game, "en").includes(`>> ${firstGroup.join(", ")} → s${konigsberg}`))
 
 	game = rules.action(game, "Axis", "piece", attackers[2])
@@ -1341,6 +1406,21 @@ test("combat advance selects and moves a unit group one adjacent step at a time"
 	assert.equal(game.log.filter((entry) => entry.key === "combat.log.advance_group").length, 2)
 	assert.equal(game.state, "combat_advance")
 	assert.equal(rules.view(game, "Axis").actions.done, 1)
+})
+
+test("declining advance after combat is explicit in both localized logs", () => {
+	const adjacency = Engine.map.buildAdjacency(data)
+	const origin = data.spaces.find((space) => space?.name === "Memel").id
+	const attacker = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu").id
+	const defender = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
+	let game = axisAdvanceGame(180, [attacker], origin, defender)
+
+	assert.equal(rules.view(game, "Axis").actions.done, 1)
+	game = rules.action(game, "Axis", "done")
+	assert.ok(renderLog(game).includes("**战后推进：**"))
+	assert.ok(renderLog(game).includes(">> 进攻方没有推进。"))
+	assert.ok(renderLog(game, "en").includes("**Advance after combat:**"))
+	assert.ok(renderLog(game, "en").includes(">> The attacker does not advance."))
 })
 
 test("mechanized combat advance executes and logs every adjacent step with undo", () => {

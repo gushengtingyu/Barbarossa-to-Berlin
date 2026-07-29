@@ -74,8 +74,46 @@ test("combat resolution consumes only the deterministic game seed", () => {
 	Combat.resolve(gameB, localData, map, [[], [{ to: 2 }], [{ to: 1 }]], second)
 	assert.deepEqual(first, second)
 	assert.equal(first.attacker_shift, -1)
+	assert.deepEqual(first.attacker_shift_factors, [{ reason: "terrain", amount: -1, terrain: "mountain" }])
+	assert.deepEqual(first.defender_shift_factors, [])
+	assert.equal(first.attacker_base_column, 4)
+	assert.equal(first.attacker_column, 3)
 	assert.equal(first.attacker_drm, 1)
+	assert.deepEqual(first.attacker_drm_factors, [{ reason: "event", amount: 1, card_id: null }])
+	assert.deepEqual(first.defender_drm_factors, [])
 	assert.equal(gameA.seed, gameB.seed)
+})
+
+test("Barbarossa keeps the Soviet trench attack shift alongside its German attack DRM", () => {
+	const localData = {
+		spaces: [null, { id: 1, name: "Attack", terrain: "clear" }, { id: 2, name: "Defense", terrain: "clear" }],
+		pieces: [null, { id: 1, side: "axis", nation: "ge", size: "lcu", unit_type: "army", cf: 5, lf: 3, rcf: 3, rlf: 3 }, { id: 2, side: "allied", nation: "su", size: "lcu", unit_type: "army", cf: 3, lf: 3, rcf: 2, rlf: 3 }],
+	}
+	const game = {
+		seed: 77,
+		turn: 1,
+		pieces: [0, 1, 2],
+		reduced: [],
+		trench: { 2: 1 },
+		trench_owner: { 2: "allied" },
+		trench_kind: { 2: "soviet" },
+		events: { barbarossa: true },
+		event: { attack_drm: 1 },
+	}
+	const combat = {
+		origin_spaces: [1],
+		defender_space: 2,
+		attackers: [1],
+		defenders: [2],
+	}
+	Combat.resolve(game, localData, { traceSupply: () => "full" }, [[], [{ to: 2, type: "regular" }], [{ to: 1, type: "regular" }]], combat)
+	assert.equal(combat.attacker_shift, -1)
+	assert.equal(combat.defender_shift, 0)
+	assert.deepEqual(combat.attacker_shift_factors, [{ reason: "trench", amount: -1 }])
+	assert.deepEqual(combat.defender_shift_factors, [])
+	assert.equal(Combat.fireColumnLabel(combat.attacker_table, combat.attacker_column), 4)
+	assert.equal(Combat.fireColumnLabel(combat.defender_table, combat.defender_column), 3)
+	assert.equal(combat.attacker_drm, 1)
 })
 
 test("Rule 11.45 excludes previously retreated strength but retains its unit class and supply effects", () => {

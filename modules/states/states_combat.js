@@ -369,7 +369,7 @@ function eliminateFailedRetreat(game, data, pieceId) {
 	const pieceRef = Engine.state.pieceLogRef(game, pieceId)
 	const originSpaceId = game.pieces[pieceId]
 	Engine.logistics.eliminateForAttrition(game, data, pieceId)
-	Engine.state.log(game, "combat.log.failed_retreat", { piece: pieceRef })
+	Engine.state.log(game, "combat.log.failed_retreat", { piece: pieceRef }, "detail2")
 	Engine.invasions.removeDefeatedBeachhead(game, data, Engine.map, originSpaceId)
 }
 
@@ -386,6 +386,7 @@ function startRetreat(game, data, adjacency) {
 	game.combat.retreat_pending = onMapParticipants(game, "defenders")
 	game.combat.retreat_paths = {}
 	game.combat.retreat_vacated = [game.combat.defender_space]
+	Engine.state.log(game, "combat.log.retreat_heading", { distance: game.combat.retreat_distance }, "strong")
 	game.active = roleForSide(game.combat.defender_side)
 	game.state = "combat_retreat"
 	prepareRetreat(game, data, adjacency)
@@ -438,11 +439,92 @@ function logCombatOverview(game) {
 	Engine.state.log(game, "combat.log.defender", {}, "strong")
 	if (combat.defenders.length) Engine.state.log(game, "combat.log.defenders", { pieces: I18n.list(combat.defenders.map((pieceId) => Engine.state.pieceLogRef(game, pieceId))) }, "detail2")
 	else Engine.state.log(game, "combat.log.defender_none", {}, "detail2")
+	if (combat.retreated_defenders?.length) Engine.state.log(game, "combat.log.defenders_retreated", { pieces: I18n.list(combat.retreated_defenders.map((pieceId) => Engine.state.pieceLogRef(game, pieceId))) }, "detail2")
 	Engine.state.log(game, "combat.log.cards", {}, "strong")
 }
 
 function combatDieLog(combat, role) {
 	return Engine.state.formatDie(combat[`${role}_side`], combat[`${role}_die_raw`], combat[`${role}_drm`], combat[`${role}_die`])
+}
+
+function signedModifier(value) {
+	const amount = Number(value) || 0
+	return amount > 0 ? `+${amount}` : String(amount)
+}
+
+function terrainModifierSource(terrain) {
+	const terrainKey = {
+		beach: "combat.log.modifier.beach",
+		fort: "combat.log.modifier.fort",
+		mountain: "ui.terrain.mountain",
+		swamp: "ui.terrain.swamp",
+		urban: "combat.log.modifier.urban",
+	}[terrain]
+	return I18n.message(terrainKey || "combat.log.modifier.terrain")
+}
+
+function modifierSource(factor) {
+	switch (factor.reason) {
+		case "terrain":
+			return terrainModifierSource(factor.terrain)
+		case "trench":
+			return I18n.message("combat.log.modifier.trench")
+		case "river":
+			return I18n.message("combat.log.modifier.river")
+		case "winter_1942":
+			return I18n.message("combat.log.modifier.winter_1942")
+		case "oos":
+			return I18n.message("combat.log.modifier.oos")
+		case "combat_card":
+			return I18n.message("combat.log.modifier.combat_card", { card: `c${factor.card_id}` })
+		case "event":
+			return factor.card_id ? I18n.message("combat.log.modifier.event", { card: `c${factor.card_id}` }) : I18n.message("combat.log.modifier.event_generic")
+		default:
+			return I18n.message("combat.log.modifier.other")
+	}
+}
+
+function modifierSummary(factors) {
+	if (!factors?.length) return I18n.message("core.none")
+	return I18n.list(
+		factors.map((factor) =>
+			I18n.message("combat.log.modifier.factor", {
+				amount: signedModifier(factor.amount),
+				source: modifierSource(factor),
+			}),
+		),
+	)
+}
+
+function logFireResult(game, combat, role, loss) {
+	const table = combat[`${role}_table`]
+	const factors = combat[`${role}_shift_factors`] || []
+	const params = {
+		die: combatDieLog(combat, role),
+		column: Engine.combat.fireColumnLabel(table, combat[`${role}_column`]),
+		loss,
+	}
+	if (factors.length) {
+		params.base_column = Engine.combat.fireColumnLabel(table, combat[`${role}_base_column`])
+		Engine.state.log(game, "combat.log.fire_result_shifted", params, "detail")
+	} else Engine.state.log(game, "combat.log.fire_result", params, "detail")
+}
+
+function logCombatResolution(game, combat) {
+	Engine.state.log(game, "combat.log.column_shifts", {}, "strong")
+	Engine.state.log(game, "combat.log.attacker_modifiers", { modifiers: modifierSummary(combat.attacker_shift_factors) }, "detail2")
+	Engine.state.log(game, "combat.log.defender_modifiers", { modifiers: modifierSummary(combat.defender_shift_factors) }, "detail2")
+
+	Engine.state.log(game, "combat.log.attacker_fire", { strength: combat.attacker_strength, table: combat.attacker_table.toUpperCase() }, "strong")
+	Engine.state.log(game, "combat.log.drm", { modifiers: modifierSummary(combat.attacker_drm_factors) }, "detail2")
+	logFireResult(game, combat, "attacker", combat.defender_loss)
+
+	Engine.state.log(game, "combat.log.defender_fire", { strength: combat.defender_strength, table: combat.defender_table.toUpperCase() }, "strong")
+	Engine.state.log(game, "combat.log.drm", { modifiers: modifierSummary(combat.defender_drm_factors) }, "detail2")
+	logFireResult(game, combat, "defender", combat.attacker_loss)
+
+	const outcomeKey = combat.defender_loss > combat.attacker_loss ? "combat.log.outcome_attacker" : combat.attacker_loss > combat.defender_loss ? "combat.log.outcome_defender" : "combat.log.outcome_draw"
+	Engine.state.log(game, outcomeKey, { defender_loss: combat.defender_loss, attacker_loss: combat.attacker_loss }, "bold")
 }
 
 function logStepLoss(game, pieceId, outcome) {
@@ -496,12 +578,8 @@ function resolveSelectedCombat(game, data, adjacency) {
 	Engine.orders.fulfillForCombat(game, data, combat)
 	for (const pieceId of combat.attackers) if (!game.action.used_pieces.includes(pieceId)) game.action.used_pieces.push(pieceId)
 	Engine.state.clearUndo(game)
-	if (attackers.length) {
-		Engine.state.log(game, "combat.log.attacker_fire", {}, "strong")
-		Engine.state.log(game, "combat.log.fire_result", { die: combatDieLog(combat, "attacker"), column: Engine.combat.fireColumnLabel(combat.attacker_table, combat.attacker_column), loss: combat.defender_loss }, "detail")
-		Engine.state.log(game, "combat.log.defender_fire", {}, "strong")
-		Engine.state.log(game, "combat.log.fire_result", { die: combatDieLog(combat, "defender"), column: Engine.combat.fireColumnLabel(combat.defender_table, combat.defender_column), loss: combat.attacker_loss }, "detail")
-	} else Engine.state.log(game, "combat.log.attacker_aborted", { space: `s${combat.defender_space}` }, "detail2")
+	if (attackers.length) logCombatResolution(game, combat)
+	else Engine.state.log(game, "combat.log.attacker_aborted", { space: `s${combat.defender_space}` }, "detail2")
 	if (!attackers.length) return finishCombat(game, data, adjacency)
 	if (combat.defender_loss > 0) Engine.state.log(game, "combat.log.defender_takes_losses", {}, "strong")
 	game.active = roleForSide(combat.defender_side)
@@ -792,6 +870,7 @@ function register(registerState) {
 			logStepLoss(game, pieceId, outcome)
 			removeDefeatedBeachheadAfterLoss(game, data, outcome)
 			game.combat.retreat_cancelled = true
+			Engine.state.log(game, "combat.log.retreat_cancelled", {}, "bold")
 			pauseForEliminatedTheater(game, data, adjacency, pieceId, outcome, "combat_retreat_option")
 		},
 		done(game, role, noun, { data, adjacency }) {
@@ -845,6 +924,16 @@ function register(registerState) {
 			if (!game.combat.retreat_options.some((path) => path.length === game.combat.retreat_prefix.length)) return
 			const path = game.combat.retreat_prefix.slice()
 			game.combat.retreat_paths[pieceId] = path
+			Engine.state.log(
+				game,
+				"combat.log.retreat_path",
+				{
+					piece: Engine.state.pieceLogRef(game, pieceId),
+					origin: `s${game.combat.defender_space}`,
+					path: path.map((spaceId) => `s${spaceId}`).join(" → "),
+				},
+				"detail2",
+			)
 			game.retreat_history.push({
 				turn: game.turn,
 				round: game.action_round,
@@ -882,6 +971,10 @@ function register(registerState) {
 		},
 		piece: toggleAdvancePiece,
 		done(game, role, noun, { data, adjacency }) {
+			if (!game.combat.advance_log_started) {
+				Engine.state.log(game, "combat.log.advance_heading", {}, "strong")
+				Engine.state.log(game, "combat.log.advance_none", {}, "detail2")
+			}
 			finishCombat(game, data, adjacency)
 		},
 		stop(game) {

@@ -21,12 +21,36 @@ header {
 	white-space: normal;
 }
 
+.deck-query-button {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0;
+	border: 0;
+	appearance: none;
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	line-height: inherit;
+	text-align: left;
+}
+
 #allied_deck_size {
 	padding: 4px 0 0 8px;
 }
 
 #axis_deck_size {
 	padding: 0 0 4px 8px;
+}
+
+.deck-query-button:hover {
+	background-color: rgb(255 255 255 / 28%);
+}
+
+.deck-query-button:focus-visible {
+	outline: 2px solid #34495e;
+	outline-offset: -2px;
 }
 
 #log {
@@ -409,6 +433,21 @@ header.Axis {
 	height: 140px;
 	border-radius: 6px;
 	cursor: default;
+}
+
+.card-query-hidden {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.card-query-hidden-label {
+	margin: 0;
+	font-weight: bold;
+}
+
+.card.query-card.card-back {
+	flex: 0 0 auto;
 }
 
 .card-query-empty {

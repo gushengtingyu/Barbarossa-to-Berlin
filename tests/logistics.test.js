@@ -172,6 +172,52 @@ test("an eliminated LCU selects a legal Full Supply home placement before spendi
 	assert.ok(renderLog(game).includes(`盟军补足p${pieceId}于s${moscow}。`))
 })
 
+test("an eliminated German LCU can rebuild in Warsaw after freeing its original stack slot", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 1, {})
+	const warsaw = data.spaces.find((space) => space?.name === "Warsaw").id
+	const pieceId = Engine.map.friendlyPiecesInSpace(game, data, "axis", warsaw).find((candidate) => data.pieces[candidate].nation === "ge" && data.pieces[candidate].size === "lcu" && data.pieces[candidate].unit_type !== "mechanized")
+	assert.equal(Engine.map.friendlyPiecesInSpace(game, data, "axis", warsaw).length, 3)
+
+	game.pieces[pieceId] = "eliminated:axis"
+	Engine.combat.setReduced(game, pieceId, false)
+	game.rp.ge = 1
+
+	const result = Engine.logistics.replaceStep(game, data, Engine.map, adjacency, "axis", pieceId)
+	assert.equal(result.placement_required, true)
+	assert.equal(result.spaces.includes(warsaw), true)
+	assert.equal(game.rp.ge, 1)
+
+	const placement = Engine.logistics.placeRebuiltLcu(game, data, Engine.map, adjacency, "axis", pieceId, warsaw)
+	assert.deepEqual(placement, { piece_id: pieceId, space_id: warsaw, bucket: "ge", cost: 1 })
+	assert.equal(game.pieces[pieceId], warsaw)
+	assert.equal(Engine.combat.isReduced(game, pieceId), true)
+	assert.equal(game.rp.ge, 0)
+})
+
+test("German LCU reinforcement entry includes Warsaw but preserves home-city placement restrictions", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 1, {})
+	const warsaw = data.spaces.find((space) => space?.name === "Warsaw").id
+	const germanLcu = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu" && Engine.unitLocations.isAvailable(game.pieces[piece.id])).id
+	const reclassifiedNonCities = ["Lodz Kalisch", "Krakow", "Radom", "Lublin", "Tarnow"].map((name) => data.spaces.find((space) => space?.name === name).id)
+
+	let spaces = Engine.reinforcements.legalLcuReinforcementSpaces(game, data, Engine.map, adjacency, germanLcu)
+	assert.equal(spaces.includes(warsaw), false)
+
+	const occupant = Engine.map.friendlyPiecesInSpace(game, data, "axis", warsaw)[0]
+	game.pieces[occupant] = "eliminated:axis"
+	spaces = Engine.reinforcements.legalLcuReinforcementSpaces(game, data, Engine.map, adjacency, germanLcu)
+	assert.equal(spaces.includes(warsaw), true)
+	for (const spaceId of reclassifiedNonCities) assert.equal(spaces.includes(spaceId), false, data.spaces[spaceId].name)
+
+	game.control[warsaw] = "allied"
+	assert.equal(Engine.reinforcements.legalLcuReinforcementSpaces(game, data, Engine.map, adjacency, germanLcu).includes(warsaw), false)
+	game.control[warsaw] = "axis"
+
+	const disconnectedAdjacency = adjacency.map((edges) => edges.slice())
+	disconnectedAdjacency[warsaw] = []
+	assert.equal(Engine.reinforcements.legalLcuReinforcementSpaces(game, data, Engine.map, disconnectedAdjacency, germanLcu).includes(warsaw), false)
+})
+
 test("German Panzer replacements stop at the per-turn step limit", () => {
 	const game = Engine.setup.createInitialState(data, "Campaign", 1, {})
 	const panzers = data.pieces.filter((piece) => piece?.nation === "ge" && piece.size === "lcu" && piece.unit_type === "mechanized").slice(0, 3)

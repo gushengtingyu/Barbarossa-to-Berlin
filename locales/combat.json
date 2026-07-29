@@ -86,8 +86,13 @@
 	},
 	"combat.log.advance_heading": {
 		"params": [],
-		"zh-CN": "挺近：",
-		"en": "Advance:"
+		"zh-CN": "战后推进：",
+		"en": "Advance after combat:"
+	},
+	"combat.log.advance_none": {
+		"params": [],
+		"zh-CN": "进攻方没有推进。",
+		"en": "The attacker does not advance."
 	},
 	"combat.log.attacker": {
 		"params": [],
@@ -100,9 +105,14 @@
 		"en": "All attacking units were eliminated before combat resolution; abort the attack on {space}."
 	},
 	"combat.log.attacker_fire": {
-		"params": [],
-		"zh-CN": "进攻方开火：",
-		"en": "Attacker fires:"
+		"params": ["strength", "table"],
+		"zh-CN": "进攻方开火（{strength} CF，{table}）：",
+		"en": "Attacker fires ({strength} CF, {table}):"
+	},
+	"combat.log.attacker_modifiers": {
+		"params": ["modifiers"],
+		"zh-CN": "进攻方：{modifiers}",
+		"en": "Attacker: {modifiers}"
 	},
 	"combat.log.attacker_none": {
 		"params": [],
@@ -140,9 +150,14 @@
 		"en": "Defender:"
 	},
 	"combat.log.defender_fire": {
-		"params": [],
-		"zh-CN": "防守方开火：",
-		"en": "Defender fires:"
+		"params": ["strength", "table"],
+		"zh-CN": "防守方开火（{strength} CF，{table}）：",
+		"en": "Defender fires ({strength} CF, {table}):"
+	},
+	"combat.log.defender_modifiers": {
+		"params": ["modifiers"],
+		"zh-CN": "防守方：{modifiers}",
+		"en": "Defender: {modifiers}"
 	},
 	"combat.log.defender_none": {
 		"params": [],
@@ -158,6 +173,21 @@
 		"params": ["pieces"],
 		"zh-CN": "{pieces}",
 		"en": "{pieces}"
+	},
+	"combat.log.defenders_retreated": {
+		"params": ["pieces"],
+		"zh-CN": "此前已退却（0 CF）：{pieces}",
+		"en": "Previously retreated (0 CF): {pieces}"
+	},
+	"combat.log.column_shifts": {
+		"params": [],
+		"zh-CN": "火力列位移：",
+		"en": "Fire-column shifts:"
+	},
+	"combat.log.drm": {
+		"params": ["modifiers"],
+		"zh-CN": "掷骰修正：{modifiers}",
+		"en": "Die-roll modifiers: {modifiers}"
 	},
 	"combat.log.eliminated": {
 		"params": ["piece"],
@@ -184,6 +214,11 @@
 		"zh-CN": "{die} × {column}列 = {loss}",
 		"en": "{die} × column {column} = {loss}"
 	},
+	"combat.log.fire_result_shifted": {
+		"params": ["die", "base_column", "column", "loss"],
+		"zh-CN": "{die} × {base_column}→{column}列 = {loss}",
+		"en": "{die} × column {base_column}→{column} = {loss}"
+	},
 	"combat.log.failed_retreat": {
 		"params": ["piece"],
 		"zh-CN": "{piece}无法完成撤退，按断补规则消灭。",
@@ -193,6 +228,86 @@
 		"params": ["space"],
 		"zh-CN": "战斗：{space}",
 		"en": "Combat: {space}"
+	},
+	"combat.log.outcome_attacker": {
+		"params": ["defender_loss", "attacker_loss"],
+		"zh-CN": "{defender_loss}:{attacker_loss} 进攻方获胜",
+		"en": "{defender_loss}:{attacker_loss} attacker victory"
+	},
+	"combat.log.outcome_defender": {
+		"params": ["defender_loss", "attacker_loss"],
+		"zh-CN": "{defender_loss}:{attacker_loss} 防守方获胜",
+		"en": "{defender_loss}:{attacker_loss} defender victory"
+	},
+	"combat.log.outcome_draw": {
+		"params": ["defender_loss", "attacker_loss"],
+		"zh-CN": "{defender_loss}:{attacker_loss} 平局",
+		"en": "{defender_loss}:{attacker_loss} draw"
+	},
+	"combat.log.modifier.beach": {
+		"params": [],
+		"zh-CN": "滩头",
+		"en": "beachhead"
+	},
+	"combat.log.modifier.combat_card": {
+		"params": ["card"],
+		"zh-CN": "战斗牌{card}",
+		"en": "combat card {card}"
+	},
+	"combat.log.modifier.event": {
+		"params": ["card"],
+		"zh-CN": "事件{card}",
+		"en": "event {card}"
+	},
+	"combat.log.modifier.event_generic": {
+		"params": [],
+		"zh-CN": "事件",
+		"en": "event"
+	},
+	"combat.log.modifier.factor": {
+		"params": ["amount", "source"],
+		"zh-CN": "{amount} {source}",
+		"en": "{amount} {source}"
+	},
+	"combat.log.modifier.fort": {
+		"params": [],
+		"zh-CN": "要塞",
+		"en": "fort"
+	},
+	"combat.log.modifier.oos": {
+		"params": [],
+		"zh-CN": "断补",
+		"en": "out of supply"
+	},
+	"combat.log.modifier.other": {
+		"params": [],
+		"zh-CN": "其他修正",
+		"en": "other modifier"
+	},
+	"combat.log.modifier.river": {
+		"params": [],
+		"zh-CN": "跨河进攻",
+		"en": "river crossing"
+	},
+	"combat.log.modifier.terrain": {
+		"params": [],
+		"zh-CN": "防御地形",
+		"en": "defensive terrain"
+	},
+	"combat.log.modifier.trench": {
+		"params": [],
+		"zh-CN": "战壕",
+		"en": "trench"
+	},
+	"combat.log.modifier.urban": {
+		"params": [],
+		"zh-CN": "城市",
+		"en": "urban terrain"
+	},
+	"combat.log.modifier.winter_1942": {
+		"params": [],
+		"zh-CN": "1942年冬季德军",
+		"en": "Winter 1942 German formation"
 	},
 	"combat.log.panzerfaust": {
 		"params": ["piece"],
@@ -213,6 +328,21 @@
 		"params": ["piece"],
 		"zh-CN": "{piece}减员",
 		"en": "{piece} reduced"
+	},
+	"combat.log.retreat_cancelled": {
+		"params": [],
+		"zh-CN": "防守方追加损失并取消撤退。",
+		"en": "The defender takes an additional loss and cancels the retreat."
+	},
+	"combat.log.retreat_heading": {
+		"params": ["distance"],
+		"zh-CN": "防守方撤退（{distance}格）：",
+		"en": "Defender retreat ({distance} spaces):"
+	},
+	"combat.log.retreat_path": {
+		"params": ["piece", "origin", "path"],
+		"zh-CN": "{piece}：{origin} → {path}",
+		"en": "{piece}: {origin} → {path}"
 	},
 	"combat.panzerfaust.loss": {
 		"params": [],
