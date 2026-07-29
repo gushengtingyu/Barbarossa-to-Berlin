@@ -239,8 +239,8 @@ function register(registerState) {
 			result.prompt("turn.orders.roll_axis")
 			result.action("continue")
 		},
-		continue(game) {
-			const roll = Engine.orders.rollAxis(game)
+		continue(game, role, noun, { data, adjacency }) {
+			const roll = Engine.orders.rollAxis(game, data, adjacency)
 			Engine.state.clearUndo(game)
 			logOrderRoll(game, AXIS, roll)
 			if (roll.result === "hitler_orders") {
@@ -260,8 +260,8 @@ function register(registerState) {
 			result.prompt("turn.orders.roll_allied")
 			result.action("continue")
 		},
-		continue(game) {
-			const roll = Engine.orders.rollAllied(game)
+		continue(game, role, noun, { data, adjacency }) {
+			const roll = Engine.orders.rollAllied(game, data, adjacency)
 			Engine.state.clearUndo(game)
 			logOrderRoll(game, ALLIED, roll)
 			if (roll.result === "stalin_orders") {

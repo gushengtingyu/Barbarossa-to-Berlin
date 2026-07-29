@@ -243,7 +243,8 @@ function register(registerState) {
 			game.events.luftwaffe_supply_space = spaceId
 			game.events.luftwaffe_supply_turn = game.turn
 			Engine.state.log(game, "events.log.air_supply_placed", { space: `s${spaceId}` })
-			Engine.turn.finishAction(game, Engine.constants.AXIS)
+			if (game.event?.dual_ops) game.state = "ops_activate"
+			else Engine.turn.finishAction(game, Engine.constants.AXIS)
 		},
 	})
 

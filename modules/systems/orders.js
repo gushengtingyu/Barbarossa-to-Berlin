@@ -4,7 +4,79 @@ const { ALLIED, AXIS } = require("../core/constants.js")
 const Random = require("../core/random.js")
 const Neutrals = require("./neutrals.js")
 
-function rollAxis(game) {
+const MANDATED_OFFENSIVES = Object.freeze(["okw_mo", "allied_mo", "soviet_mo"])
+
+function isCombatUnit(piece) {
+	return ["scu", "lcu"].includes(piece?.size)
+}
+
+function onMapPieces(game, data, predicate) {
+	const result = []
+	for (let pieceId = 1; pieceId < game.pieces.length; pieceId++) {
+		const location = game.pieces[pieceId]
+		const piece = data.pieces[pieceId]
+		if (Number.isInteger(location) && location > 0 && isCombatUnit(piece) && predicate(piece)) result.push({ piece, location })
+	}
+	return result
+}
+
+function spaceHasSide(game, data, spaceId, side) {
+	for (let pieceId = 1; pieceId < game.pieces.length; pieceId++) {
+		if (game.pieces[pieceId] !== spaceId || !isCombatUnit(data.pieces[pieceId])) continue
+		if (Neutrals.effectivePieceSide(game, data.pieces[pieceId]) === side) return true
+	}
+	return false
+}
+
+// Rule 8.3 targets are theater-local: Sea SR links alone do not make a land offensive possible.
+function connectedLandSpaces(game, data, adjacency, origin) {
+	const connected = new Set([origin])
+	const queue = [origin]
+	for (let cursor = 0; cursor < queue.length; cursor++) {
+		for (const edge of adjacency[queue[cursor]] || []) {
+			const space = data.spaces[edge.to]
+			if (edge.type === "sr" || space?.kind !== "land" || connected.has(edge.to) || !Neutrals.mayEnterSpace(game, space)) continue
+			connected.add(edge.to)
+			queue.push(edge.to)
+		}
+	}
+	return connected
+}
+
+function mandatedOffensivePieces(game, data, result) {
+	if (result === "okw_mo") return onMapPieces(game, data, (piece) => piece.nation === "ge" && Neutrals.effectivePieceSide(game, piece) === AXIS)
+	if (result === "allied_mo") return onMapPieces(game, data, (piece) => ["br", "us"].includes(piece.nation) && Neutrals.effectivePieceSide(game, piece) === ALLIED)
+	if (result === "soviet_mo") return onMapPieces(game, data, (piece) => piece.nation === "su" && Neutrals.effectivePieceSide(game, piece) === ALLIED)
+	return []
+}
+
+function mandatedOffensivePossible(game, data, adjacency, result) {
+	if (!MANDATED_OFFENSIVES.includes(result) || !data?.spaces || !data?.pieces || !adjacency) return true
+	const attackingSide = result === "okw_mo" ? AXIS : ALLIED
+	const defendingSide = attackingSide === AXIS ? ALLIED : AXIS
+	for (const { piece, location } of mandatedOffensivePieces(game, data, result)) {
+		for (const spaceId of connectedLandSpaces(game, data, adjacency, location)) {
+			if (spaceId === location) continue
+			const space = data.spaces[spaceId]
+			if (result === "okw_mo" && space?.nation === "su") continue
+			const canOccupy = game.control?.[spaceId] === defendingSide
+			const canAttack = spaceHasSide(game, data, spaceId, defendingSide) && (result !== "soviet_mo" || piece.size === "lcu")
+			if (canOccupy || canAttack) return true
+		}
+	}
+	return false
+}
+
+function ignoreImpossibleMandatedOffensive(game, data, adjacency, order) {
+	if (!MANDATED_OFFENSIVES.includes(order.result) || mandatedOffensivePossible(game, data, adjacency, order.result)) return order
+	order.rolled_result = order.result
+	order.result = "none"
+	order.fulfilled = true
+	order.ignored = true
+	return order
+}
+
+function rollAxis(game, data = null, adjacency = null) {
 	const die = Random.random(game, 6) + 1
 	const modifier = game.events?.hitler_takes_command ? 2 : 0
 	const modifiedDie = Math.min(6, die + modifier)
@@ -16,14 +88,14 @@ function rollAxis(game) {
 		result,
 		fulfilled: result === "none" || result === "hitler_orders",
 	}
-	return game.orders.axis
+	return ignoreImpossibleMandatedOffensive(game, data, adjacency, game.orders.axis)
 }
 
-function rollAllied(game) {
+function rollAllied(game, data = null, adjacency = null) {
 	const die = Random.random(game, 6) + 1
 	const result = die <= 2 ? "allied_mo" : die === 3 ? "soviet_mo" : "stalin_orders"
 	game.orders.allied = { die, result, fulfilled: result === "stalin_orders" }
-	return game.orders.allied
+	return ignoreImpossibleMandatedOffensive(game, data, adjacency, game.orders.allied)
 }
 
 function adjacentSuppliedEnemy(game, data, map, logistics, adjacency, side, spaceId, nation = null) {
@@ -97,7 +169,7 @@ function fulfillForCombat(game, data, combat) {
 		if (combat.attackers.some((pieceId) => data.pieces[pieceId]?.nation === "ge") && data.spaces[combat.defender_space]?.nation !== "su") game.orders.axis.fulfilled = true
 	}
 	if (combat.attacker_side === ALLIED && game.orders?.allied?.result === "allied_mo") {
-		if (combat.attackers.some((pieceId) => ["br", "cw", "us", "ff"].includes(data.pieces[pieceId]?.nation))) game.orders.allied.fulfilled = true
+		if (combat.attackers.some((pieceId) => ["br", "us"].includes(data.pieces[pieceId]?.nation))) game.orders.allied.fulfilled = true
 	}
 	if (combat.attacker_side === ALLIED && game.orders?.allied?.result === "soviet_mo") {
 		if (combat.attackers.some((pieceId) => data.pieces[pieceId]?.nation === "su" && data.pieces[pieceId]?.size === "lcu")) game.orders.allied.fulfilled = true
@@ -127,11 +199,11 @@ function applyPenalties(game) {
 	const penalties = []
 	if (game.orders?.axis && !game.orders.axis.fulfilled) {
 		game.vp--
-		penalties.push("Axis")
+		penalties.push(AXIS)
 	}
 	if (game.orders?.allied && !game.orders.allied.fulfilled) {
 		game.vp++
-		penalties.push("Allied")
+		penalties.push(ALLIED)
 	}
 	return penalties
 }

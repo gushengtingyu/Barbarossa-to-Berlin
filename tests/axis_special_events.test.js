@@ -102,6 +102,27 @@ test("Luftwaffe Supply affects only defense and Axis attrition in its marked spa
 	assert.equal(Engine.logistics.supplyStatus(game, data, Engine.map, Engine.adjacency, defender, "attrition"), "oos")
 })
 
+test("Luftwaffe Supply continues into the card's OPS after its supply marker is placed", () => {
+	let game = prepareAction(74, 7401)
+	const target = space("Smolensk")
+	const defender = data.pieces.find((piece) => piece?.side === "axis" && piece.nation === "ge" && piece.size === "scu").id
+	for (let pieceId = 1; pieceId < game.pieces.length; pieceId++) if (data.pieces[pieceId]?.side === "axis") game.pieces[pieceId] = Engine.unitLocations.REMOVED
+	for (const mapSpace of data.spaces) if (mapSpace?.kind === "land") game.control[mapSpace.id] = "allied"
+	game.control[target] = "axis"
+	game.pieces[defender] = target
+
+	game = rules.action(game, "Axis", "play_event", 74)
+	assert.equal(game.state, "event_luftwaffe_supply")
+	assert.equal(game.event.dual_ops, 3)
+	game = rules.action(game, "Axis", "space", target)
+
+	assert.equal(game.state, "ops_activate")
+	assert.equal(game.active, "Axis")
+	assert.equal(game.action.mode, "ops")
+	assert.equal(game.action.points, 3)
+	assert.ok(rules.view(game, "Axis").actions.done)
+})
+
 test("Manstein cancels Axis Orders, their penalty, and Hitler Stand Fast markers", () => {
 	let game = prepareAction(101, 10100)
 	const target = space("Smolensk")
