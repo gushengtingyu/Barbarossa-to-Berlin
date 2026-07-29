@@ -37,6 +37,15 @@ function finishTurnOneOrders(game) {
 	return game
 }
 
+function expectedTurnOneStandFastSnapshot(game) {
+	return Object.fromEntries(
+		Object.keys(game.stand_fast).map((spaceId) => [
+			spaceId,
+			data.pieces.filter((piece) => piece?.side === "allied" && ["scu", "lcu"].includes(piece.size) && game.pieces[piece.id] === Number(spaceId)).map((piece) => piece.id),
+		]),
+	)
+}
+
 function finishAxisOpeningEvent(game) {
 	game = rules.action(game, "Axis", "play_event", axisCard(1))
 	while (game.state === "event_combat_markers") {
@@ -209,9 +218,21 @@ test("Turn 1 Axis places three legal Stalin Orders before its mandatory event", 
 	assert.deepEqual(new Set(Object.values(game.stand_fast)), new Set(["stalin"]))
 	assert.throws(() => rules.action(game, "Axis", "space", firstSpace), /illegal action/)
 	assert.equal(Object.keys(game.stand_fast).length, 3)
+	const expectedSnapshot = expectedTurnOneStandFastSnapshot(game)
 	game = rules.action(game, "Axis", "continue")
 	assert.equal(game.state, "axis_turn1_event")
+	assert.deepEqual(game.stand_fast_round_units, expectedSnapshot)
 	assert.equal(game.undo.length, 0)
+	const replayed = rules.replay(game.initial_seed, game.scenario, game.options, game.action_log)
+	assert.deepEqual(replayed, game)
+})
+
+test("legacy Turn 1 event saves rebuild a missing Stand Fast snapshot before acting", () => {
+	let game = setupWithPlayableAlliedHand()
+	const expectedSnapshot = expectedTurnOneStandFastSnapshot(game)
+	delete game.stand_fast_round_units
+	game = rules.action(game, "Axis", "declare_turkey")
+	assert.deepEqual(game.stand_fast_round_units, expectedSnapshot)
 })
 
 test("views redact opponent hands and reject forged actions", () => {
@@ -370,7 +391,23 @@ test("recorded legal actions replay to a byte-equivalent normalized state", () =
 	// setupWithPlayableAlliedHand has already recorded the opening-card choice.
 	game = finishAxisOpeningAttrition(game)
 	game = rules.action(game, "Allied", "auto_ops")
-	game = rules.action(game, "Allied", "done")
+	const origin = Object.keys(game.stand_fast)
+		.map(Number)
+		.find((spaceId) => rules.view(game, "Allied").actions.space?.includes(spaceId))
+	assert.ok(origin)
+	const pieceId = game.stand_fast_round_units[origin][0]
+	game = rules.action(game, "Allied", "space", origin)
+	assert.ok(rules.view(game, "Allied").actions.piece.includes(pieceId))
+	game = rules.action(game, "Allied", "piece", pieceId)
+	const destination = rules.view(game, "Allied").actions.move.find((spaceId) => game.control[spaceId] === "allied")
+	assert.ok(destination)
+	const vp = game.vp
+	game = rules.action(game, "Allied", "move", destination)
+	assert.equal(game.vp, vp + 1)
+	assert.equal(game.stand_fast[origin], undefined)
+	assert.equal(game.log.filter((entry) => entry.key === "orders.log.stand_fast_payment").length, 1)
+	if (rules.view(game, "Allied").actions.stop) game = rules.action(game, "Allied", "stop")
+	if (rules.view(game, "Allied").actions?.done) game = rules.action(game, "Allied", "done")
 	game = finishTurnEndPhases(game)
 	const replayed = rules.replay(seed, "Campaign", game.options, game.action_log)
 	assert.equal(JSON.stringify(replayed), JSON.stringify(game))

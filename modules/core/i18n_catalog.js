@@ -1807,6 +1807,17 @@
 		"zh-CN": "维希法国参战；双方此后可进入维希法国及法属北非。",
 		"en": "Vichy France enters the war; both sides may now enter Vichy France and French North Africa."
 	},
+	"orders.log.stand_fast_payment": {
+		"params": [
+			"order",
+			"space",
+			"cost",
+			"delta",
+			"vp"
+		],
+		"zh-CN": "在{space}忽略{order}：支付{cost} VP，轴心国VP{delta}，当前{vp}。",
+		"en": "Ignoring {order} at {space} costs {cost} VP: Axis VP {delta}; now {vp}."
+	},
 	"replacements.log.rebuild": {
 		"params": [
 			"side",

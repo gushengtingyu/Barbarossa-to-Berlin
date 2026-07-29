@@ -21,6 +21,10 @@ function giveSovietControl(current, spaceId) {
 	current.control_nation[spaceId] = "su"
 }
 
+function standFastPayments(current) {
+	return (current.log || []).filter((entry) => entry?.key === "orders.log.stand_fast_payment")
+}
+
 test("Thunderclap and Bomb Plot deterministically discard and reveal one Axis hand card", () => {
 	const makeThunderclap = () => {
 		const current = game(2201)
@@ -139,24 +143,35 @@ test("Finland Withdraws requires Soviet control and Full Supply at Leningrad, Ta
 	assert.equal(current.events.finland_withdraws, true)
 })
 
-test("after Bomb Plot, ignoring Hitler Orders costs one VP per German unit under the marker", () => {
+test("after Bomb Plot, ignoring Hitler Orders charges only German units in the Action Round snapshot", () => {
 	const current = game(2206)
 	const origin = space("Berlin")
 	const destination = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land").to
 	const germans = data.pieces
-		.filter((piece) => piece?.nation === "ge")
-		.slice(0, 2)
+		.filter((piece) => piece?.nation === "ge" && ["scu", "lcu"].includes(piece.size))
+		.slice(0, 3)
 		.map((piece) => piece.id)
 	const italian = data.pieces.find((piece) => piece?.nation === "it").id
 	current.pieces.fill(0)
-	for (const pieceId of [...germans, italian]) current.pieces[pieceId] = origin
+	for (const pieceId of germans.slice(0, 2)) current.pieces[pieceId] = origin
 	current.control[destination] = "axis"
 	current.stand_fast[origin] = "hitler"
 	current.events.bomb_plot = true
+	Engine.turn.startAction(current, "axis", 1)
+	current.pieces[germans[2]] = origin
+	assert.deepEqual(current.stand_fast_round_units[origin], germans.slice(0, 2))
 	const vp = current.vp
 	Engine.map.movePieceAlongPath(current, data, germans[0], [destination])
 	assert.equal(current.vp, vp - 2)
 	assert.equal(current.stand_fast[origin], undefined)
+	assert.equal(standFastPayments(current).length, 1)
+	assert.deepEqual(standFastPayments(current)[0].params, {
+		order: { key: "ui.order.hitler_orders", params: {} },
+		space: `s${origin}`,
+		cost: 2,
+		delta: "-2",
+		vp: vp - 2,
+	})
 
 	const nonGerman = game(2207)
 	nonGerman.pieces.fill(0)
@@ -164,7 +179,9 @@ test("after Bomb Plot, ignoring Hitler Orders costs one VP per German unit under
 	nonGerman.control[destination] = "axis"
 	nonGerman.stand_fast[origin] = "hitler"
 	nonGerman.events.bomb_plot = true
+	Engine.turn.startAction(nonGerman, "axis", 1)
 	Engine.map.movePieceAlongPath(nonGerman, data, italian, [destination])
 	assert.equal(nonGerman.vp, 7)
 	assert.equal(nonGerman.stand_fast[origin], undefined)
+	assert.deepEqual(standFastPayments(nonGerman), [])
 })

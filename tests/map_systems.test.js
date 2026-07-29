@@ -13,6 +13,10 @@ function space(name, nation = null) {
 	return data.spaces.find((entry) => entry?.name === name && (!nation || entry.nation === nation)).id
 }
 
+function standFastPayments(game) {
+	return (game.log || []).filter((entry) => entry?.key === "orders.log.stand_fast_payment")
+}
+
 test("movement uses the unit allowance and never traverses Sea SR nodes", () => {
 	const game = Engine.setup.createInitialState(data, "Campaign", 3, {})
 	const memel = space("Memel")
@@ -1098,6 +1102,16 @@ test("Stand Fast exits charge VP unless the first destination is enemy-controlle
 	assert.equal(game.vp, 8)
 	assert.equal(game.stand_fast[origin], undefined)
 	assert.equal(game.pieces[pieceId], destination)
+	assert.equal(standFastPayments(game).length, 1)
+	assert.deepEqual(standFastPayments(game)[0].params, {
+		order: { key: "ui.order.stalin_orders", params: {} },
+		space: `s${origin}`,
+		cost: 1,
+		delta: "+1",
+		vp: 8,
+	})
+	assert.ok(renderLog(game).includes(`在s${origin}忽略斯大林命令：支付1 VP，轴心国VP+1，当前8。`))
+	assert.ok(renderLog(game, "en").includes(`Ignoring Stalin Orders at s${origin} costs 1 VP: Axis VP +1; now 8.`))
 
 	game = makeGame()
 	paths = Engine.map.legalMovePaths(game, data, adjacency, pieceId)
@@ -1107,6 +1121,128 @@ test("Stand Fast exits charge VP unless the first destination is enemy-controlle
 	Engine.map.movePieceAlongPath(game, data, pieceId, path)
 	assert.equal(game.vp, 7)
 	assert.equal(game.stand_fast[origin], undefined)
+	assert.deepEqual(standFastPayments(game), [])
+})
+
+test("Stand Fast ignores later arrivals until the next Action Round snapshot", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 33, {})
+	const origin = space("Bialystok")
+	const [arrivalSource, laterExit, subjectExit] = adjacency[origin]
+		.filter((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land" && !data.spaces[edge.to]?.vp)
+		.slice(0, 3)
+		.map((edge) => edge.to)
+	const [subject, laterArrival] = data.pieces
+		.filter((piece) => piece?.nation === "su" && piece.size === "scu")
+		.slice(0, 2)
+		.map((piece) => piece.id)
+	game.pieces.fill(0)
+	game.pieces[subject] = origin
+	game.pieces[laterArrival] = arrivalSource
+	for (const spaceId of [origin, arrivalSource, laterExit, subjectExit]) game.control[spaceId] = "allied"
+	game.stand_fast[origin] = "stalin"
+	Engine.turn.startAction(game, "axis", 1)
+
+	assert.deepEqual(game.stand_fast_round_units[origin], [subject])
+	Engine.map.movePieceAlongPath(game, data, laterArrival, [origin])
+	Engine.map.movePieceAlongPath(game, data, laterArrival, [laterExit])
+	assert.equal(game.vp, 7)
+	assert.equal(game.stand_fast[origin], "stalin")
+	assert.deepEqual(game.stand_fast_round_units[origin], [subject])
+	assert.deepEqual(standFastPayments(game), [])
+
+	Engine.map.movePieceAlongPath(game, data, subject, [subjectExit])
+	assert.equal(game.vp, 8)
+	assert.equal(game.stand_fast[origin], undefined)
+	assert.equal(Object.hasOwn(game.stand_fast_round_units, origin), false)
+	assert.equal(standFastPayments(game).length, 1)
+})
+
+test("a later arrival becomes subject to Stand Fast in the next Action Round", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 34, {})
+	const origin = space("Bialystok")
+	const [arrivalSource, destination] = adjacency[origin]
+		.filter((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land" && !data.spaces[edge.to]?.vp)
+		.slice(0, 2)
+		.map((edge) => edge.to)
+	const [original, laterArrival] = data.pieces
+		.filter((piece) => piece?.nation === "su" && piece.size === "scu")
+		.slice(0, 2)
+		.map((piece) => piece.id)
+	game.pieces.fill(0)
+	game.pieces[original] = origin
+	game.pieces[laterArrival] = arrivalSource
+	for (const spaceId of [origin, arrivalSource, destination]) game.control[spaceId] = "allied"
+	game.stand_fast[origin] = "stalin"
+	Engine.turn.startAction(game, "axis", 1)
+	Engine.map.movePieceAlongPath(game, data, laterArrival, [origin])
+	assert.deepEqual(game.stand_fast_round_units[origin], [original])
+
+	Engine.turn.startAction(game, "axis", 2)
+	assert.deepEqual(game.stand_fast_round_units[origin], [original, laterArrival])
+	Engine.map.movePieceAlongPath(game, data, laterArrival, [destination])
+	assert.equal(game.vp, 8)
+	assert.equal(game.stand_fast[origin], undefined)
+	assert.equal(standFastPayments(game).length, 1)
+})
+
+test("mixed formations charge Stand Fast independently of unit order", () => {
+	const origin = space("Bialystok")
+	const destination = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land" && !data.spaces[edge.to]?.vp).to
+	const pieces = data.pieces
+		.filter((piece) => piece?.nation === "su" && piece.size === "scu")
+		.slice(0, 2)
+		.map((piece) => piece.id)
+
+	for (const formation of [pieces, pieces.slice().reverse()]) {
+		const game = Engine.setup.createInitialState(data, "Campaign", 35, {})
+		game.pieces.fill(0)
+		game.pieces[pieces[0]] = origin
+		game.control[origin] = "allied"
+		game.control[destination] = "allied"
+		game.stand_fast[origin] = "stalin"
+		Engine.turn.startAction(game, "axis", 1)
+		game.pieces[pieces[1]] = origin
+
+		Engine.map.moveFormationStep(game, data, adjacency, formation, [origin], destination)
+		assert.equal(game.vp, 8)
+		assert.equal(game.stand_fast[origin], undefined)
+		assert.equal(standFastPayments(game).length, 1)
+	}
+})
+
+test("Hitler Stand Fast charges Axis VP once and logs only paid exits", () => {
+	const origin = space("Berlin")
+	const destination = adjacency[origin].find((edge) => edge.type !== "sr" && data.spaces[edge.to]?.kind === "land" && !data.spaces[edge.to]?.vp).to
+	const pieceId = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "scu").id
+	const cases = [
+		{ name: "paid", destinationControl: "axis", options: {}, expectedVp: 6, expectedLogs: 1 },
+		{ name: "enemy-controlled", destinationControl: "allied", options: {}, expectedVp: 7, expectedLogs: 0 },
+		{ name: "combat advance", destinationControl: "axis", options: { freeStandFastExit: true }, expectedVp: 7, expectedLogs: 0 },
+	]
+
+	for (const scenario of cases) {
+		const game = Engine.setup.createInitialState(data, "Campaign", 36, {})
+		game.pieces.fill(0)
+		game.pieces[pieceId] = origin
+		game.control[origin] = "axis"
+		game.control[destination] = scenario.destinationControl
+		game.stand_fast[origin] = "hitler"
+		Engine.turn.startAction(game, "axis", 1)
+
+		Engine.map.movePieceAlongPath(game, data, pieceId, [destination], scenario.options)
+		assert.equal(game.vp, scenario.expectedVp, scenario.name)
+		assert.equal(game.stand_fast[origin], undefined, scenario.name)
+		assert.equal(standFastPayments(game).length, scenario.expectedLogs, scenario.name)
+		if (scenario.expectedLogs) {
+			assert.deepEqual(standFastPayments(game)[0].params, {
+				order: { key: "ui.order.hitler_orders", params: {} },
+				space: `s${origin}`,
+				cost: 1,
+				delta: "-1",
+				vp: 6,
+			})
+		}
+	}
 })
 
 test("Stand Fast remains after free exits until every unit present at the Action Round start has left", () => {

@@ -34,6 +34,11 @@
 		"zh-CN": "{space}控制权改变：轴心国VP{delta}，当前{vp}。",
 		"en": "{space} changes control: Axis VP {delta}; now {vp}."
 	},
+	"orders.log.stand_fast_payment": {
+		"params": ["order", "space", "cost", "delta", "vp"],
+		"zh-CN": "在{space}忽略{order}：支付{cost} VP，轴心国VP{delta}，当前{vp}。",
+		"en": "Ignoring {order} at {space} costs {cost} VP: Axis VP {delta}; now {vp}."
+	},
 	"neutrals.log.declare_war": {
 		"params": ["side", "country"],
 		"zh-CN": "{side}向{country}宣战。",

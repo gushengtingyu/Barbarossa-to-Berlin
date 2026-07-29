@@ -519,16 +519,26 @@ function applyStandFastExit(game, data, piece, origin, firstDestination) {
 	if (!marker || !piece || firstDestination === undefined) return false
 	const side = Neutrals.effectivePieceSide(game, piece)
 	if ((marker === "stalin" && side !== ALLIED) || (marker === "hitler" && side !== AXIS)) return false
-	Orders.ensureStandFastUnits(game, data, origin)
+	const trackedUnits = Orders.ensureStandFastUnits(game, data, origin)
+	if (!trackedUnits.includes(piece.id)) return false
 	const entersEnemyControl = game.control[firstDestination] === otherSide(side)
 	if (entersEnemyControl) return true
-	if (marker === "stalin") game.vp += 1
+	let cost = 1
+	if (marker === "stalin") game.vp += cost
 	else {
-		// Rule 8.3: Bomb Plot replaces the per-space payment with one VP for
+		// Rule 8.4: Bomb Plot replaces the per-space payment with one VP for
 		// every German unit that remains subject to and beneath this marker.
-		const cost = game.events?.bomb_plot ? (game.stand_fast_round_units?.[origin] || []).filter((pieceId) => game.pieces[pieceId] === Number(origin) && data.pieces[pieceId]?.nation === "ge").length : 1
+		if (game.events?.bomb_plot) cost = trackedUnits.filter((pieceId) => game.pieces[pieceId] === Number(origin) && data.pieces[pieceId]?.nation === "ge").length
 		game.vp -= cost
 	}
+	if (cost > 0)
+		log(game, "orders.log.stand_fast_payment", {
+			order: { key: marker === "stalin" ? "ui.order.stalin_orders" : "ui.order.hitler_orders", params: {} },
+			space: `s${origin}`,
+			cost,
+			delta: marker === "stalin" ? `+${cost}` : `-${cost}`,
+			vp: game.vp,
+		})
 	Orders.removeStandFast(game, origin)
 	return true
 }

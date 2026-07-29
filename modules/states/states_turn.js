@@ -68,6 +68,11 @@ function startAxisTurnOne(game) {
 	Engine.state.log(game, "turn.log.place_initial_orders")
 }
 
+function ensureTurnOneStandFastSnapshot(game, data) {
+	const missingSnapshot = Object.keys(game.stand_fast || {}).some((spaceId) => !Array.isArray(game.stand_fast_round_units?.[spaceId]))
+	if (missingSnapshot) Engine.orders.recordStandFastUnits(game, data)
+}
+
 function finishAlliedMulligan(game, data, keepCardId = null) {
 	for (const cardId of game.hands[ALLIED].slice()) if (cardId !== keepCardId) Engine.cards.discard(game, data, ALLIED, cardId)
 	Engine.cards.drawTo(game, ALLIED, 7)
@@ -204,11 +209,16 @@ function register(registerState) {
 			if (!Engine.neutrals.isAtWar(game, "tu")) result.action("declare_turkey")
 			if (!Engine.neutrals.isAtWar(game, "sw")) result.action("declare_sweden")
 		},
-		play_event: playEventCard,
+		play_event(game, role, noun, context) {
+			ensureTurnOneStandFastSnapshot(game, context.data)
+			return playEventCard(game, role, noun, context)
+		},
 		declare_turkey(game, role, noun, { data }) {
+			ensureTurnOneStandFastSnapshot(game, data)
 			Engine.neutrals.declareWar(game, data, "tu", AXIS, "axis_turn1_event")
 		},
 		declare_sweden(game, role, noun, { data }) {
+			ensureTurnOneStandFastSnapshot(game, data)
 			Engine.neutrals.declareWar(game, data, "sw", AXIS, "axis_turn1_event")
 		},
 	})
@@ -228,7 +238,8 @@ function register(registerState) {
 			game.stand_fast[spaceId] = "stalin"
 			game.orders.placements.push(spaceId)
 		},
-		continue(game) {
+		continue(game, role, noun, { data }) {
+			Engine.orders.recordStandFastUnits(game, data)
 			game.state = "axis_turn1_event"
 			Engine.state.clearUndo(game)
 		},
