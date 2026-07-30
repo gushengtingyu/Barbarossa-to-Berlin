@@ -9,6 +9,7 @@ const Engine = Object.freeze({
 	constants: require("./core/constants.js"),
 	state: require("./core/state.js"),
 	collaboration: require("./systems/collaboration.js"),
+	combat: require("./systems/combat.js"),
 	events: require("./systems/events.js"),
 	map: require("./systems/map.js"),
 	adjacency: Runtime.adjacency,
@@ -93,6 +94,11 @@ function staticView(game) {
 	}
 }
 
+function actionView(game) {
+	if (!game.action) return game.action
+	return { ...game.action, combat_markers: Engine.combat.activeCombatMarkerSpaces(game) }
+}
+
 function playerView(game, player, isReplay = false) {
 	const sourceGame = game
 	const normalized = readNormalizedState(game)
@@ -165,7 +171,7 @@ function playerView(game, player, isReplay = false) {
 		neutral_deployment: game.neutral_deployment,
 		orders: game.orders,
 		action_track: game.action_track,
-		action: game.action,
+		action: actionView(game),
 		combat: game.combat,
 		last_combat: game.last_combat,
 		reinforcement: game.reinforcement,

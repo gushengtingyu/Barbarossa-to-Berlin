@@ -998,7 +998,7 @@ function updateMapMarkers() {
 				title: uiText("ui.activation.move"),
 				size: 51,
 			})
-		if (includesId(view?.action?.attack_spaces, space.id))
+		if (includesId(view?.action?.combat_markers, space.id))
 			markers.push({
 				type: "combat",
 				asset: "Combat.jpg",

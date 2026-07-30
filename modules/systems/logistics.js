@@ -36,6 +36,7 @@ function eliminateForAttrition(game, data, pieceId, map = null) {
 		Orders.releaseStandFastIfVacated(game, data, location)
 		return
 	}
+	Combat.recordLcuReplacementIdentity(game, data, pieceId, replacement)
 	const southwestReplacement = Combat.replaceEliminatedSouthwestFront(game, data, pieceId)
 	Combat.setReduced(game, replacement, false)
 	game.pieces[replacement] = Locations.eliminated(side)

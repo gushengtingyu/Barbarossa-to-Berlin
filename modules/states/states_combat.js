@@ -148,7 +148,7 @@ function combatAttackerCandidates(game, data) {
 }
 
 function advanceCandidates(game, data, adjacency) {
-	return onMapParticipants(game, "attackers").filter((pieceId) => !game.combat.advanced.includes(pieceId) && Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId).size)
+	return onMapParticipants(game, "attackers").filter((pieceId) => !game.combat.advanced.includes(pieceId) && Engine.combat.legalAdvanceRoutes(game, data, Engine.map, adjacency, game.combat, pieceId).length)
 }
 
 function uniqueAdvanceRoutes(routes) {
@@ -162,7 +162,7 @@ function uniqueAdvanceRoutes(routes) {
 }
 
 function initialAdvanceRoutes(game, data, adjacency, pieceId) {
-	return uniqueAdvanceRoutes([...Engine.combat.legalAdvancePaths(game, data, Engine.map, adjacency, game.combat, pieceId).values()].map((path) => path.slice()))
+	return uniqueAdvanceRoutes(Engine.combat.legalAdvanceRoutes(game, data, Engine.map, adjacency, game.combat, pieceId).map((path) => path.slice()))
 }
 
 function advanceRoutesForPieces(game, data, adjacency, pieceIds) {
@@ -304,6 +304,8 @@ function finishCombat(game, data, adjacency) {
 
 function beginAdvance(game) {
 	game.combat.advanced = []
+	game.combat.advance_outcome = Engine.combat.onMapDefenders(game, game.combat).length ? "retreat" : "eliminated"
+	game.combat.advance_origins = Object.fromEntries(game.combat.attackers.filter((pieceId) => Engine.combat.isOnMap(game, pieceId)).map((pieceId) => [pieceId, game.pieces[pieceId]]))
 	delete game.combat.advance_pieces
 	delete game.combat.advance_routes
 	game.active = roleForSide(game.combat.attacker_side)
@@ -394,11 +396,11 @@ function startRetreat(game, data, adjacency) {
 
 function finishLosses(game, data, adjacency) {
 	const combat = game.combat
-	const survivingDefenders = onMapParticipants(game, "defenders")
+	const survivingAttackers = onMapParticipants(game, "attackers")
+	const survivingDefenders = Engine.combat.onMapDefenders(game, combat)
+	if (!survivingAttackers.length) return finishCombat(game, data, adjacency)
+	if (!survivingDefenders.length) return beginAdvance(game)
 	if (Engine.combat.winner(combat) === combat.attacker_side) {
-		if (!survivingDefenders.length) {
-			return beginAdvance(game)
-		}
 		if (Engine.combat.canCancelRetreat(game, data, Engine.map, adjacency, combat)) {
 			game.active = roleForSide(combat.defender_side)
 			game.state = "combat_retreat_option"

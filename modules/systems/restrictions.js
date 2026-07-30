@@ -25,6 +25,7 @@ function mayEnter(game, data, adjacency, pieceId, spaceId) {
 	if (piece.nation === "bu") return ["gr", "bu", "tu", "yu"].includes(space.nation)
 	if (piece.nation === "it") {
 		if (piece.name.includes("IT 8 Army")) return space.nation === "su"
+		if (pieceId === game.italian_8th_corps) return space.nation === "su" || ITALIAN_ALLOWED.has(space.nation)
 		return ITALIAN_ALLOWED.has(space.nation)
 	}
 	if (piece.nation === "ge" && piece.size === "lcu" && space.nation === "it" && SOUTH_ITALY.has(space.name) && !game.events.achse) return false

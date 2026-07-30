@@ -320,6 +320,25 @@ function replaceParticipant(combat, pieceId, replacement) {
 	for (const key of ["attackers", "defenders"]) if (combat[key]?.includes(pieceId) && replacement && !combat[key].includes(replacement)) combat[key].push(replacement)
 }
 
+function recordLcuReplacementIdentity(game, data, pieceId, replacement) {
+	if (replacement && data.pieces[pieceId]?.name === "IT 8 Army") game.italian_8th_corps = replacement
+}
+
+function inheritAttackerReplacementState(game, combat, pieceId, replacement) {
+	if (!replacement || !combat.attackers?.includes(pieceId) || !game.action) return
+	if (game.action.activation_supply && Object.hasOwn(game.action.activation_supply, pieceId)) game.action.activation_supply[replacement] = game.action.activation_supply[pieceId]
+	game.action.used_pieces ||= []
+	if (!game.action.used_pieces.includes(replacement)) game.action.used_pieces.push(replacement)
+	for (const key of ["moved", "sr_moved"]) {
+		if (game.action[key]?.includes(pieceId) && !game.action[key].includes(replacement)) game.action[key].push(replacement)
+	}
+}
+
+function registerCombatReplacement(game, data, combat, pieceId, replacement) {
+	recordLcuReplacementIdentity(game, data, pieceId, replacement)
+	inheritAttackerReplacementState(game, combat, pieceId, replacement)
+}
+
 function replaceEliminatedSouthwestFront(game, data, pieceId) {
 	if (data.pieces[pieceId]?.name !== "SU Southwest Front") return null
 	const replacement = data.pieces.find((piece) => piece?.name === "SU Southwest Front (Infantry)")
@@ -371,6 +390,7 @@ function applyStepLoss(game, data, combat, pieceId, maxCost = null) {
 		const southwestReplacement = replaceEliminatedSouthwestFront(game, data, pieceId)
 		game.pieces[replacement] = location
 		replaceParticipant(combat, pieceId, replacement)
+		registerCombatReplacement(game, data, combat, pieceId, replacement)
 		Orders.releaseStandFastIfVacated(game, data, location)
 		return { cost: baseCost, eliminated: true, replacement: southwestReplacement, scu_replacement: replacement, permanent: false, origin_space_id: location }
 	}
@@ -383,6 +403,7 @@ function applyStepLoss(game, data, combat, pieceId, maxCost = null) {
 		if (replacement) {
 			game.pieces[replacement] = location
 			replaceParticipant(combat, pieceId, replacement)
+			registerCombatReplacement(game, data, combat, pieceId, replacement)
 		} else {
 			game.pieces[pieceId] = Locations.REMOVED
 			permanent = true
@@ -427,6 +448,7 @@ function eliminatePreviouslyRetreated(game, data, pieceId) {
 		setReduced(game, replacement, false)
 		game.pieces[replacement] = Locations.eliminated(side)
 		game.pieces[pieceId] = Locations.eliminated(side)
+		recordLcuReplacementIdentity(game, data, pieceId, replacement)
 	} else game.pieces[pieceId] = Locations.REMOVED
 	Orders.releaseStandFastIfVacated(game, data, location)
 	return { replacement, permanent: !replacement, origin_space_id: location }
@@ -540,14 +562,47 @@ function isMechanizedForAdvance(game, data, map, adjacency, pieceId) {
 	return true
 }
 
+function defenderParticipants(combat) {
+	return [...new Set([...(combat.defenders || []), ...(combat.retreated_defenders || [])])]
+}
+
+function onMapDefenders(game, combat) {
+	return defenderParticipants(combat).filter((pieceId) => isOnMap(game, pieceId))
+}
+
+function retreatDistanceForAdvance(combat) {
+	if (Number.isInteger(combat.retreat_distance)) return combat.retreat_distance
+	if (Array.isArray(combat.retreat_path)) return combat.retreat_path.length
+	const paths = Object.values(combat.retreat_paths || {})
+	return paths.length ? Math.max(...paths.map((path) => path.length)) : 0
+}
+
+function allDefendersEliminatedForAdvance(game, combat) {
+	if (combat.advance_outcome) return combat.advance_outcome === "eliminated"
+	if (retreatDistanceForAdvance(combat) > 0) return false
+	return onMapDefenders(game, combat).length === 0
+}
+
+function advanceOrigin(game, combat, pieceId) {
+	return combat.advance_origins?.[pieceId] ?? game.pieces[pieceId]
+}
+
+function timeOfMudAdvanceCap(game, data, combat, pieceId) {
+	const piece = data.pieces[pieceId]
+	const origin = advanceOrigin(game, combat, pieceId)
+	return game.options?.time_of_mud && game.turn === 3 && [2, 3].includes(game.action_round) && piece?.nation === "ge" && piece?.unit_type === "mechanized" && data.spaces[origin]?.nation === "su" ? 1 : Infinity
+}
+
 function advanceLimit(game, data, map, adjacency, combat, pieceId) {
 	const piece = data.pieces[pieceId]
-	if (!isMechanizedForAdvance(game, data, map, adjacency, pieceId)) return 1
-	if (piece.name.includes("Shock")) return 1
-	if (game.options.time_of_mud && game.turn === 3 && [2, 3].includes(game.action_round) && piece.nation === "ge" && data.spaces[game.pieces[pieceId]]?.nation === "su") return 1
-	const retreatDistance = combat.retreat_distance ?? combat.retreat_path?.length ?? 0
-	const normal = retreatDistance === 1 ? 2 : 3
-	return Number.isInteger(combat.extra_advance_limit) ? Math.min(normal, combat.extra_advance_limit) : normal
+	const mechanized = isMechanizedForAdvance(game, data, map, adjacency, pieceId)
+	const allDefendersEliminated = allDefendersEliminatedForAdvance(game, combat)
+	const retreatDistance = retreatDistanceForAdvance(combat)
+	const normal = mechanized ? (allDefendersEliminated || retreatDistance !== 1 ? 3 : 2) : allDefendersEliminated || retreatDistance <= 1 ? 1 : 2
+	let absolute = timeOfMudAdvanceCap(game, data, combat, pieceId)
+	if (String(piece?.name || "").includes("Shock")) absolute = Math.min(absolute, 1)
+	if (Number.isInteger(combat.extra_advance_limit)) absolute = Math.min(absolute, combat.extra_advance_limit)
+	return Math.min(normal, absolute)
 }
 
 function stopsMechanizedAdvance(game, combat, space) {
@@ -561,26 +616,59 @@ function stopsWinter42GermanAdvance(game, data, pieceId, space) {
 	return Weather.isWinter42(game) && data.pieces[pieceId]?.nation === "ge" && space?.nation === "su"
 }
 
-function nonMechanizedAdvancePaths(game, data, map, adjacency, combat, pieceId) {
-	const paths = new Map()
+function activeCombatMarkerSpaces(game, combat = game.combat) {
+	const attacked = new Set(game.action?.attacked || [])
+	const markers = new Set((game.action?.attack_spaces || []).filter((spaceId) => !attacked.has(spaceId)))
+	for (const spaceId of combat?.origin_spaces || []) markers.add(spaceId)
+	return [...markers]
+}
+
+function hasActiveCombatMarker(game, spaceId, combat = game.combat) {
+	return activeCombatMarkerSpaces(game, combat).includes(spaceId)
+}
+
+function mayAdvanceIntoSpace(game, data, adjacency, combat, pieceId, spaceId) {
+	if (!Restrictions.mayEnter(game, data, adjacency, pieceId, spaceId)) return false
+	const piece = data.pieces[pieceId]
+	const resolved = Number.isFinite(combat.defender_loss) && Number.isFinite(combat.attacker_loss)
+	if (resolved && game.events?.tito && piece?.nation === "su" && data.spaces[spaceId]?.nation === "yu" && winner(combat) !== combat.attacker_side) return false
+	return true
+}
+
+function uniqueRoutes(routes) {
+	const seen = new Set()
+	return routes.filter((route) => {
+		const key = route.join(",")
+		if (seen.has(key)) return false
+		seen.add(key)
+		return true
+	})
+}
+
+function legalNonMechanizedAdvanceRoutes(game, data, map, adjacency, combat, pieceId, limit) {
+	const routes = []
 	const defender = combat.defender_space
 	const side = sideOf(game, data, map, [pieceId])
-	if (map.enemyPiecesInSpace(game, data, side, defender).length) return paths
-	if (!game.action?.attack_spaces?.includes(defender) && map.canStack(game, data, pieceId, defender) && Restrictions.mayEnter(game, data, adjacency, pieceId, defender)) paths.set(defender, [defender])
+	if (limit < 1 || map.enemyPiecesInSpace(game, data, side, defender).length) return routes
+	const legalPath = (path) =>
+		path.length <= limit && path.every((spaceId) => !map.enemyPiecesInSpace(game, data, side, spaceId).length && map.canStack(game, data, pieceId, spaceId) && mayAdvanceIntoSpace(game, data, adjacency, combat, pieceId, spaceId))
+	const addRoute = (path) => {
+		if (legalPath(path) && !hasActiveCombatMarker(game, path[path.length - 1], combat)) routes.push(path)
+	}
+	addRoute([defender])
+	if (allDefendersEliminatedForAdvance(game, combat) || retreatDistanceForAdvance(combat) < 2 || limit < 2) return uniqueRoutes(routes)
 	const retreatPaths = Object.keys(combat.retreat_paths || {}).length ? Object.values(combat.retreat_paths) : combat.retreat_path ? [combat.retreat_path] : []
 	for (const retreatPath of retreatPaths) {
 		for (let index = 0; index < retreatPath.length - 1; index++) {
-			const destination = retreatPath[index]
 			const path = [defender].concat(retreatPath.slice(0, index + 1))
-			if (game.action?.attack_spaces?.includes(destination) || map.enemyPiecesInSpace(game, data, side, destination).length || !map.canStack(game, data, pieceId, destination)) continue
-			if (path.every((spaceId) => Restrictions.mayEnter(game, data, adjacency, pieceId, spaceId))) paths.set(destination, path)
+			addRoute(path)
 		}
 	}
-	return paths
+	return uniqueRoutes(routes)
 }
 
-function legalAdvancePaths(game, data, map, adjacency, combat, pieceId) {
-	if (!combat.attackers.includes(pieceId) || !isOnMap(game, pieceId) || combat.advanced?.includes(pieceId)) return new Map()
+function legalAdvanceRoutes(game, data, map, adjacency, combat, pieceId) {
+	if (!combat.attackers.includes(pieceId) || !isOnMap(game, pieceId) || combat.advanced?.includes(pieceId)) return []
 	const invasionBeach = game.invasion?.beaches?.find((record) => combat.origin_spaces?.includes(record.space_id) && game.pieces[pieceId] === record.space_id)
 	if (invasionBeach) {
 		const destination = combat.defender_space
@@ -589,34 +677,40 @@ function legalAdvancePaths(game, data, map, adjacency, combat, pieceId) {
 			destination === invasionBeach.connected_land &&
 			!map.enemyPiecesInSpace(game, data, sideOf(game, data, map, [pieceId]), destination).length &&
 			map.canStack(game, data, pieceId, destination) &&
-			Restrictions.mayEnter(game, data, adjacency, pieceId, destination)
+			mayAdvanceIntoSpace(game, data, adjacency, combat, pieceId, destination)
 		)
-			return new Map([[destination, [destination]]])
-		return new Map()
+			return [[destination]]
+		return []
 	}
 	const limit = advanceLimit(game, data, map, adjacency, combat, pieceId)
-	if (limit === 1 && !isMechanizedForAdvance(game, data, map, adjacency, pieceId)) return nonMechanizedAdvancePaths(game, data, map, adjacency, combat, pieceId)
+	if (!isMechanizedForAdvance(game, data, map, adjacency, pieceId)) return legalNonMechanizedAdvanceRoutes(game, data, map, adjacency, combat, pieceId, limit)
 	const side = sideOf(game, data, map, [pieceId])
 	const from = game.pieces[pieceId]
-	const paths = new Map()
-	const queue = [{ space: from, path: [] }]
-	const visited = new Map([[from, 0]])
-	while (queue.length) {
-		const current = queue.shift()
-		for (const edge of adjacency[current.space] || []) {
+	const routes = []
+	function visit(current, path) {
+		if (path.length >= limit) return
+		for (const edge of adjacency[current] || []) {
 			const next = data.spaces[edge.to]
-			if (edge.type === "sr" || next?.kind !== "land") continue
-			const path = current.path.concat(edge.to)
-			if (path.length > limit || map.enemyPiecesInSpace(game, data, side, edge.to).length) continue
-			if (!Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
+			if (edge.type === "sr" || next?.kind !== "land" || edge.to === from || path.includes(edge.to)) continue
+			const nextPath = path.concat(edge.to)
+			if (map.enemyPiecesInSpace(game, data, side, edge.to).length) continue
+			if (!mayAdvanceIntoSpace(game, data, adjacency, combat, pieceId, edge.to)) continue
 			if (!map.canStack(game, data, pieceId, edge.to)) continue
-			const hasCombatMarker = game.action?.attack_spaces?.includes(edge.to)
-			if (!hasCombatMarker && !paths.has(edge.to)) paths.set(edge.to, path)
+			if (!hasActiveCombatMarker(game, edge.to, combat)) routes.push(nextPath)
 			if (stopsMechanizedAdvance(game, combat, next) || stopsWinter42GermanAdvance(game, data, pieceId, next)) continue
-			if (visited.has(edge.to) && visited.get(edge.to) <= path.length) continue
-			visited.set(edge.to, path.length)
-			queue.push({ space: edge.to, path })
+			visit(edge.to, nextPath)
 		}
+	}
+	visit(from, [])
+	return uniqueRoutes(routes)
+}
+
+function legalAdvancePaths(game, data, map, adjacency, combat, pieceId) {
+	const paths = new Map()
+	const routes = legalAdvanceRoutes(game, data, map, adjacency, combat, pieceId)
+	for (const route of routes.slice().sort((a, b) => a.length - b.length)) {
+		const destination = route[route.length - 1]
+		if (!paths.has(destination)) paths.set(destination, route)
 	}
 	return paths
 }
@@ -627,6 +721,7 @@ module.exports = {
 	SCU_COLUMNS,
 	SCU_FIRE,
 	applyStepLoss,
+	activeCombatMarkerSpaces,
 	advanceLimit,
 	attackersAcrossRiver,
 	baseColumn,
@@ -636,14 +731,18 @@ module.exports = {
 	fireColumnLabel,
 	fireResult,
 	findLcuReplacement,
+	hasActiveCombatMarker,
 	isOnMap,
 	isReduced,
 	legalLossChoices,
 	legalAdvancePaths,
+	legalAdvanceRoutes,
 	lossFactor,
 	maxReachableLoss,
 	mayAttackSpace,
+	onMapDefenders,
 	preview,
+	recordLcuReplacementIdentity,
 	replaceEliminatedSouthwestFront,
 	resolve,
 	setReduced,

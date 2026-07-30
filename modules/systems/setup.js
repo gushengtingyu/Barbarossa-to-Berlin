@@ -40,6 +40,7 @@ function createInitialState(data, scenario = "Campaign", seed = 1, options = {})
 		vp: 7,
 		stalin_location: MOSCOW_SPACE_ID,
 		pieces: Array(data.pieces.length).fill(0),
+		italian_8th_corps: null,
 		reduced: [],
 		control: data.spaces.map((space) => space?.side || null),
 		control_nation: data.spaces.map((space) => (space?.kind === "land" ? space.nation || null : null)),

@@ -3,6 +3,9 @@
 const { ALLIED, AXIS, DATA_VERSION, MOSCOW_SPACE_ID, RULESET_VERSION, SCHEMA_VERSION, STALIN_PIECE_ID } = require("./constants.js")
 const I18n = require("./i18n.js")
 
+const ITALIAN_8TH_ARMY_PIECE_ID = 492
+const COMBAT_REPLACEMENT_LOG_KEYS = new Set(["combat.log.eliminated_replaced", "combat.log.eliminated_replaced_permanent"])
+
 function clone(value) {
 	return JSON.parse(JSON.stringify(value))
 }
@@ -119,6 +122,21 @@ function migrateGame(game) {
 	return game
 }
 
+function pieceIdFromLogRef(value) {
+	const match = typeof value === "string" ? /^[Pp](\d+)$/.exec(value) : null
+	return match ? Number(match[1]) : null
+}
+
+function legacyItalian8thCorps(game) {
+	const candidates = new Set()
+	for (const entry of game.log) {
+		if (!COMBAT_REPLACEMENT_LOG_KEYS.has(entry.key) || pieceIdFromLogRef(entry.params?.piece) !== ITALIAN_8TH_ARMY_PIECE_ID) continue
+		const replacementId = pieceIdFromLogRef(entry.params?.replacement)
+		if (Number.isInteger(replacementId) && replacementId > 0 && replacementId < game.pieces.length) candidates.add(replacementId)
+	}
+	return candidates.size === 1 ? candidates.values().next().value : null
+}
+
 function normalizeGame(game) {
 	if (!game || typeof game !== "object") throw new Error("game state must be an object")
 	game = migrateGame(game)
@@ -127,6 +145,8 @@ function normalizeGame(game) {
 	game.options = normalizeOptions(game.options)
 	if (game.log == null) game.log = []
 	if (!Array.isArray(game.log) || game.log.some((entry) => !entry || typeof entry !== "object" || typeof entry.key !== "string")) throw new Error("invalid structured game log")
+	if (!Object.hasOwn(game, "italian_8th_corps")) game.italian_8th_corps = legacyItalian8thCorps(game)
+	else if (game.italian_8th_corps !== null && (!Number.isInteger(game.italian_8th_corps) || game.italian_8th_corps <= 0 || game.italian_8th_corps >= game.pieces.length)) game.italian_8th_corps = null
 	game.action_log ||= []
 	game.undo ||= []
 	game.rollback ||= []

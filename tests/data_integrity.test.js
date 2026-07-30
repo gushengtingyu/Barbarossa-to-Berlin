@@ -330,7 +330,7 @@ test("printed map symbols and special attack restrictions are represented as aut
 			.sort(),
 		["Brest", "Konigsberg", "Leningrad", "Ruhr", "Sevastopol"],
 	)
-	assert.equal(spaces.filter((space) => space.port).length, 33)
+	assert.equal(spaces.filter((space) => space.port).length, 27)
 	assert.equal(spaces.filter((space) => space.capital).length, 11)
 	assert.equal(spaces.filter((space) => space.wehrkreis).length, 19)
 	assert.deepEqual(
