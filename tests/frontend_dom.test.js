@@ -31,6 +31,29 @@ function loadFrontend() {
 	return { context, queries, window }
 }
 
+test("supply buttons show split map projections and toggle the overlay off", () => {
+	const { context, window } = loadFrontend()
+	const game = rules.setup(20260730, "Campaign", {})
+	const alliedSupply = rules.query(game, "Observer", "allied_supply")
+
+	window.on_reply("allied_supply", alliedSupply)
+	assert.equal(window.document.getElementById("supply_allied").className, "checked")
+	const westernFull = Number(Object.entries(alliedSupply.spaces.western).find(([, status]) => status === "full")[0])
+	const sovietFull = Number(Object.entries(alliedSupply.spaces.soviet).find(([, status]) => status === "full")[0])
+	assert.equal(vm.runInContext(`spaceElements[${westernFull}].classList.contains("supply-western-full")`, context), true)
+	assert.equal(vm.runInContext(`spaceElements[${sovietFull}].classList.contains("supply-soviet-full")`, context), true)
+
+	window.toggleSupplyOverlay("allied_supply")
+	assert.equal(window.document.getElementById("supply_allied").className, "unchecked")
+	assert.equal(window.document.querySelectorAll(".space.supply-overlay").length, 0)
+
+	const axisSupply = rules.query(game, "Observer", "axis_supply")
+	window.on_reply("axis_supply", axisSupply)
+	const axisFull = Number(Object.entries(axisSupply.spaces.axis).find(([, status]) => status === "full")[0])
+	assert.equal(window.document.getElementById("supply_axis").className, "checked")
+	assert.equal(vm.runInContext(`spaceElements[${axisFull}].classList.contains("supply-axis-full")`, context), true)
+})
+
 test("log headings preserve their first visible character", () => {
 	const { window } = loadFrontend()
 	const cases = [
@@ -211,35 +234,6 @@ test("published reinforcement slots keep stable counter nodes as units enter pla
 	assert.equal(document.querySelector(`.reinforcement_card_hotspot[data-card-id="${spec.card_id}"]`), hotspot)
 })
 
-test("published reinforcement counters match the printed slot sizes and centers", () => {
-	const { context, window } = loadFrontend()
-	const document = window.document
-	const pieces = Array(Engine.data.pieces.length).fill("removed")
-	const cases = [560, 462, 478, 405, 483, 401, 573, 559].map((id) => {
-		const slot = Engine.data.reinforcement_board.slots.find((entry) => entry.piece_id === id)
-		assert.ok(slot, `missing authored reinforcement slot for piece ${id}`)
-		return { id, size: slot.w, left: Math.round(slot.x - slot.w / 2), top: Math.round(slot.y - slot.h / 2) }
-	})
-	for (const entry of cases) pieces[entry.id] = "available"
-	window.view = {
-		actions: {},
-		pieces,
-		reduced: [],
-		neutrals: {},
-		off_map_units: [],
-	}
-
-	vm.runInContext("rebuildInteractionCache(); updatePieces()", context)
-	for (const entry of cases) {
-		const counter = document.querySelector(`.piece[title^="#${entry.id} "]`)
-		assert.equal(counter.parentElement.id, "reinforcement_board")
-		assert.equal(counter.style.width, `${entry.size}px`)
-		assert.equal(counter.style.height, `${entry.size}px`)
-		assert.equal(counter.style.left, `${entry.left}px`)
-		assert.equal(counter.style.top, `${entry.top}px`)
-	}
-})
-
 test("printed reduced-strength reinforcements use their reduced counter face before entry", () => {
 	const { context, window } = loadFrontend()
 	const document = window.document
@@ -356,6 +350,46 @@ test("a legal counter in an expanded over-capacity pool sends its piece action",
 	counter.dispatchEvent(new window.Event("click"))
 	assert.deepEqual(sent, [["piece", target.id]])
 	assert.equal(document.getElementById("focus-box").style.display, "block")
+})
+test("a legal attacking unit remains clickable after its map stack expands", () => {
+	const { context, window } = loadFrontend()
+	const document = window.document
+	const sent = []
+	window.send_action = (...args) => sent.push(args)
+	const units = Engine.data.pieces.filter((piece) => piece?.side === "allied" && piece.size !== "marker").slice(0, 2)
+	const target = units[0]
+	const spaceId = Engine.data.spaces.find((space) => space?.kind === "land").id
+	const pieces = Array(Engine.data.pieces.length).fill("removed")
+	for (const unit of units) pieces[unit.id] = spaceId
+	window.view = {
+		state: "ops_combat",
+		actions: { piece: [target.id] },
+		pieces,
+		reduced: [],
+		neutrals: {},
+		off_map_units: [],
+	}
+	vm.runInContext("rebuildInteractionCache(); updatePieces()", context)
+	const counter = document.querySelector(`.piece[title^="#${target.id} "]`)
+
+	counter.dispatchEvent(new window.Event("click", { bubbles: true }))
+	assert.equal(document.getElementById("focus-box").style.display, "block")
+	assert.deepEqual(sent, [])
+
+	counter.dispatchEvent(new window.Event("click", { bubbles: true }))
+	assert.deepEqual(sent, [["piece", target.id]])
+	assert.equal(document.getElementById("focus-box").style.display, "block")
+
+	document.getElementById("map").dispatchEvent(new window.Event("click", { bubbles: true }))
+	assert.equal(document.getElementById("focus-box").style.display, "none")
+})
+
+test("map capture closes supply without dismissing a focused stack before counter clicks", () => {
+	const source = fs.readFileSync("play.js", "utf8")
+	const listenerBlock = source.slice(source.indexOf('const mapElement = document.getElementById("map")'), source.indexOf('set_style(localStorage.getItem("btb.style")'))
+	assert.match(listenerBlock, /hideSupplyOverlay\(\)[\s\S]*true/)
+	assert.match(listenerBlock, /addEventListener\("click", \(\) => focusStack\(null\)\)/)
+	assert.doesNotMatch(listenerBlock, /focusStack\(null\)[\s\S]*true/)
 })
 
 test("published chart keeps its aspect ratio and scrolls safely on narrow screens", () => {

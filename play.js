@@ -1,6 +1,6 @@
 "use strict"
 
-/* global view, send_action, action_button */
+/* global view, send_action, send_query, action_button */
 
 const BTB = globalThis.BTB_DATA
 const spaceElements = []
@@ -12,7 +12,6 @@ const cardElements = new Map()
 const reinforcementCardHotspots = []
 const reinforcementSlotElements = new Map()
 const reinforcementTokenElements = []
-const offMapHotspots = []
 const offMapPoolActions = []
 const currentMarkerStacks = new Map()
 const currentTrackStacks = new Map()
@@ -149,6 +148,7 @@ let focusedOffMapStack = null
 let counterStyle = "bevel"
 let mouseFocus = 0
 let shownSupplyQuery = null
+const supplyOverlaySpaceIds = new Set()
 let legalActionSource = null
 let reinforcementBoardElement = null
 const legalActionSets = new Map()
@@ -1614,9 +1614,39 @@ function on_reply(query, params) {
 
 function hideSupplyOverlay() {
 	for (const element of pieceElements.values()) element.classList.remove("supply-limited", "supply-oos")
+	for (const spaceId of supplyOverlaySpaceIds) {
+		spaceElements[spaceId]?.classList.remove(
+			"supply-overlay",
+			"supply-overlay-allied",
+			"supply-overlay-axis",
+			"supply-western-full",
+			"supply-western-limited",
+			"supply-western-oos",
+			"supply-soviet-full",
+			"supply-soviet-limited",
+			"supply-soviet-oos",
+			"supply-axis-full",
+			"supply-axis-limited",
+			"supply-axis-oos",
+		)
+	}
+	supplyOverlaySpaceIds.clear()
 	shownSupplyQuery = null
 	setMenuCheck("supply_allied", false)
 	setMenuCheck("supply_axis", false)
+}
+
+function toggleSupplyOverlay(query) {
+	if (shownSupplyQuery === query) {
+		hideSupplyOverlay()
+		return
+	}
+	send_query(query)
+}
+
+function supplyProjectionStatus(projection, group, spaceId) {
+	const status = projection?.[group]?.[spaceId]
+	return ["full", "limited", "oos"].includes(status) ? status : null
 }
 
 function showSupplyOverlay(query, result) {
@@ -1624,6 +1654,22 @@ function showSupplyOverlay(query, result) {
 	if (!result?.pieces || !["allied", "axis"].includes(result.side)) return
 	shownSupplyQuery = query
 	setMenuCheck(query === "allied_supply" ? "supply_allied" : "supply_axis", true)
+	for (const space of BTB.spaces) {
+		if (!space || space.kind === "sr") continue
+		const element = spaceElements[space.id]
+		if (!element) continue
+		if (result.side === "allied") {
+			const western = supplyProjectionStatus(result.spaces, "western", space.id)
+			const soviet = supplyProjectionStatus(result.spaces, "soviet", space.id)
+			if (!western || !soviet) continue
+			element.classList.add("supply-overlay", "supply-overlay-allied", `supply-western-${western}`, `supply-soviet-${soviet}`)
+		} else {
+			const axis = supplyProjectionStatus(result.spaces, "axis", space.id)
+			if (!axis) continue
+			element.classList.add("supply-overlay", "supply-overlay-axis", `supply-axis-${axis}`)
+		}
+		supplyOverlaySpaceIds.add(space.id)
+	}
 	for (const [pieceId, status] of Object.entries(result.pieces)) {
 		if (!["limited", "oos"].includes(status)) continue
 		pieceElements.get(Number(pieceId))?.classList.add(`supply-${status}`)
@@ -1680,7 +1726,6 @@ function updateEventMarkers() {
 
 function renderOffMapHotspots() {
 	document.getElementById("offmap-hotspots")?.remove()
-	offMapHotspots.length = 0
 	offMapPoolActions.length = 0
 	const overlay = document.createElement("div")
 	overlay.id = "offmap-hotspots"
@@ -1689,10 +1734,6 @@ function renderOffMapHotspots() {
 		hotspot.className = "offmap_hotspot"
 		hotspot.dataset.target = target
 		Object.assign(hotspot.style, { left: `${x}px`, top: `${y}px`, width: `${width}px`, height: `${height}px` })
-		const badge = document.createElement("span")
-		badge.textContent = "0"
-		hotspot.append(badge)
-		offMapHotspots.push({ element: hotspot, badge })
 		const moveTarget = reinforcementMoveTarget(target)
 		if (moveTarget) {
 			const action = document.createElement("button")
@@ -1727,13 +1768,6 @@ function updateOffMapBoards() {
 		element.hidden = !available
 		slot.classList.toggle("occupied", available)
 	}
-	const counts = new Map()
-	for (const unit of view?.off_map_units || []) {
-		const poolSide = unit.pool_side || unit.side
-		const key = unit.location === "eliminated" ? `${poolSide}_eliminated` : unit.location === "reserve" ? `${poolSide}_reserve` : null
-		if (key) counts.set(key, (counts.get(key) || 0) + 1)
-	}
-	for (const { element, badge } of offMapHotspots) badge.textContent = String(counts.get(element.dataset.target) || 0)
 }
 
 function renderReinforcements() {
@@ -2065,6 +2099,7 @@ globalThis.to_reinforcements = to_reinforcements
 globalThis.on_reply = on_reply
 globalThis.hideCardQuery = hideCardQuery
 globalThis.hideSupplyOverlay = hideSupplyOverlay
+globalThis.toggleSupplyOverlay = toggleSupplyOverlay
 globalThis.flagSupplyWarnings = flagSupplyWarnings
 globalThis.openRollbackProposal = openRollbackProposal
 globalThis.closeRollbackProposal = closeRollbackProposal
@@ -2083,7 +2118,17 @@ document.addEventListener("click", (event) => {
 	if (!event.target.closest?.("#card_popup, .card")) hideCardPopup()
 	if (!event.target.closest?.("#activation_popup, .space, .piece")) hideActivationPopup()
 })
-document.getElementById("map").addEventListener("click", () => focusStack(null))
+const mapElement = document.getElementById("map")
+// Counter handlers stop propagation after handling focus or actions. Keep only
+// the supply-overlay cleanup in capture; stack dismissal belongs to background bubbling.
+mapElement.addEventListener(
+	"click",
+	() => {
+		if (shownSupplyQuery) hideSupplyOverlay()
+	},
+	true,
+)
+mapElement.addEventListener("click", () => focusStack(null))
 set_style(localStorage.getItem("btb.style") || "bevel")
 set_mouse_focus(Number(localStorage.getItem("btb.mouseFocus") || 0))
 

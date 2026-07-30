@@ -60,6 +60,7 @@ test("language and card-art options are independent and use one authoritative ca
 		card_language: "EN",
 		disable_optional_rules: false,
 		allied_2_24_exclusive_1941: true,
+		moscow_trench_axis_rp: true,
 		no_invasions_before_summer_42: true,
 		sunny_italy: true,
 		time_of_mud: true,
@@ -67,6 +68,7 @@ test("language and card-art options are independent and use one authoritative ca
 	const disabled = State.normalizeOptions({
 		disable_optional_rules: "true",
 		allied_2_24_exclusive_1941: true,
+		moscow_trench_axis_rp: true,
 		no_invasions_before_summer_42: true,
 		sunny_italy: true,
 		time_of_mud: true,
@@ -76,6 +78,7 @@ test("language and card-art options are independent and use one authoritative ca
 		card_language: "CN",
 		disable_optional_rules: true,
 		allied_2_24_exclusive_1941: false,
+		moscow_trench_axis_rp: false,
 		no_invasions_before_summer_42: false,
 		sunny_italy: false,
 		time_of_mud: false,

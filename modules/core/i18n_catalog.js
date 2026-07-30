@@ -886,8 +886,8 @@
 	},
 	"create.rule.disable_all_help": {
 		"params": [],
-		"zh-CN": "四条选规默认全部启用；勾选后将全部关闭。",
-		"en": "All four optional rules are enabled by default; select this setting to disable all of them."
+		"zh-CN": "五条选规默认全部启用；勾选后将全部关闭。",
+		"en": "All five optional rules are enabled by default; select this setting to disable all of them."
 	},
 	"create.rule.disable_all_help_label": {
 		"params": [],
@@ -923,6 +923,21 @@
 		"params": [],
 		"zh-CN": "查看意大利晴空说明",
 		"en": "View the Sunny Italy rule"
+	},
+	"create.rule.moscow_axis_rp": {
+		"params": [],
+		"zh-CN": "AX+2RP",
+		"en": "AX +2 RP"
+	},
+	"create.rule.moscow_axis_rp_help": {
+		"params": [],
+		"zh-CN": "莫斯科初始拥有一个战壕，【施佩尔】和【总体战】获得每回合GERP+1的效果",
+		"en": "Moscow begins with one trench. Speer and Totaler Krieg! each grant +1 German RP every turn."
+	},
+	"create.rule.moscow_axis_rp_help_label": {
+		"params": [],
+		"zh-CN": "查看莫斯科战壕与德国军备说明",
+		"en": "View the Moscow Trench and German Armaments rule"
 	},
 	"create.rule.mud": {
 		"params": [],
@@ -1988,6 +2003,13 @@
 		],
 		"zh-CN": "在{space}忽略{order}：支付{cost} VP，轴心国VP{delta}，当前{vp}。",
 		"en": "Ignoring {order} at {space} costs {cost} VP: Axis VP {delta}; now {vp}."
+	},
+	"replacements.log.axis_variant_rp": {
+		"params": [
+			"points"
+		],
+		"zh-CN": "德国军备：本回合德国补员点 +{points}。",
+		"en": "German armaments: +{points} German RP this turn."
 	},
 	"replacements.log.rebuild": {
 		"params": [

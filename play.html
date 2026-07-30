@@ -96,8 +96,8 @@
 					</summary>
 					<menu>
 						<li onclick="to_reinforcements()" data-i18n="ui.toolbar.reinforcements">增援板</li>
-						<li class="unchecked" id="supply_allied" onclick="send_query('allied_supply')" data-i18n="ui.toolbar.supply_allied">盟军补给</li>
-						<li class="unchecked" id="supply_axis" onclick="send_query('axis_supply')" data-i18n="ui.toolbar.supply_axis">轴心国补给</li>
+						<li class="unchecked" id="supply_allied" onclick="toggleSupplyOverlay('allied_supply')" data-i18n="ui.toolbar.supply_allied">盟军补给</li>
+						<li class="unchecked" id="supply_axis" onclick="toggleSupplyOverlay('axis_supply')" data-i18n="ui.toolbar.supply_axis">轴心国补给</li>
 						<li class="separator"></li>
 						<li onclick="send_query('discard')" data-i18n="ui.toolbar.discard">弃牌堆</li>
 						<li onclick="send_query('removed')" data-i18n="ui.toolbar.removed">移出游戏牌</li>

@@ -1,7 +1,7 @@
 # VASSAL source archive
 
 This directory contains review-only source material from the VASSAL module.
-It is not part of the Rally runtime and must not override reviewed CSV data.
+It is not part of the Rally runtime and must not override canonical CSV data.
 
 - `buildFile`: input for `npm run import:vassal` and related review tools.
 - `moduledata`: original VASSAL module metadata retained for provenance.

@@ -84,6 +84,11 @@
 		"zh-CN": "德国军区惩罚：{count} 个军区失控和/或断补，德国补员点减少 {points}。",
 		"en": "Wehrkreis penalty: {count} districts are uncontrolled and/or out of supply; German RP is reduced by {points}."
 	},
+	"replacements.log.axis_variant_rp": {
+		"params": ["points"],
+		"zh-CN": "德国军备：本回合德国补员点 +{points}。",
+		"en": "German armaments: +{points} German RP this turn."
+	},
 	"stalin.log.captured": {
 		"params": ["space", "reason", "vp"],
 		"zh-CN": "斯大林在{space}{reason}：VP+4，当前{vp}。",

@@ -11,13 +11,8 @@ const catalog = require("./unit_catalog.js")
 const ROOT = path.resolve(__dirname, "..")
 const PIECES_FILE = path.join(ROOT, "csv", "pieces.csv")
 const SETUP_FILE = path.join(ROOT, "csv", "setup_campaign.csv")
-const REVIEW_DIR = path.join(ROOT, "csv", "review")
-const PIECES_REVIEW_FILE = path.join(REVIEW_DIR, "pieces.csv")
-const SETUP_REVIEW_FILE = path.join(REVIEW_DIR, "setup_campaign.csv")
 const PIECE_HEADERS = ["id", "nation", "name", "size", "unit_type", "cf", "lf", "mf", "rcf", "rlf", "rmf", "asset", "traits", "reduced_asset"]
 const SETUP_HEADERS = ["piece_id", "space_id", "location", "reduced"]
-const PIECE_REVIEW_HEADERS = ["id", "flags"]
-const SETUP_REVIEW_HEADERS = ["piece_id", "flags"]
 
 function normalizeName(value) {
 	return String(value || "")
@@ -62,10 +57,6 @@ function buildUnitTables() {
 		traits: "",
 		reduced_asset: "",
 	})
-	const pieceReview = pieces.map((piece) => ({
-		id: piece.id,
-		flags: "vassal_identity;counter_scan_reviewed",
-	}))
 	const runtimePieceIds = new Set(pieces.filter((piece) => piece.size !== "marker").map((piece) => piece.id))
 	const aliases = new Map([
 		["hellfirepass", "helltirepass"],
@@ -78,34 +69,20 @@ function buildUnitTables() {
 		const normalized = aliases.get(normalizeName(source.location)) || normalizeName(source.location)
 		const spaceId = normalized === "homs" ? 191 : spacesByName.get(normalized)
 		let location = ""
-		let flags = "rulebook_setup_reviewed"
 		if (!spaceId) {
 			if (/reserve/i.test(source.location)) location = `reserve:${source.side}`
 			else if (source.location === "Anywhere in Turkey") location = "setup_choice:turkey"
 			else if (source.location === "Occupied France") location = "setup_choice:occupied_france"
-			else {
-				location = "available"
-				flags = "vassal_pool;needs_review"
-			}
+			else location = "available"
 		}
 		setup.push({
 			piece_id: source.gpid,
 			space_id: spaceId || "",
 			location,
 			reduced: source.reduced,
-			flags,
 		})
 	}
-	const setupReview = setup.map((row) => ({
-		piece_id: row.piece_id,
-		flags: row.flags,
-	}))
-	return {
-		pieces,
-		setup: setup.map(({ flags: _flags, ...row }) => row),
-		pieceReview,
-		setupReview,
-	}
+	return { pieces, setup }
 }
 
 function main() {
@@ -115,12 +92,9 @@ function main() {
 		return
 	}
 	const existing = fs.readFileSync(PIECES_FILE, "utf8").trim().split(/\r?\n/).length - 1
-	if (existing > 0 && !process.argv.includes("--force")) throw new Error("pieces.csv is not empty; pass --force only after review")
-	fs.mkdirSync(REVIEW_DIR, { recursive: true })
+	if (existing > 0 && !process.argv.includes("--force")) throw new Error("pieces.csv is not empty; pass --force to replace generated unit data")
 	fs.writeFileSync(PIECES_FILE, stringify(PIECE_HEADERS, tables.pieces), "utf8")
 	fs.writeFileSync(SETUP_FILE, stringify(SETUP_HEADERS, tables.setup), "utf8")
-	fs.writeFileSync(PIECES_REVIEW_FILE, stringify(PIECE_REVIEW_HEADERS, tables.pieceReview), "utf8")
-	fs.writeFileSync(SETUP_REVIEW_FILE, stringify(SETUP_REVIEW_HEADERS, tables.setupReview), "utf8")
 	console.log(`Updated pieces=${tables.pieces.length}, setup=${tables.setup.length}`)
 }
 

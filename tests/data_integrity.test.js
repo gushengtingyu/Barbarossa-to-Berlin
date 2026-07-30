@@ -6,6 +6,8 @@ const path = require("node:path")
 const test = require("node:test")
 const assert = require("node:assert/strict")
 const { build, serialize, validateSpaces, validateEdges, writeGeneratedFile } = require("../tools/build_data.js")
+const { parse } = require("../tools/csv.js")
+const { serializeEditorData, SPACE_HEADERS, EDGE_HEADERS } = require("../tools/dev_server.js")
 const { makeReport } = require("../tools/report_progress.js")
 
 const ROOT = path.resolve(__dirname, "..")
@@ -52,6 +54,30 @@ test("generated data writes are atomic and skip unchanged content", () => {
 	} finally {
 		fs.rmSync(directory, { recursive: true, force: true })
 	}
+})
+
+test("map editor serialization preserves the complete canonical CSV schema", () => {
+	const { data } = build()
+	const sourceSpaces = data.spaces.filter(Boolean)
+	const serialized = serializeEditorData({ spaces: sourceSpaces, edges: data.edges })
+	const spaces = parse(serialized.spacesCsv)
+	const edges = parse(serialized.edgesCsv)
+
+	assert.deepEqual(Object.keys(spaces[0]), SPACE_HEADERS)
+	assert.deepEqual(Object.keys(edges[0]), EDGE_HEADERS)
+	assert.equal(spaces.length, sourceSpaces.length)
+	assert.equal(edges.length, data.edges.length)
+	assert.equal(serialized.spacesCsv, fs.readFileSync(path.join(ROOT, "csv", "spaces.csv"), "utf8").replace(/\r\n?/g, "\n"))
+	assert.equal(serialized.edgesCsv, fs.readFileSync(path.join(ROOT, "csv", "edges.csv"), "utf8").replace(/\r\n?/g, "\n"))
+	assert.deepEqual(
+		spaces.filter((space) => space.beach_letter).map((space) => [space.id, space.beach_letter]),
+		sourceSpaces.filter((space) => space.beach_letter).map((space) => [String(space.id), space.beach_letter]),
+	)
+	assert.equal(
+		spaces.every((space) => space.vp !== "0"),
+		true,
+	)
+	assert.throws(() => serializeEditorData({ spaces: sourceSpaces.map((space, index) => (index === 0 ? { ...space, vp: 0 } : space)), edges: data.edges }), /vp must be a positive integer/)
 })
 
 test("generated runtime data excludes authored-data audit and compatibility fields", () => {
@@ -168,9 +194,18 @@ test("reinforcement board manifest covers every printed live counter and card gr
 			.sort((a, b) => a - b),
 		[578, 579, 580, 581],
 	)
-	for (const pieceId of [401, 413, 419, 427, 483, 492, 518, 556, 559, 564, 573]) assert.equal(board.slots.some((slot) => slot.piece_id === pieceId), true, `piece ${pieceId}`)
+	for (const pieceId of [401, 413, 419, 427, 483, 492, 518, 556, 559, 564, 573])
+		assert.equal(
+			board.slots.some((slot) => slot.piece_id === pieceId),
+			true,
+			`piece ${pieceId}`,
+		)
 	for (const cardId of [1, 16, 21, 33, 34, 42, 45, 46, 50, 52, 62, 77, 78, 93, 94, 109])
-		assert.equal(board.card_areas.some((area) => area.card_ids.includes(cardId)), true, `card ${cardId}`)
+		assert.equal(
+			board.card_areas.some((area) => area.card_ids.includes(cardId)),
+			true,
+			`card ${cardId}`,
+		)
 })
 
 test("the generated rulebook reference preserves the authoritative development anchors", () => {
@@ -196,7 +231,7 @@ test("generated map data contains only valid endpoints", () => {
 	const { data } = build()
 	const ids = new Set(data.spaces.filter(Boolean).map((space) => space.id))
 	assert.equal(ids.size, 352)
-	assert.equal(data.edges.length, 658)
+	assert.equal(data.edges.length, 649)
 	assert.equal(
 		data.edges.every((edge) => ids.has(edge.a) && ids.has(edge.b)),
 		true,
@@ -206,9 +241,8 @@ test("generated map data contains only valid endpoints", () => {
 test("progress report exposes remaining authored-data work", () => {
 	const report = makeReport()
 	assert.deepEqual(report.cards, { total: 110, complete: 110, pending: 0 })
-	assert.equal(report.spaces.total, 352)
-	assert.equal(report.spaces.reviewed + report.spaces.pending, 352)
-	assert.equal(report.edges.reviewed + report.edges.pending, report.edges.total)
+	assert.deepEqual(report.spaces, { total: 352 })
+	assert.deepEqual(report.edges, { total: 649 })
 	assert.equal(report.reinforcements.total, 57)
 })
 
@@ -321,7 +355,37 @@ test("printed map symbols and special attack restrictions are represented as aut
 			true,
 		)
 	}
-	assert.deepEqual(Object.fromEntries(["regular", "river", "sr"].map((type) => [type, data.edges.filter((edge) => edge.type === type).length])), { regular: 543, river: 77, sr: 38 })
+	assert.deepEqual(Object.fromEntries(["regular", "river", "sr"].map((type) => [type, data.edges.filter((edge) => edge.type === type).length])), { regular: 537, river: 79, sr: 33 })
+	assert.equal(
+		data.edges.some((edge) => edge.type === "regular" && ((edge.a === 100 && edge.b === 348) || (edge.a === 348 && edge.b === 100))),
+		true,
+	)
+	assert.equal(
+		data.edges.some((edge) => edge.type === "sr" && ((edge.a === 286 && edge.b === 317) || (edge.a === 317 && edge.b === 286))),
+		true,
+	)
+	for (const [a, b] of [
+		[133, 134],
+		[51, 294],
+	]) {
+		assert.equal(
+			data.edges.some((edge) => edge.type === "sr" && ((edge.a === a && edge.b === b) || (edge.a === b && edge.b === a))),
+			true,
+		)
+	}
+	for (const [a, b] of [
+		[377, 378],
+		[338, 331],
+	]) {
+		assert.equal(
+			data.edges.some((edge) => edge.type === "river" && ((edge.a === a && edge.b === b) || (edge.a === b && edge.b === a))),
+			true,
+		)
+	}
+	assert.equal(
+		data.edges.some((edge) => (edge.a === 286 && edge.b === 155) || (edge.a === 155 && edge.b === 286)),
+		false,
+	)
 	for (const neighbor of [48, 51]) {
 		assert.equal(
 			data.edges.some((edge) => edge.type === "regular" && ((edge.a === 47 && edge.b === neighbor) || (edge.a === neighbor && edge.b === 47))),

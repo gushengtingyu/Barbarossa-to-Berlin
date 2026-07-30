@@ -170,6 +170,17 @@ function replacementUsage(game) {
 	return game.replacement_usage
 }
 
+function awardAxisVariantRp(game) {
+	const usage = replacementUsage(game)
+	if (!game.options?.moscow_trench_axis_rp || usage.axis_variant_rp_awarded) return 0
+	usage.axis_variant_rp_awarded = true
+	const points = Number(!!game.events?.speer) + Number(!!game.events?.totaler_krieg)
+	if (!points) return 0
+	game.rp.ge = (Number(game.rp.ge) || 0) + points
+	log(game, "replacements.log.axis_variant_rp", { points })
+	return points
+}
+
 function applyWehrkreisPenalty(game, data, map, adjacency) {
 	const usage = replacementUsage(game)
 	if (usage.wehrkreis_applied) return { count: usage.wehrkreis_count, deducted: usage.wehrkreis_deducted }
@@ -284,6 +295,7 @@ function voluntarilyEliminate(game, data, map, adjacency, pieceId) {
 
 module.exports = Object.freeze({
 	applyWehrkreisPenalty,
+	awardAxisVariantRp,
 	canRebuildLcuInAlliedReserve,
 	classifyEliminatedLcu,
 	clearEliminatedTheater,

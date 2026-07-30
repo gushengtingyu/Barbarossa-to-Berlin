@@ -97,6 +97,11 @@ function createInitialState(data, scenario = "Campaign", seed = 1, options = {})
 	if (game.setup_choice.occupied_france.pieces.length !== 2) throw new Error("Campaign setup requires two Occupied France army choices")
 	if (game.setup_choice.turkey.pieces.length !== 2) throw new Error("Campaign setup requires two Turkish corps placement choices")
 	placeCampaignTrenches(game, data)
+	if (game.options.moscow_trench_axis_rp) {
+		game.trench[MOSCOW_SPACE_ID] = 1
+		game.trench_owner[MOSCOW_SPACE_ID] = ALLIED
+		game.trench_kind[MOSCOW_SPACE_ID] = "soviet"
+	}
 	game.opening_cards = [findCard(data, AXIS, 1), findCard(data, AXIS, 2)]
 	return game
 }

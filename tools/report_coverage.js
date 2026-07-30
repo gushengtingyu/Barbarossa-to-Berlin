@@ -31,6 +31,7 @@ const RULES = [
 
 const OPTIONAL = [
 	["allied_2_24_exclusive_1941", "Only one of Allied events 2 and 24 in 1941", "implemented"],
+	["moscow_trench_axis_rp", "Moscow trench; Speer and Totaler Krieg! each grant +1 German RP per turn", "implemented"],
 	["no_invasions_before_summer_42", "No Allied invasions before Summer 1942", "implemented"],
 	["sunny_italy", "Naples is Limited Supply in Fall/Winter", "implemented"],
 	["time_of_mud", "German Panzer limits in Fall 1941 rounds 2-3", "implemented"],

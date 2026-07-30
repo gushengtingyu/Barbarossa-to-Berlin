@@ -271,11 +271,17 @@ test("view, static_view and query are read-only and clone public structures", ()
 	assert.equal(observerDiscard, null)
 	assert.equal(alliedSupply.side, "allied")
 	assert.equal(axisSupply.side, "axis")
+	assert.deepEqual(Object.keys(alliedSupply.spaces).sort(), ["soviet", "western"])
+	assert.deepEqual(Object.keys(axisSupply.spaces), ["axis"])
 	for (const result of [alliedSupply, axisSupply]) {
 		for (const [pieceId, status] of Object.entries(result.pieces)) {
 			assert.ok(["full", "limited", "oos"].includes(status))
 			assert.equal(Engine.map.pieceSide(game, Engine.data, Number(pieceId)), result.side)
 			assert.ok(Number.isInteger(game.pieces[pieceId]) && game.pieces[pieceId] > 0)
+		}
+		for (const projection of Object.values(result.spaces)) {
+			assert.equal(Object.keys(projection).length, Engine.data.spaces.filter((space) => space && space.kind !== "sr").length)
+			for (const status of Object.values(projection)) assert.ok(["full", "limited", "oos"].includes(status))
 		}
 	}
 	ownDiscard.push(999)

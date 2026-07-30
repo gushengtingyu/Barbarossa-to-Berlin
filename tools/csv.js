@@ -55,9 +55,15 @@ function escapeCsv(value) {
 	return value
 }
 
-function stringify(headers, rows) {
+function stringify(headers, rows, { trimTrailingEmpty = false, minimumColumns = 0 } = {}) {
 	const lines = [headers.map(escapeCsv).join(",")]
-	for (const row of rows) lines.push(headers.map((header) => escapeCsv(row[header])).join(","))
+	for (const row of rows) {
+		const values = headers.map((header) => row[header])
+		if (trimTrailingEmpty) {
+			while (values.length > minimumColumns && (values.at(-1) === "" || values.at(-1) === null || values.at(-1) === undefined)) values.pop()
+		}
+		lines.push(values.map(escapeCsv).join(","))
+	}
 	return `${lines.join("\n")}\n`
 }
 

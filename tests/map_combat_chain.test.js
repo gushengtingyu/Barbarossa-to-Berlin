@@ -978,7 +978,7 @@ test("the Soviet Southwest Front uses its mechanized face and becomes the infant
 test("Rally exposes deterministic entrenchment actions and read-only public engineering fields", () => {
 	const moscow = data.spaces.find((space) => space?.name === "Moscow").id
 	const front = data.pieces.find((piece) => piece?.nation === "su" && piece.size === "lcu").id
-	let game = rules.setup(3, "Campaign", {})
+	let game = rules.setup(3, "Campaign", { moscow_trench_axis_rp: false })
 	game.pieces.fill(0)
 	game.pieces[front] = moscow
 	game.active = "Allied"

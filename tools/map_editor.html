@@ -5,193 +5,787 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>BTB 地图数据工作台</title>
 		<style>
-			:root { color-scheme:dark; --panel:#181a1f; --line:#343943; --text:#e8eaed; --muted:#9aa0a6; --accent:#f0b429; --pending:#d94cff; }
-			* { box-sizing:border-box; }
-			body { margin:0; height:100vh; overflow:hidden; display:grid; grid-template-columns:380px 1fr; font:14px/1.4 "Segoe UI","Microsoft YaHei",sans-serif; color:var(--text); background:#0d0f12; }
-			aside { display:flex; min-height:0; flex-direction:column; background:var(--panel); border-right:1px solid var(--line); }
-			header { padding:13px 14px 10px; border-bottom:1px solid var(--line); }
-			h1 { margin:0 0 4px; font-size:18px; }
-			.small { color:var(--muted); font-size:12px; }
-			#review-summary { margin-top:7px; color:#d9c6ff; }
-			.toolbar { display:grid; grid-template-columns:1fr 1fr; gap:7px; padding:10px 14px; border-bottom:1px solid var(--line); }
-			button,input,select { min-height:34px; border:1px solid #464c57; border-radius:5px; background:#252931; color:var(--text); padding:6px 8px; }
-			button { cursor:pointer; }
-			button:disabled { cursor:not-allowed; opacity:.45; }
-			button:hover,button.active { border-color:var(--accent); }
-			button.primary { color:#17130b; background:var(--accent); border-color:var(--accent); font-weight:700; }
-			.filters { display:grid; grid-template-columns:1fr 126px; gap:7px; padding:10px 14px 6px; }
-			#space-list { flex:1; min-height:110px; overflow:auto; padding:0 8px; }
-			.space-row { display:flex; gap:8px; align-items:center; width:100%; padding:7px 8px; border:0; border-bottom:1px solid #282c33; border-radius:0; background:transparent; text-align:left; }
-			.space-row.selected { color:#19140a; background:var(--accent); }
-			.space-row.pending::after { content:"待核"; margin-left:auto; color:#eaa9ff; font-size:11px; }
-			.space-row.selected.pending::after { color:#6a257c; }
-			.space-id { width:40px; color:var(--muted); font-variant-numeric:tabular-nums; }
-			#form { display:grid; grid-template-columns:84px 1fr; gap:7px; padding:10px 14px; border-top:1px solid var(--line); max-height:39vh; overflow:auto; }
-			#form label { align-self:center; color:var(--muted); }
-			.wide { grid-column:1 / -1; }
-			#edge-list { display:grid; gap:5px; }
-			.edge-row { display:grid; grid-template-columns:1fr 88px 42px; gap:5px; align-items:center; }
-			.edge-row span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-			.edge-row button { min-height:28px; padding:3px; }
-			#status { padding:8px 14px; border-top:1px solid var(--line); color:var(--muted); }
-			#viewport { position:relative; overflow:hidden; cursor:grab; }
-			#viewport.creating,#viewport.edge-mode { cursor:crosshair; }
-			#world { position:absolute; transform-origin:0 0; width:3400px; height:2200px; }
-			#map { display:block; width:3400px; height:2200px; user-select:none; pointer-events:none; }
-			#edges { position:absolute; inset:0; width:3400px; height:2200px; pointer-events:none; }
-			#spaces { position:absolute; inset:0; }
-			.space-box { position:absolute; border:3px solid rgba(255,255,255,.82); background:rgba(0,0,0,.12); color:#fff; text-shadow:0 1px 3px #000; display:flex; align-items:center; justify-content:center; padding:3px; font-size:12px; text-align:center; cursor:pointer; user-select:none; }
-			.space-box.needs-review { border-style:dashed; box-shadow:inset 0 0 0 1px var(--pending); }
-			.space-box.axis { border-color:#f35b5b; }
-			.space-box.allied { border-color:#5ba8ff; }
-			.space-box.selected { outline:4px solid var(--accent); z-index:4; }
-			.space-box.edge-source { box-shadow:0 0 0 7px var(--pending); }
-			.resize { display:none; position:absolute; right:-7px; bottom:-7px; width:14px; height:14px; background:var(--accent); border:2px solid #111; cursor:nwse-resize; }
-			.space-box.selected .resize { display:block; }
-			.edge-regular { stroke:#20252b; }
-			.edge-river { stroke:#30a9ff; }
-			.edge-sr { stroke:#00d6d6; stroke-dasharray:15 10; }
-			@media (max-width:900px) { body { grid-template-columns:310px 1fr; } }
+			:root {
+				color-scheme: dark;
+				--panel: #181a1f;
+				--line: #343943;
+				--text: #e8eaed;
+				--muted: #9aa0a6;
+				--accent: #f0b429;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				height: 100vh;
+				overflow: hidden;
+				display: grid;
+				grid-template-columns: 390px 1fr;
+				font:
+					14px/1.4 "Segoe UI",
+					"Microsoft YaHei",
+					sans-serif;
+				color: var(--text);
+				background: #0d0f12;
+			}
+			aside {
+				display: flex;
+				min-height: 0;
+				flex-direction: column;
+				background: var(--panel);
+				border-right: 1px solid var(--line);
+			}
+			header {
+				padding: 13px 14px 10px;
+				border-bottom: 1px solid var(--line);
+			}
+			h1 {
+				margin: 0 0 4px;
+				font-size: 18px;
+			}
+			.small {
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.toolbar {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 7px;
+				padding: 10px 14px;
+				border-bottom: 1px solid var(--line);
+			}
+			button,
+			input,
+			select {
+				min-height: 34px;
+				border: 1px solid #464c57;
+				border-radius: 5px;
+				background: #252931;
+				color: var(--text);
+				padding: 6px 8px;
+			}
+			button {
+				cursor: pointer;
+			}
+			button:disabled,
+			input:disabled,
+			select:disabled {
+				cursor: not-allowed;
+				opacity: 0.48;
+			}
+			button:hover:not(:disabled),
+			button.active {
+				border-color: var(--accent);
+			}
+			button.primary {
+				color: #17130b;
+				background: var(--accent);
+				border-color: var(--accent);
+				font-weight: 700;
+			}
+			.filters {
+				padding: 10px 14px 6px;
+			}
+			.filters input {
+				width: 100%;
+			}
+			#space-list {
+				flex: 1;
+				min-height: 110px;
+				overflow: auto;
+				padding: 0 8px;
+			}
+			.space-row {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				width: 100%;
+				padding: 7px 8px;
+				border: 0;
+				border-bottom: 1px solid #282c33;
+				border-radius: 0;
+				background: transparent;
+				text-align: left;
+			}
+			.space-row.selected {
+				color: #19140a;
+				background: var(--accent);
+			}
+			.space-id {
+				width: 42px;
+				color: var(--muted);
+				font-variant-numeric: tabular-nums;
+			}
+			.space-row.selected .space-id {
+				color: #5b450f;
+			}
+			#form {
+				display: grid;
+				grid-template-columns: 88px 1fr;
+				gap: 7px;
+				padding: 10px 14px;
+				border-top: 1px solid var(--line);
+				max-height: 43vh;
+				overflow: auto;
+			}
+			#form label {
+				align-self: center;
+				color: var(--muted);
+			}
+			.wide {
+				grid-column: 1 / -1;
+			}
+			#edge-list {
+				display: grid;
+				gap: 5px;
+			}
+			.edge-row {
+				display: grid;
+				grid-template-columns: 1fr 96px 42px;
+				gap: 5px;
+				align-items: center;
+			}
+			.edge-row span {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.edge-row button {
+				min-height: 28px;
+				padding: 3px;
+			}
+			#status {
+				padding: 8px 14px;
+				border-top: 1px solid var(--line);
+				color: var(--muted);
+			}
+			#viewport {
+				position: relative;
+				overflow: hidden;
+				cursor: grab;
+			}
+			#viewport.creating,
+			#viewport.edge-mode {
+				cursor: crosshair;
+			}
+			#world {
+				position: absolute;
+				transform-origin: 0 0;
+				width: 3400px;
+				height: 2200px;
+			}
+			#map {
+				display: block;
+				width: 3400px;
+				height: 2200px;
+				user-select: none;
+				pointer-events: none;
+			}
+			#edges {
+				position: absolute;
+				inset: 0;
+				width: 3400px;
+				height: 2200px;
+				pointer-events: none;
+			}
+			#spaces {
+				position: absolute;
+				inset: 0;
+			}
+			.space-box {
+				position: absolute;
+				border: 3px solid rgba(255, 255, 255, 0.82);
+				background: rgba(0, 0, 0, 0.12);
+				color: #fff;
+				text-shadow: 0 1px 3px #000;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 3px;
+				font-size: 11px;
+				text-align: center;
+				cursor: pointer;
+				user-select: none;
+			}
+			.space-box.axis {
+				border-color: #f35b5b;
+			}
+			.space-box.allied {
+				border-color: #5ba8ff;
+			}
+			.space-box.selected {
+				outline: 4px solid var(--accent);
+				z-index: 4;
+			}
+			.space-box.edge-source {
+				box-shadow: 0 0 0 7px #e04cff;
+				z-index: 5;
+			}
+			.resize {
+				display: none;
+				position: absolute;
+				right: -7px;
+				bottom: -7px;
+				width: 14px;
+				height: 14px;
+				background: var(--accent);
+				border: 2px solid #111;
+				cursor: nwse-resize;
+			}
+			.space-box.selected .resize {
+				display: block;
+			}
+			.edge-regular {
+				stroke: #ff3f72;
+			}
+			.edge-river {
+				stroke: #18c8ff;
+			}
+			.edge-sr {
+				stroke: #ffe45c;
+				stroke-dasharray: 15 10;
+			}
+			.legend {
+				display: flex;
+				gap: 12px;
+				padding: 0 14px 8px;
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.legend i {
+				display: inline-block;
+				width: 18px;
+				height: 3px;
+				margin-right: 4px;
+				vertical-align: middle;
+			}
+			@media (max-width: 900px) {
+				body {
+					grid-template-columns: 320px 1fr;
+				}
+			}
 		</style>
 	</head>
 	<body>
 		<aside>
 			<header>
 				<h1>BTB 地图数据工作台</h1>
-				<div class="small">空间坐标、属性与连接关系的 CSV 编辑器</div>
-				<div id="review-summary" class="small">正在统计复核进度…</div>
+				<div class="small">直接编辑 csv/spaces.csv 与 csv/edges.csv</div>
 			</header>
 			<div class="toolbar">
-				<button id="toggle-lock" class="primary">坐标已锁定</button><button id="undo" disabled>撤销 Ctrl+Z</button>
-				<button id="add-space">新增空间</button><button id="delete-space">删除空间</button>
+				<button id="toggle-lock" class="primary">编辑已锁定</button><button id="undo" disabled>撤销 Ctrl+Z</button> <button id="add-space">新增空间</button><button id="delete-space">删除空间</button>
 				<button id="add-edge">新增连接</button>
-				<select id="edge-type" title="连接类型"><option value="regular">普通陆路</option><option value="river">跨河/水障碍</option><option value="sr">海运 SR</option></select>
-				<button id="fit">适应窗口</button><button id="save" class="primary">保存 CSV</button>
+				<select id="edge-type" title="新增连接类型">
+					<option value="regular">普通陆路</option>
+					<option value="river">跨河/水障碍</option>
+					<option value="sr">海运 SR</option>
+				</select>
+				<button id="toggle-edges">隐藏程序连线</button><button id="fit">适应窗口</button>
+				<button id="save" class="primary wide">保存 CSV</button>
 			</div>
-			<div class="filters">
-				<input id="search" placeholder="搜索 ID 或名称" />
-				<select id="review-filter"><option value="all">全部空间</option><option value="pending">仅待复核</option><option value="reviewed">仅已复核</option></select>
+			<div class="legend">
+				<span><i style="background: #ff3f72"></i>陆路</span>
+				<span><i style="background: #18c8ff"></i>跨河</span>
+				<span><i style="background: #ffe45c"></i>海运</span>
 			</div>
+			<div class="filters"><input id="search" placeholder="搜索 ID 或名称" /></div>
 			<div id="space-list"></div>
 			<div id="form">
-				<label>ID</label><input id="f-id" disabled />
-				<label>名称</label><input id="f-name" />
-				<label>空间类型</label><select id="f-kind"><option value="land">陆地空间</option><option value="sr">海运 SR 空间</option><option value="beach">入侵海滩</option></select>
-				<label>国家</label><input id="f-nation" placeholder="ge / su / br…" />
-				<label>阵营</label><select id="f-side"><option value="neutral">中立</option><option value="axis">轴心</option><option value="allied">同盟</option></select>
-				<label>地形</label><select id="f-terrain"><option value="">不适用</option><option value="clear">开阔</option><option value="desert">沙漠</option><option value="mountain">山地</option><option value="forest">森林</option><option value="swamp">沼泽</option></select>
-				<label>VP</label><input id="f-vp" type="number" />
-				<label>补给源</label><select id="f-supply"><option value="">无</option><option value="axis">轴心补给</option><option value="allied">同盟补给</option><option value="allied_scheldt">同盟/需清扫斯海尔德</option><option value="axis_limited">轴心有限补给</option></select>
-				<label>资源</label><select id="f-resource"><option value="">无</option><option value="oil">石油</option><option value="iron">铁矿</option></select>
-				<label>军区</label><input id="f-wehrkreis" placeholder="Wehrkreis HQ" />
-				<label>首次进攻</label><input id="f-attack-card" placeholder="所需事件卡" />
-				<label>独立属性</label><div><label><input id="f-urban" type="checkbox" />城市</label> <label><input id="f-fort" type="checkbox" />要塞</label> <label><input id="f-port" type="checkbox" />港口</label> <label><input id="f-capital" type="checkbox" />首都</label></div>
-				<label>标志</label><input id="f-flags" placeholder="用分号分隔" />
-				<button id="toggle-reviewed" class="wide">将当前空间标为已复核</button>
-				<div class="wide small">当前空间的连接（可修改类型或删除）</div>
+				<label>ID</label><input id="f-id" disabled /> <label>名称</label><input id="f-name" /> <label>空间类型</label
+				><select id="f-kind">
+					<option value="land">陆地空间</option>
+					<option value="sr">海运 SR 空间</option>
+					<option value="beach">入侵海滩</option>
+				</select>
+				<label>海滩字母</label><input id="f-beach-letter" maxlength="1" placeholder="A–T" /> <label>国家</label><input id="f-nation" placeholder="ge / su / br…" /> <label>阵营</label
+				><select id="f-side">
+					<option value="neutral">中立</option>
+					<option value="axis">轴心</option>
+					<option value="allied">同盟</option>
+				</select>
+				<label>地形</label
+				><select id="f-terrain">
+					<option value="">不适用</option>
+					<option value="clear">开阔</option>
+					<option value="desert">沙漠</option>
+					<option value="mountain">山地</option>
+					<option value="forest">森林</option>
+					<option value="swamp">沼泽</option>
+				</select>
+				<label>VP</label><input id="f-vp" type="number" /> <label>补给源</label
+				><select id="f-supply">
+					<option value="">无</option>
+					<option value="axis">轴心补给</option>
+					<option value="allied">同盟补给</option>
+					<option value="allied_scheldt">同盟/需清扫斯海尔德</option>
+					<option value="axis_limited">轴心有限补给</option>
+				</select>
+				<label>资源</label
+				><select id="f-resource">
+					<option value="">无</option>
+					<option value="oil">石油</option>
+					<option value="iron">铁矿</option>
+				</select>
+				<label>军区</label><input id="f-wehrkreis" placeholder="Wehrkreis HQ" /> <label>首次进攻</label><input id="f-attack-card" placeholder="所需事件卡" /> <label>独立属性</label>
+				<div>
+					<label><input id="f-urban" type="checkbox" />城市</label> <label><input id="f-fort" type="checkbox" />要塞</label> <label><input id="f-port" type="checkbox" />港口</label>
+					<label><input id="f-capital" type="checkbox" />首都</label>
+				</div>
+				<div class="wide small">当前空间的连接（选择类型可修改，点击“删”可删除）</div>
 				<div id="edge-list" class="wide"></div>
-				<div class="wide small">坐标默认锁定；解锁后才能新增、删除、拖动或缩放空间。滚轮缩放，拖动空白处平移。Ctrl+Z 撤销，Ctrl+S 保存，Esc 退出当前模式。</div>
+				<div class="wide small">解锁后才能修改数据。滚轮缩放，拖动空白处平移；Ctrl+Z 撤销，Ctrl+S 保存，Esc 退出当前模式。</div>
 			</div>
 			<div id="status">正在读取 CSV…</div>
 		</aside>
-		<main id="viewport"><div id="world"><img id="map" src="/btb%20map.png" alt="BTB map" /><svg id="edges"></svg><div id="spaces"></div></div></main>
+		<main id="viewport">
+			<div id="world">
+				<img id="map" src="/btb%20map.png" alt="BTB map" /><svg id="edges"></svg>
+				<div id="spaces"></div>
+			</div>
+		</main>
 		<script>
 			"use strict"
 			const $ = (id) => document.getElementById(id)
-			const state = { spaces:[], edges:[], selected:null, mode:"select", edgeSource:null, scale:.3, tx:0, ty:0, dirty:false, locked:true, history:[] }
-			const viewport=$("viewport"), world=$("world"), spacesLayer=$("spaces"), edgesLayer=$("edges")
-			const fields={name:$("f-name"),kind:$("f-kind"),nation:$("f-nation"),side:$("f-side"),terrain:$("f-terrain"),vp:$("f-vp"),supply:$("f-supply"),resource:$("f-resource"),wehrkreis:$("f-wehrkreis"),attack_card:$("f-attack-card"),flags:$("f-flags")}
-			const booleanFields={urban:$("f-urban"),fort:$("f-fort"),port:$("f-port"),capital:$("f-capital")}
+			const state = { spaces: [], edges: [], selected: null, mode: "select", edgeSource: null, scale: 0.3, tx: 0, ty: 0, dirty: false, locked: true, history: [], edgesVisible: true }
+			const viewport = $("viewport"),
+				world = $("world"),
+				spacesLayer = $("spaces"),
+				edgesLayer = $("edges")
+			const fields = {
+				name: $("f-name"),
+				kind: $("f-kind"),
+				beach_letter: $("f-beach-letter"),
+				nation: $("f-nation"),
+				side: $("f-side"),
+				terrain: $("f-terrain"),
+				vp: $("f-vp"),
+				supply: $("f-supply"),
+				resource: $("f-resource"),
+				wehrkreis: $("f-wehrkreis"),
+				attack_card: $("f-attack-card"),
+			}
+			const booleanFields = { urban: $("f-urban"), fort: $("f-fort"), port: $("f-port"), capital: $("f-capital") }
 
-			function number(value,fallback=0){const n=Number(value);return Number.isFinite(n)?n:fallback}
-			function normalizeSpace(row){return {...row,id:number(row.id),x:number(row.x),y:number(row.y),w:number(row.w,70),h:number(row.h,50),vp:row.vp===""?"":number(row.vp)}}
-			function normalizeEdge(row){return {...row,a:number(row.a),b:number(row.b)}}
-			function flagsOf(row){return new Set(String(row.flags||"").split(";").map((flag)=>flag.trim()).filter(Boolean))}
-			function hasFlag(row,flag){return flagsOf(row).has(flag)}
-			function setFlag(row,flag,enabled){const flags=flagsOf(row);enabled?flags.add(flag):flags.delete(flag);row.flags=[...flags].join(";")}
-			function setDirty(value=true){state.dirty=value;updateStatus()}
-			function updateStatus(message){const pending=state.spaces.filter((space)=>hasFlag(space,"needs_review")).length;$("review-summary").textContent=`空间复核 ${state.spaces.length-pending}/${state.spaces.length} · 待复核 ${pending}`;$("status").textContent=message||`${state.spaces.length} 个空间 · ${state.edges.length} 条连接 · 坐标${state.locked?"已锁定":"已解锁"}${state.dirty?" · 未保存":""}`}
-			function snapshot(){return JSON.stringify({spaces:state.spaces,edges:state.edges,selected:state.selected})}
-			function pushHistory(){state.history.push(snapshot());if(state.history.length>100)state.history.shift();$("undo").disabled=false}
-			function undo(){const value=state.history.pop();if(!value)return;const previous=JSON.parse(value);state.spaces=previous.spaces.map(normalizeSpace);state.edges=previous.edges.map(normalizeEdge);state.selected=previous.selected;state.dirty=true;for(const input of Object.values(fields))delete input.dataset.history;$("undo").disabled=state.history.length===0;cancelMode();render()}
-			function requireUnlocked(){if(!state.locked)return true;updateStatus("坐标已锁定，请先点击锁定按钮解锁");return false}
-			function applyTransform(){world.style.transform=`translate(${state.tx}px,${state.ty}px) scale(${state.scale})`}
-			function center(space){return [space.x+space.w/2,space.y+space.h/2]}
-			function selectedSpace(){return state.spaces.find((space)=>space.id===state.selected)}
-			function spaceById(id){return state.spaces.find((space)=>space.id===id)}
+			function number(value, fallback = 0) {
+				const n = Number(value)
+				return Number.isFinite(n) ? n : fallback
+			}
+			function normalizeSpace(row) {
+				const vp = row.vp === "" || row.vp === undefined || row.vp === null ? "" : number(row.vp)
+				return { ...row, id: number(row.id), x: number(row.x), y: number(row.y), w: number(row.w, 70), h: number(row.h, 50), vp }
+			}
+			function normalizeEdge(row) {
+				return { ...row, a: number(row.a), b: number(row.b) }
+			}
+			function setDirty(value = true) {
+				state.dirty = value
+				updateStatus()
+			}
+			function updateStatus(message) {
+				$("status").textContent = message || `${state.spaces.length} 个空间 · ${state.edges.length} 条连接 · 编辑${state.locked ? "已锁定" : "已解锁"}${state.dirty ? " · 未保存" : ""}`
+			}
+			function snapshot() {
+				return JSON.stringify({ spaces: state.spaces, edges: state.edges, selected: state.selected })
+			}
+			function pushHistory() {
+				state.history.push(snapshot())
+				if (state.history.length > 100) state.history.shift()
+				$("undo").disabled = false
+			}
+			function undo() {
+				const value = state.history.pop()
+				if (!value) return
+				const previous = JSON.parse(value)
+				state.spaces = previous.spaces.map(normalizeSpace)
+				state.edges = previous.edges.map(normalizeEdge)
+				state.selected = previous.selected
+				state.dirty = true
+				for (const input of Object.values(fields)) delete input.dataset.history
+				$("undo").disabled = state.history.length === 0
+				cancelMode()
+				render()
+			}
+			function requireUnlocked() {
+				if (!state.locked) return true
+				updateStatus("编辑已锁定，请先点击“编辑已锁定”解锁")
+				return false
+			}
+			function applyTransform() {
+				world.style.transform = `translate(${state.tx}px,${state.ty}px) scale(${state.scale})`
+			}
+			function center(space) {
+				return [space.x + space.w / 2, space.y + space.h / 2]
+			}
+			function selectedSpace() {
+				return state.spaces.find((space) => space.id === state.selected)
+			}
+			function spaceById(id) {
+				return state.spaces.find((space) => space.id === id)
+			}
 
-			function render(){
+			function render() {
 				spacesLayer.replaceChildren()
-				for(const space of state.spaces){
-					const el=document.createElement("div")
-					el.className=["space-box",space.side||"",hasFlag(space,"needs_review")?"needs-review":"",space.id===state.selected?"selected":"",space.id===state.edgeSource?"edge-source":""].filter(Boolean).join(" ")
-					el.style.cssText=`left:${space.x}px;top:${space.y}px;width:${space.w}px;height:${space.h}px`;el.dataset.id=space.id;el.append(document.createTextNode(space.name||`#${space.id}`))
-					const handle=document.createElement("span");handle.className="resize";el.append(handle);el.addEventListener("pointerdown",(event)=>spacePointerDown(event,space,handle===event.target));spacesLayer.append(el)
+				for (const space of state.spaces) {
+					const el = document.createElement("div")
+					el.className = ["space-box", space.side || "", space.id === state.selected ? "selected" : "", space.id === state.edgeSource ? "edge-source" : ""].filter(Boolean).join(" ")
+					el.style.cssText = `left:${space.x}px;top:${space.y}px;width:${space.w}px;height:${space.h}px`
+					el.dataset.id = space.id
+					el.append(document.createTextNode(`#${space.id} ${space.name || "未命名"}`))
+					const handle = document.createElement("span")
+					handle.className = "resize"
+					el.append(handle)
+					el.addEventListener("pointerdown", (event) => spacePointerDown(event, space, handle === event.target))
+					spacesLayer.append(el)
 				}
-				renderEdges();renderList();renderForm();updateStatus()
+				renderEdges()
+				renderList()
+				renderForm()
+				updateStatus()
 			}
 
-			function renderEdges(){
+			function renderEdges() {
 				edgesLayer.replaceChildren()
-				for(const edge of state.edges){
-					const a=spaceById(edge.a),b=spaceById(edge.b);if(!a||!b)continue
-					const [x1,y1]=center(a),[x2,y2]=center(b),line=document.createElementNS("http://www.w3.org/2000/svg","line")
-					line.setAttribute("x1",x1);line.setAttribute("y1",y1);line.setAttribute("x2",x2);line.setAttribute("y2",y2);line.setAttribute("stroke-width",edge.type==="sr"?6:5);line.setAttribute("class",`edge-${edge.type||"regular"}`);edgesLayer.append(line)
+				edgesLayer.style.display = state.edgesVisible ? "" : "none"
+				for (const edge of state.edges) {
+					const a = spaceById(edge.a),
+						b = spaceById(edge.b)
+					if (!a || !b) continue
+					const [x1, y1] = center(a),
+						[x2, y2] = center(b),
+						line = document.createElementNS("http://www.w3.org/2000/svg", "line")
+					line.setAttribute("x1", x1)
+					line.setAttribute("y1", y1)
+					line.setAttribute("x2", x2)
+					line.setAttribute("y2", y2)
+					line.setAttribute("stroke-width", edge.type === "sr" ? 6 : 5)
+					line.setAttribute("stroke-opacity", ".82")
+					line.setAttribute("class", `edge-${edge.type || "regular"}`)
+					edgesLayer.append(line)
 				}
 			}
 
-			function renderList(){
-				const query=$("search").value.trim().toLowerCase(),filter=$("review-filter").value;$("space-list").replaceChildren()
-				const visible=state.spaces.filter((space)=>{const pending=hasFlag(space,"needs_review");return (!query||String(space.id).includes(query)||(space.name||"").toLowerCase().includes(query))&&(filter==="all"||(filter==="pending"&&pending)||(filter==="reviewed"&&!pending))})
-				for(const space of visible){const row=document.createElement("button");row.className=`space-row${space.id===state.selected?" selected":""}${hasFlag(space,"needs_review")?" pending":""}`;const id=document.createElement("span"),name=document.createElement("span");id.className="space-id";id.textContent=space.id;name.textContent=space.name||"未命名";row.append(id,name);row.onclick=()=>{select(space.id);focusSpace(space)};$("space-list").append(row)}
+			function renderList() {
+				const query = $("search").value.trim().toLowerCase()
+				$("space-list").replaceChildren()
+				const visible = state.spaces.filter((space) => !query || String(space.id).includes(query) || (space.name || "").toLowerCase().includes(query))
+				for (const space of visible) {
+					const row = document.createElement("button")
+					row.className = `space-row${space.id === state.selected ? " selected" : ""}`
+					const id = document.createElement("span"),
+						name = document.createElement("span")
+					id.className = "space-id"
+					id.textContent = space.id
+					name.textContent = space.name || "未命名"
+					row.append(id, name)
+					row.onclick = () => {
+						select(space.id)
+						focusSpace(space)
+					}
+					$("space-list").append(row)
+				}
 			}
 
-			function renderForm(){
-				const space=selectedSpace();$("f-id").value=space?.id??"";for(const [key,input] of Object.entries(fields))input.value=space?.[key]??"";for(const input of Object.values(fields))input.disabled=!space
-				for(const [key,input] of Object.entries(booleanFields)){input.checked=Boolean(space?.[key]);input.disabled=!space}
-				$("toggle-reviewed").disabled=!space;$("toggle-reviewed").textContent=space&&hasFlag(space,"needs_review")?"将当前空间标为已复核":"重新标为待复核"
-				const list=$("edge-list");list.replaceChildren();if(!space)return
-				state.edges.forEach((edge,index)=>{if(edge.a!==space.id&&edge.b!==space.id)return;const other=spaceById(edge.a===space.id?edge.b:edge.a),row=document.createElement("div"),label=document.createElement("span"),type=document.createElement("select"),remove=document.createElement("button");row.className="edge-row";label.textContent=`${hasFlag(edge,"needs_review")?"◇ ":"✓ "}${other?.name||"未知"}`;for(const value of ["regular","river","sr"]){const option=document.createElement("option");option.value=value;option.textContent={regular:"普通陆路",river:"跨河",sr:"海运 SR"}[value];type.append(option)}type.value=edge.type;type.onchange=()=>{pushHistory();edge.type=type.value;setFlag(edge,"needs_review",false);setFlag(edge,"reviewed",true);setDirty();renderEdges();renderForm()};remove.textContent="删";remove.title="删除连接";remove.onclick=()=>{if(!requireUnlocked())return;pushHistory();state.edges.splice(index,1);setDirty();render()};row.append(label,type,remove);list.append(row)})
+			function renderForm() {
+				const space = selectedSpace(),
+					editable = Boolean(space && !state.locked)
+				$("f-id").value = space?.id ?? ""
+				for (const [key, input] of Object.entries(fields)) {
+					input.value = space?.[key] ?? ""
+					input.disabled = !editable
+				}
+				for (const [key, input] of Object.entries(booleanFields)) {
+					input.checked = Boolean(space?.[key])
+					input.disabled = !editable
+				}
+				const list = $("edge-list")
+				list.replaceChildren()
+				if (!space) return
+				state.edges.forEach((edge, index) => {
+					if (edge.a !== space.id && edge.b !== space.id) return
+					const other = spaceById(edge.a === space.id ? edge.b : edge.a),
+						row = document.createElement("div"),
+						label = document.createElement("span"),
+						type = document.createElement("select"),
+						remove = document.createElement("button")
+					row.className = "edge-row"
+					label.textContent = `#${other?.id ?? "?"} ${other?.name || "未知"}`
+					for (const value of ["regular", "river", "sr"]) {
+						const option = document.createElement("option")
+						option.value = value
+						option.textContent = { regular: "普通陆路", river: "跨河", sr: "海运 SR" }[value]
+						type.append(option)
+					}
+					type.value = edge.type
+					type.disabled = state.locked
+					type.onchange = () => {
+						pushHistory()
+						edge.type = type.value
+						setDirty()
+						renderEdges()
+					}
+					remove.textContent = "删"
+					remove.title = "删除连接"
+					remove.disabled = state.locked
+					remove.onclick = () => {
+						pushHistory()
+						state.edges.splice(index, 1)
+						setDirty()
+						render()
+					}
+					row.append(label, type, remove)
+					list.append(row)
+				})
 			}
 
-			function select(id){state.selected=id;cancelMode();render()}
-			function cancelMode(){state.mode="select";state.edgeSource=null;$("add-space").classList.remove("active");$("add-edge").classList.remove("active");viewport.className=""}
-			function focusSpace(space){const rect=viewport.getBoundingClientRect();state.tx=rect.width/2-(space.x+space.w/2)*state.scale;state.ty=rect.height/2-(space.y+space.h/2)*state.scale;applyTransform()}
-			function updateSpaceVisual(space){const el=spacesLayer.querySelector(`[data-id="${space.id}"]`);if(!el)return;el.className=["space-box",space.side||"",hasFlag(space,"needs_review")?"needs-review":"","selected"].filter(Boolean).join(" ");if(el.firstChild)el.firstChild.nodeValue=space.name||`#${space.id}`}
-			function mapPoint(event){const r=viewport.getBoundingClientRect();return{x:Math.round((event.clientX-r.left-state.tx)/state.scale),y:Math.round((event.clientY-r.top-state.ty)/state.scale)}}
-			function nextId(){return state.spaces.reduce((max,space)=>Math.max(max,space.id),0)+1}
-			function createSpace(event){pushHistory();const p=mapPoint(event),id=nextId();state.spaces.push({id,name:`Space ${id}`,x:Math.max(0,p.x-35),y:Math.max(0,p.y-25),w:70,h:50,kind:"land",terrain:"clear",flags:"needs_review"});state.selected=id;cancelMode();setDirty();render()}
+			function select(id) {
+				state.selected = id
+				cancelMode()
+				render()
+			}
+			function cancelMode() {
+				state.mode = "select"
+				state.edgeSource = null
+				$("add-space").classList.remove("active")
+				$("add-edge").classList.remove("active")
+				viewport.className = ""
+			}
+			function focusSpace(space) {
+				const rect = viewport.getBoundingClientRect()
+				state.tx = rect.width / 2 - (space.x + space.w / 2) * state.scale
+				state.ty = rect.height / 2 - (space.y + space.h / 2) * state.scale
+				applyTransform()
+			}
+			function mapPoint(event) {
+				const r = viewport.getBoundingClientRect()
+				return { x: Math.round((event.clientX - r.left - state.tx) / state.scale), y: Math.round((event.clientY - r.top - state.ty) / state.scale) }
+			}
+			function nextId() {
+				return state.spaces.reduce((max, space) => Math.max(max, space.id), 0) + 1
+			}
+			function createSpace(event) {
+				pushHistory()
+				const p = mapPoint(event),
+					id = nextId()
+				state.spaces.push({ id, name: `Space ${id}`, x: Math.max(0, p.x - 35), y: Math.max(0, p.y - 25), w: 70, h: 50, kind: "land", nation: "", side: "neutral", terrain: "clear" })
+				state.selected = id
+				cancelMode()
+				setDirty()
+				render()
+			}
 
-			function spacePointerDown(event,space,resizing){
+			function spacePointerDown(event, space, resizing) {
 				event.stopPropagation()
-				if(state.mode==="edge"){if(state.edgeSource===null){state.edgeSource=space.id;render();return}if(state.edgeSource!==space.id){const a=Math.min(state.edgeSource,space.id),b=Math.max(state.edgeSource,space.id);if(!state.edges.some((edge)=>Math.min(edge.a,edge.b)===a&&Math.max(edge.a,edge.b)===b)){pushHistory();state.edges.push({a,b,type:$("edge-type").value,rule:"",flags:"needs_review"})}state.edgeSource=null;setDirty();render()}return}
-				state.selected=space.id;updateSpaceVisual(space);renderList();renderForm();const start=mapPoint(event),original={x:space.x,y:space.y,w:space.w,h:space.h}
-				if(state.locked){updateStatus("坐标已锁定；当前操作只会选择空间");render();return}
+				if (state.mode === "edge") {
+					if (state.edgeSource === null) {
+						state.edgeSource = space.id
+						render()
+						return
+					}
+					if (state.edgeSource !== space.id) {
+						const a = Math.min(state.edgeSource, space.id),
+							b = Math.max(state.edgeSource, space.id)
+						if (state.edges.some((edge) => Math.min(edge.a, edge.b) === a && Math.max(edge.a, edge.b) === b)) {
+							updateStatus("这两个空间已经存在连接")
+						} else {
+							pushHistory()
+							state.edges.push({ a, b, type: $("edge-type").value })
+							setDirty()
+						}
+						state.edgeSource = null
+						render()
+					}
+					return
+				}
+				state.selected = space.id
+				if (state.locked) {
+					render()
+					return
+				}
 				event.currentTarget.setPointerCapture(event.pointerId)
-				let captured=false;const move=(e)=>{if(!captured){pushHistory();captured=true}const p=mapPoint(e),dx=p.x-start.x,dy=p.y-start.y;if(resizing){space.w=Math.max(25,original.w+dx);space.h=Math.max(20,original.h+dy)}else{space.x=Math.max(0,Math.min(3400-space.w,original.x+dx));space.y=Math.max(0,Math.min(2200-space.h,original.y+dy))}setFlag(space,"needs_review",false);setFlag(space,"reviewed",true);setDirty();renderEdges();const el=spacesLayer.querySelector(`[data-id="${space.id}"]`);if(el)el.style.cssText=`left:${space.x}px;top:${space.y}px;width:${space.w}px;height:${space.h}px`}
-				const up=()=>{window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up);render()};window.addEventListener("pointermove",move);window.addEventListener("pointerup",up)
+				const start = mapPoint(event),
+					original = { x: space.x, y: space.y, w: space.w, h: space.h }
+				let captured = false
+				const move = (e) => {
+					if (!captured) {
+						pushHistory()
+						captured = true
+					}
+					const p = mapPoint(e),
+						dx = p.x - start.x,
+						dy = p.y - start.y
+					if (resizing) {
+						space.w = Math.max(25, original.w + dx)
+						space.h = Math.max(20, original.h + dy)
+					} else {
+						space.x = Math.max(0, Math.min(3400 - space.w, original.x + dx))
+						space.y = Math.max(0, Math.min(2200 - space.h, original.y + dy))
+					}
+					setDirty()
+					renderEdges()
+					const el = spacesLayer.querySelector(`[data-id="${space.id}"]`)
+					if (el) el.style.cssText = `left:${space.x}px;top:${space.y}px;width:${space.w}px;height:${space.h}px`
+				}
+				const up = () => {
+					window.removeEventListener("pointermove", move)
+					window.removeEventListener("pointerup", up)
+					render()
+				}
+				window.addEventListener("pointermove", move)
+				window.addEventListener("pointerup", up)
 			}
 
-			viewport.addEventListener("pointerdown",(event)=>{if(event.target.closest(".space-box"))return;if(state.mode==="create")return createSpace(event);const start={x:event.clientX,y:event.clientY,tx:state.tx,ty:state.ty};viewport.setPointerCapture(event.pointerId);const move=(e)=>{state.tx=start.tx+e.clientX-start.x;state.ty=start.ty+e.clientY-start.y;applyTransform()};const up=()=>{viewport.removeEventListener("pointermove",move);viewport.removeEventListener("pointerup",up)};viewport.addEventListener("pointermove",move);viewport.addEventListener("pointerup",up)})
-			viewport.addEventListener("wheel",(event)=>{event.preventDefault();const before=mapPoint(event),factor=event.deltaY<0?1.12:.89;state.scale=Math.max(.12,Math.min(2.5,state.scale*factor));const r=viewport.getBoundingClientRect();state.tx=event.clientX-r.left-before.x*state.scale;state.ty=event.clientY-r.top-before.y*state.scale;applyTransform()},{passive:false})
+			viewport.addEventListener("pointerdown", (event) => {
+				if (event.target.closest(".space-box")) return
+				if (state.mode === "create") return createSpace(event)
+				const start = { x: event.clientX, y: event.clientY, tx: state.tx, ty: state.ty }
+				viewport.setPointerCapture(event.pointerId)
+				const move = (e) => {
+					state.tx = start.tx + e.clientX - start.x
+					state.ty = start.ty + e.clientY - start.y
+					applyTransform()
+				}
+				const up = () => {
+					viewport.removeEventListener("pointermove", move)
+					viewport.removeEventListener("pointerup", up)
+				}
+				viewport.addEventListener("pointermove", move)
+				viewport.addEventListener("pointerup", up)
+			})
+			viewport.addEventListener(
+				"wheel",
+				(event) => {
+					event.preventDefault()
+					const before = mapPoint(event),
+						factor = event.deltaY < 0 ? 1.12 : 0.89
+					state.scale = Math.max(0.12, Math.min(2.5, state.scale * factor))
+					const r = viewport.getBoundingClientRect()
+					state.tx = event.clientX - r.left - before.x * state.scale
+					state.ty = event.clientY - r.top - before.y * state.scale
+					applyTransform()
+				},
+				{ passive: false },
+			)
 
-			$("toggle-lock").onclick=()=>{state.locked=!state.locked;$("toggle-lock").textContent=state.locked?"坐标已锁定":"坐标已解锁";$("toggle-lock").classList.toggle("primary",state.locked);cancelMode();updateStatus()}
-			$("undo").onclick=undo
-			$("add-space").onclick=()=>{if(!requireUnlocked())return;state.mode="create";state.edgeSource=null;viewport.className="creating";$("add-space").classList.add("active");$("add-edge").classList.remove("active");updateStatus("点击地图放置新空间")}
-			$("add-edge").onclick=()=>{if(!requireUnlocked())return;state.mode="edge";state.edgeSource=null;viewport.className="edge-mode";$("add-edge").classList.add("active");$("add-space").classList.remove("active");updateStatus("依次点击两个空间建立连接")}
-			$("delete-space").onclick=()=>{if(!requireUnlocked())return;const space=selectedSpace();if(!space||!confirm(`删除 ${space.name} 及其全部连接？`))return;pushHistory();state.spaces=state.spaces.filter((item)=>item.id!==space.id);state.edges=state.edges.filter((edge)=>edge.a!==space.id&&edge.b!==space.id);state.selected=null;setDirty();render()}
-			$("fit").onclick=()=>{const rect=viewport.getBoundingClientRect();state.scale=Math.min(rect.width/3400,rect.height/2200)*.96;state.tx=(rect.width-3400*state.scale)/2;state.ty=(rect.height-2200*state.scale)/2;applyTransform()}
-			$("search").oninput=renderList;$("review-filter").onchange=renderList
-			for(const [key,input] of Object.entries(fields)){input.oninput=()=>{const space=selectedSpace();if(!space)return;if(input.dataset.history!=="1"){pushHistory();input.dataset.history="1"}space[key]=key==="vp"&&input.value!==""?number(input.value):input.value;if(key==="kind")space.terrain=input.value==="land"?(space.terrain||"clear"):"";if(key!=="flags"){setFlag(space,"needs_review",false);setFlag(space,"reviewed",true)}setDirty();updateSpaceVisual(space);renderList()};input.onblur=()=>delete input.dataset.history}
-			for(const [key,input] of Object.entries(booleanFields))input.onchange=()=>{const space=selectedSpace();if(!space)return;pushHistory();space[key]=input.checked;setFlag(space,"needs_review",false);setFlag(space,"reviewed",true);setDirty();render()}
-			$("toggle-reviewed").onclick=()=>{const space=selectedSpace();if(!space)return;pushHistory();const pending=hasFlag(space,"needs_review");setFlag(space,"needs_review",!pending);setFlag(space,"reviewed",pending);setDirty();render()}
-			$("save").onclick=save
-			async function save(){try{updateStatus("正在校验并保存…");const response=await fetch("/api/editor-data",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({spaces:state.spaces,edges:state.edges})});const result=await response.json();if(!response.ok)throw new Error(result.error);state.dirty=false;updateStatus(`已保存 ${result.spaces} 个空间和 ${result.edges} 条连接`)}catch(error){updateStatus(`保存失败：${error.message}`)}}
-			window.addEventListener("keydown",(event)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="z"){event.preventDefault();undo()}else if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="s"){event.preventDefault();save()}else if(event.key==="Escape"){cancelMode();render()}})
-			window.addEventListener("beforeunload",(event)=>{if(state.dirty){event.preventDefault();event.returnValue=""}})
+			$("toggle-lock").onclick = () => {
+				state.locked = !state.locked
+				$("toggle-lock").textContent = state.locked ? "编辑已锁定" : "编辑已解锁"
+				$("toggle-lock").classList.toggle("primary", state.locked)
+				cancelMode()
+				render()
+			}
+			$("undo").onclick = undo
+			$("add-space").onclick = () => {
+				if (!requireUnlocked()) return
+				state.mode = "create"
+				state.edgeSource = null
+				viewport.className = "creating"
+				$("add-space").classList.add("active")
+				$("add-edge").classList.remove("active")
+				updateStatus("点击地图放置新空间")
+			}
+			$("add-edge").onclick = () => {
+				if (!requireUnlocked()) return
+				state.mode = "edge"
+				state.edgeSource = null
+				viewport.className = "edge-mode"
+				$("add-edge").classList.add("active")
+				$("add-space").classList.remove("active")
+				updateStatus("依次点击两个空间建立连接")
+			}
+			$("delete-space").onclick = () => {
+				if (!requireUnlocked()) return
+				const space = selectedSpace()
+				if (!space || !confirm(`删除 ${space.name} 及其全部连接？`)) return
+				pushHistory()
+				state.spaces = state.spaces.filter((item) => item.id !== space.id)
+				state.edges = state.edges.filter((edge) => edge.a !== space.id && edge.b !== space.id)
+				state.selected = null
+				setDirty()
+				render()
+			}
+			$("toggle-edges").onclick = () => {
+				state.edgesVisible = !state.edgesVisible
+				$("toggle-edges").textContent = state.edgesVisible ? "隐藏程序连线" : "显示程序连线"
+				renderEdges()
+			}
+			$("fit").onclick = () => {
+				const rect = viewport.getBoundingClientRect()
+				state.scale = Math.min(rect.width / 3400, rect.height / 2200) * 0.96
+				state.tx = (rect.width - 3400 * state.scale) / 2
+				state.ty = (rect.height - 2200 * state.scale) / 2
+				applyTransform()
+			}
+			$("search").oninput = renderList
+			for (const [key, input] of Object.entries(fields)) {
+				input.oninput = () => {
+					const space = selectedSpace()
+					if (!space || state.locked) return
+					if (input.dataset.history !== "1") {
+						pushHistory()
+						input.dataset.history = "1"
+					}
+					space[key] = key === "vp" && input.value !== "" ? number(input.value) : input.value
+					if (key === "kind" && input.value !== "land") space.terrain = ""
+					if (key === "beach_letter") space[key] = input.value.toUpperCase()
+					setDirty()
+					renderList()
+				}
+				input.onblur = () => delete input.dataset.history
+			}
+			for (const [key, input] of Object.entries(booleanFields))
+				input.onchange = () => {
+					const space = selectedSpace()
+					if (!space || state.locked) return
+					pushHistory()
+					space[key] = input.checked
+					setDirty()
+				}
+			$("save").onclick = save
+			async function save() {
+				try {
+					$("save").disabled = true
+					updateStatus("正在校验并保存…")
+					const response = await fetch("/api/editor-data", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ spaces: state.spaces, edges: state.edges }) })
+					const result = await response.json()
+					if (!response.ok) throw new Error(result.error)
+					state.dirty = false
+					updateStatus(`已保存 ${result.spaces} 个空间和 ${result.edges} 条连接；运行 npm run build:data 可更新 data.js`)
+				} catch (error) {
+					updateStatus(`保存失败：${error.message}`)
+				} finally {
+					$("save").disabled = false
+				}
+			}
+			window.addEventListener("keydown", (event) => {
+				if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+					event.preventDefault()
+					undo()
+				} else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+					event.preventDefault()
+					save()
+				} else if (event.key === "Escape") {
+					cancelMode()
+					render()
+				}
+			})
+			window.addEventListener("beforeunload", (event) => {
+				if (state.dirty) {
+					event.preventDefault()
+					event.returnValue = ""
+				}
+			})
 
-			async function init(){const response=await fetch("/api/editor-data"),data=await response.json();if(!response.ok)throw new Error(data.error);state.spaces=data.spaces.map(normalizeSpace);state.edges=data.edges.map(normalizeEdge);render();$("fit").click()}
-			init().catch((error)=>updateStatus(`加载失败：${error.message}`))
+			async function init() {
+				const response = await fetch("/api/editor-data"),
+					data = await response.json()
+				if (!response.ok) throw new Error(data.error)
+				state.spaces = data.spaces.map(normalizeSpace)
+				state.edges = data.edges.map(normalizeEdge)
+				render()
+				$("fit").click()
+			}
+			init().catch((error) => updateStatus(`加载失败：${error.message}`))
 		</script>
 	</body>
 </html>

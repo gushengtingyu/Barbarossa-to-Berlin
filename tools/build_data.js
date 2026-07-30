@@ -62,29 +62,6 @@ const TABLES = {
 	},
 }
 
-const REVIEW_TABLES = {
-	spaces: {
-		file: path.join("review", "spaces.csv"),
-		numbers: ["id"],
-		booleans: [],
-	},
-	edges: {
-		file: path.join("review", "edges.csv"),
-		numbers: ["a", "b"],
-		booleans: [],
-	},
-	pieces: {
-		file: path.join("review", "pieces.csv"),
-		numbers: ["id"],
-		booleans: [],
-	},
-	setup: {
-		file: path.join("review", "setup_campaign.csv"),
-		numbers: ["piece_id"],
-		booleans: [],
-	},
-}
-
 function asNumber(value, table, row, field) {
 	if (value === "") return undefined
 	const result = Number(value)
@@ -126,10 +103,6 @@ function loadTables() {
 	return loadSchemaTables(TABLES)
 }
 
-function loadReviewTables() {
-	return loadSchemaTables(REVIEW_TABLES)
-}
-
 function assertUnique(rows, field, table) {
 	const seen = new Map()
 	for (let i = 0; i < rows.length; i++) {
@@ -142,22 +115,6 @@ function assertUnique(rows, field, table) {
 
 function keyForEdge(edge) {
 	return edge.a < edge.b ? `${edge.a}:${edge.b}` : `${edge.b}:${edge.a}`
-}
-
-function indexReview(rows, key, table) {
-	const result = new Map()
-	for (const row of rows) {
-		const id = key(row)
-		if (result.has(id)) throw new Error(`${table}: duplicate review row ${id}`)
-		result.set(id, row)
-	}
-	return result
-}
-
-function requireReview(review, key, table) {
-	const row = review.get(key)
-	if (!row) throw new Error(`${table}: missing review row ${key}`)
-	return row
 }
 
 function reducedAsset(asset) {
@@ -173,30 +130,8 @@ function deriveCards(rows) {
 	}))
 }
 
-function deriveSpaces(rows, reviewRows) {
-	const reviewById = indexReview(reviewRows, (row) => row.id, "review/spaces")
-	const spaces = rows.map((row) => {
-		requireReview(reviewById, row.id, "review/spaces")
-		return { ...row }
-	})
-	if (reviewById.size !== spaces.length) throw new Error("review/spaces must contain exactly one row for every space")
-	return spaces
-}
-
-function deriveEdges(rows, reviewRows) {
-	const reviewByKey = indexReview(reviewRows, keyForEdge, "review/edges")
-	const edges = rows.map((row) => {
-		requireReview(reviewByKey, keyForEdge(row), "review/edges")
-		return { ...row }
-	})
-	if (reviewByKey.size !== edges.length) throw new Error("review/edges must contain exactly one row for every edge")
-	return edges
-}
-
-function derivePieces(rows, reviewRows) {
-	const reviewById = indexReview(reviewRows, (row) => row.id, "review/pieces")
-	const pieces = rows.map((row) => {
-		requireReview(reviewById, row.id, "review/pieces")
+function derivePieces(rows) {
+	return rows.map((row) => {
 		const { asset, reduced_asset, ...piece } = row
 		return {
 			...piece,
@@ -205,18 +140,6 @@ function derivePieces(rows, reviewRows) {
 			...(row.size === "marker" ? {} : { image_reduced: reduced_asset || reducedAsset(asset) }),
 		}
 	})
-	if (reviewById.size !== pieces.length) throw new Error("review/pieces must contain exactly one row for every piece")
-	return pieces
-}
-
-function deriveSetup(rows, reviewRows) {
-	const reviewByPiece = indexReview(reviewRows, (row) => row.piece_id, "review/setup_campaign")
-	const setup = rows.map((row) => {
-		requireReview(reviewByPiece, row.piece_id, "review/setup_campaign")
-		return { ...row }
-	})
-	if (reviewByPiece.size !== setup.length) throw new Error("review/setup_campaign must contain exactly one row for every setup row")
-	return setup
 }
 
 function deriveReinforcements(rows) {
@@ -340,6 +263,7 @@ function validateSpaces(spaces, { requireAttributes = true } = {}) {
 		if (requireAttributes && !space.nation) throw new Error(`spaces ${space.id}: missing nation`)
 		if (space.supply !== undefined && !supplies.has(space.supply)) throw new Error(`spaces ${space.id}: invalid supply ${space.supply}`)
 		if (space.resource !== undefined && !resources.has(space.resource)) throw new Error(`spaces ${space.id}: invalid resource ${space.resource}`)
+		if (space.vp !== undefined && (!Number.isInteger(space.vp) || space.vp <= 0)) throw new Error(`spaces ${space.id}: vp must be a positive integer`)
 		if (space.kind === "beach" && !/^[A-U]$/.test(space.beach_letter || "")) throw new Error(`spaces ${space.id}: beach spaces require beach_letter A..U`)
 		if (space.kind !== "beach" && space.beach_letter !== undefined) throw new Error(`spaces ${space.id}: only beach spaces may define beach_letter`)
 	}
@@ -418,8 +342,7 @@ function validateReferences(tables) {
 			row.kind === "card"
 				? row.w <= 0 || row.h <= 0 || row.x < 0 || row.y < 0 || row.x + row.w > REINFORCEMENT_BOARD_WIDTH || row.y + row.h > REINFORCEMENT_BOARD_HEIGHT
 				: row.w <= 0 || row.h <= 0 || row.x - row.w / 2 < 0 || row.y - row.h / 2 < 0 || row.x + row.w / 2 > REINFORCEMENT_BOARD_WIDTH || row.y + row.h / 2 > REINFORCEMENT_BOARD_HEIGHT
-		if (outside)
-			throw new Error(`reinforcement_board ${row.id}: rectangle is outside ${REINFORCEMENT_BOARD_WIDTH}x${REINFORCEMENT_BOARD_HEIGHT} board`)
+		if (outside) throw new Error(`reinforcement_board ${row.id}: rectangle is outside ${REINFORCEMENT_BOARD_WIDTH}x${REINFORCEMENT_BOARD_HEIGHT} board`)
 		if (row.kind === "piece") {
 			if (!pieceIds.has(row.piece_id) || boardPieceIds.has(row.piece_id)) throw new Error(`reinforcement_board ${row.id}: unknown or duplicate piece ${row.piece_id}`)
 			boardPieceIds.add(row.piece_id)
@@ -446,14 +369,13 @@ function indexed(rows) {
 
 function build() {
 	const source = loadTables()
-	const review = loadReviewTables()
 	const warnings = []
 	const tables = {
 		cards: deriveCards(source.cards),
-		spaces: deriveSpaces(source.spaces, review.spaces),
-		edges: deriveEdges(source.edges, review.edges),
-		pieces: derivePieces(source.pieces, review.pieces),
-		setup: deriveSetup(source.setup, review.setup),
+		spaces: source.spaces,
+		edges: source.edges,
+		pieces: derivePieces(source.pieces),
+		setup: source.setup,
 		reinforcement_rows: source.reinforcements,
 		reinforcements: deriveReinforcements(source.reinforcements),
 		reinforcement_board: deriveReinforcementBoard(source.reinforcement_board),
@@ -482,13 +404,12 @@ function build() {
 			reinforcement_catalog: tables.reinforcement_catalog,
 			reinforcement_board: tables.reinforcement_board,
 		},
-		review,
 		warnings,
 	}
 }
 
 function serialize(data) {
-	return `"use strict"\n\n// Generated by tools/build_data.js from reviewed csv/*.csv sources. Do not edit.\nconst data = ${JSON.stringify(data, null, "\t")}\n\nif (typeof module !== "undefined") module.exports = { data }\nif (typeof globalThis !== "undefined") globalThis.BTB_DATA = data\n`
+	return `"use strict"\n\n// Generated by tools/build_data.js from csv/*.csv sources. Do not edit.\nconst data = ${JSON.stringify(data, null, "\t")}\n\nif (typeof module !== "undefined") module.exports = { data }\nif (typeof globalThis !== "undefined") globalThis.BTB_DATA = data\n`
 }
 
 function writeGeneratedFile(file, content) {
@@ -521,12 +442,10 @@ module.exports = {
 	serialize,
 	writeGeneratedFile,
 	loadTables,
-	loadReviewTables,
 	normalizeRow,
 	validateSpaces,
 	validateEdges,
 	deriveCards,
-	deriveSpaces,
 	derivePieces,
 	deriveReinforcementCatalog,
 	deriveReinforcements,

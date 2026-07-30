@@ -208,6 +208,25 @@ function supplyStatuses(game, side, statuses = new Map()) {
 	return pieces
 }
 
+function supplySpaceProjection(game, side) {
+	const nations = side === Engine.constants.ALLIED ? { western: ["br", "us"], soviet: ["su"] } : { axis: ["ge"] }
+	const projection = {}
+	const rank = { oos: 0, limited: 1, full: 2 }
+	for (const [group, groupNations] of Object.entries(nations)) {
+		const spaces = {}
+		for (const space of data.spaces) {
+			if (!space || space.kind === "sr") continue
+			if (space.kind === "land" && game.control[space.id] !== side) {
+				spaces[space.id] = "oos"
+				continue
+			}
+			spaces[space.id] = groupNations.map((nation) => Engine.map.traceSupply(game, data, Engine.adjacency, side, space.id, nation)).reduce((best, status) => (rank[status] > rank[best] ? status : best), "oos")
+		}
+		projection[group] = spaces
+	}
+	return projection
+}
+
 function supplyDependencySignature(game) {
 	return [
 		game.turn,
@@ -244,7 +263,8 @@ function supplyView(game, cacheKey = null) {
 
 function supplyQuery(game, side) {
 	const pieces = supplyStatuses(game, side)
-	return { side, pieces }
+	const spaces = supplySpaceProjection(game, side)
+	return { side, pieces, spaces }
 }
 
 function cardsQuery(game, viewerSide, cardSide) {

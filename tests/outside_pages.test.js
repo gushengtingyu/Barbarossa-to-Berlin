@@ -15,13 +15,13 @@ test("create page is localized and exposes only implemented options", () => {
 	assert.match(html, /outside\.css/)
 	assert.doesNotMatch(html, /class="campaign-note"/)
 	assert.match(html, /id="Campaign"/)
-	for (const option of ["ui_locale", "card_language", "disable_optional_rules", "allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+	for (const option of ["ui_locale", "card_language", "disable_optional_rules", "allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
 		assert.match(html, new RegExp(`name="${option}"`), option)
 	}
 	const disableAll = html.match(/<input[^>]*name="disable_optional_rules"[^>]*>/)?.[0]
 	assert.ok(disableAll)
 	assert.doesNotMatch(disableAll, /\bchecked\b/)
-	for (const option of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+	for (const option of ["allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
 		const input = html.match(new RegExp(`<input[^>]*name="${option}"[^>]*>`))?.[0]
 		assert.ok(input, option)
 		assert.match(input, /\bchecked\b/, option)
@@ -51,16 +51,25 @@ test("create page disable-all control turns every optional rule off and back on"
 
 	const disableAll = window.document.querySelector('input[name="disable_optional_rules"]')
 	const optionalRules = [...window.document.querySelectorAll("input[data-optional-rule]")]
-	assert.equal(optionalRules.length, 4)
-	assert.equal(optionalRules.every((control) => control.checked && control.disabled), true)
+	assert.equal(optionalRules.length, 5)
+	assert.equal(
+		optionalRules.every((control) => control.checked && control.disabled),
+		true,
+	)
 
 	disableAll.checked = true
 	disableAll.dispatchEvent(new window.Event("change"))
-	assert.equal(optionalRules.every((control) => !control.checked && control.disabled), true)
+	assert.equal(
+		optionalRules.every((control) => !control.checked && control.disabled),
+		true,
+	)
 
 	disableAll.checked = false
 	disableAll.dispatchEvent(new window.Event("change"))
-	assert.equal(optionalRules.every((control) => control.checked && control.disabled), true)
+	assert.equal(
+		optionalRules.every((control) => control.checked && control.disabled),
+		true,
+	)
 })
 
 test("about page presents finished game information, credits, and local reference links", () => {

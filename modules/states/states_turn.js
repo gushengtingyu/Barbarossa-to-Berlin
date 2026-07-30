@@ -339,6 +339,7 @@ function register(registerState) {
 			Engine.invasions.removeUnsupportedBeachheads(game, data, adjacency)
 			logAttritionResult(game, resolved, AXIS)
 			Engine.neutrals.awardTurkeyRp(game)
+			Engine.replacements.awardAxisVariantRp(game)
 			Engine.state.logH1(game, "turn.phase.replacement")
 			game.phase = "replacement"
 			enterReplacementSegment(game, ALLIED, data, adjacency)

@@ -1085,7 +1085,7 @@ test("Rule 13.1 exposes current OOS immediately while preserving the activation-
 })
 
 test("Rule 13.42 bars an OOS Soviet LCU from entrenching using its activation-time supply snapshot", () => {
-	const game = Engine.setup.createInitialState(data, "Campaign", 74, {})
+	const game = Engine.setup.createInitialState(data, "Campaign", 74, { moscow_trench_axis_rp: false })
 	const leningrad = space("Leningrad")
 	const moscow = space("Moscow")
 	const front = Engine.map.friendlyPiecesInSpace(game, data, "allied", leningrad).find((id) => data.pieces[id]?.nation === "su" && data.pieces[id]?.size === "lcu")
