@@ -21,20 +21,25 @@ test("create page is localized and exposes only implemented options", () => {
 	const disableAll = html.match(/<input[^>]*name="disable_optional_rules"[^>]*>/)?.[0]
 	assert.ok(disableAll)
 	assert.doesNotMatch(disableAll, /\bchecked\b/)
-	for (const option of ["allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+	for (const option of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
 		const input = html.match(new RegExp(`<input[^>]*name="${option}"[^>]*>`))?.[0]
 		assert.ok(input, option)
 		assert.match(input, /\bchecked\b/, option)
 		assert.match(input, /\bdisabled\b/, option)
 		assert.match(input, /\bdata-optional-rule\b/, option)
+		assert.match(input, /\bdata-default-enabled\b/, option)
 	}
-	assert.match(html, /control\.disabled = true/)
+	const moscowAxisRp = html.match(/<input[^>]*name="moscow_trench_axis_rp"[^>]*>/)?.[0]
+	assert.ok(moscowAxisRp)
+	assert.match(moscowAxisRp, /\bdata-optional-rule\b/)
+	assert.doesNotMatch(moscowAxisRp, /\bdata-default-enabled\b|\bchecked\b|\bdisabled\b/)
+	assert.match(html, /control\.disabled = disableOptionalRules\.checked \|\| defaultEnabled/)
 	assert.doesNotMatch(html, /name="english_cards"/)
 	assert.match(html, /class="option-help-popup"/)
 	assert.match(html, /select\[name='scenario'\]/)
 })
 
-test("create page disable-all control turns every optional rule off and back on", () => {
+test("create page requires AX +2 RP to be selected separately from the default optional rules", () => {
 	const html = read("create.html")
 	const { window } = parseHTML(`<html><body>${html}</body></html>`)
 	Object.defineProperty(window, "localStorage", {
@@ -51,11 +56,18 @@ test("create page disable-all control turns every optional rule off and back on"
 
 	const disableAll = window.document.querySelector('input[name="disable_optional_rules"]')
 	const optionalRules = [...window.document.querySelectorAll("input[data-optional-rule]")]
+	const defaultRules = optionalRules.filter((control) => control.hasAttribute("data-default-enabled"))
+	const moscowAxisRp = window.document.querySelector('input[name="moscow_trench_axis_rp"]')
 	assert.equal(optionalRules.length, 5)
+	assert.equal(defaultRules.length, 4)
 	assert.equal(
-		optionalRules.every((control) => control.checked && control.disabled),
+		defaultRules.every((control) => control.checked && control.disabled),
 		true,
 	)
+	assert.equal(moscowAxisRp.checked, false)
+	assert.equal(moscowAxisRp.disabled, false)
+	moscowAxisRp.checked = true
+	assert.equal(moscowAxisRp.checked, true)
 
 	disableAll.checked = true
 	disableAll.dispatchEvent(new window.Event("change"))
@@ -67,9 +79,11 @@ test("create page disable-all control turns every optional rule off and back on"
 	disableAll.checked = false
 	disableAll.dispatchEvent(new window.Event("change"))
 	assert.equal(
-		optionalRules.every((control) => control.checked && control.disabled),
+		defaultRules.every((control) => control.checked && control.disabled),
 		true,
 	)
+	assert.equal(moscowAxisRp.checked, false)
+	assert.equal(moscowAxisRp.disabled, false)
 })
 
 test("about page presents finished game information, credits, and local reference links", () => {

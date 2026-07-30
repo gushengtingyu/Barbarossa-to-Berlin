@@ -8,9 +8,12 @@ const Engine = require("../modules/engine.js")
 
 const MOSCOW = Engine.constants.MOSCOW_SPACE_ID
 
-test("Moscow and German armaments variant gives Moscow its initial Soviet trench", () => {
-	const enabled = rules.setup(1601, "Campaign", {})
+test("Moscow and German armaments variant gives Moscow its initial Soviet trench only when selected", () => {
+	const defaults = rules.setup(1600, "Campaign", {})
 	assert.equal(data.spaces[MOSCOW].name, "Moscow")
+	assert.equal(defaults.trench[MOSCOW], undefined)
+
+	const enabled = rules.setup(1601, "Campaign", { moscow_trench_axis_rp: true })
 	assert.equal(enabled.trench[MOSCOW], 1)
 	assert.equal(enabled.trench_owner[MOSCOW], "allied")
 	assert.equal(enabled.trench_kind[MOSCOW], "soviet")
@@ -20,7 +23,7 @@ test("Moscow and German armaments variant gives Moscow its initial Soviet trench
 })
 
 test("Speer and Totaler Krieg each grant one German RP per replacement phase and stack", () => {
-	const game = rules.setup(1603, "Campaign", {})
+	const game = rules.setup(1603, "Campaign", { moscow_trench_axis_rp: true })
 	game.events.speer = true
 	game.events.totaler_krieg = true
 
@@ -35,12 +38,18 @@ test("Speer and Totaler Krieg each grant one German RP per replacement phase and
 })
 
 test("German armaments RP is conditional on its events and the variant", () => {
-	const speer = rules.setup(1604, "Campaign", {})
+	const unselected = rules.setup(1600, "Campaign", {})
+	unselected.events.speer = true
+	unselected.events.totaler_krieg = true
+	assert.equal(Engine.replacements.awardAxisVariantRp(unselected), 0)
+	assert.equal(unselected.rp.ge, 0)
+
+	const speer = rules.setup(1604, "Campaign", { moscow_trench_axis_rp: true })
 	speer.events.speer = true
 	assert.equal(Engine.replacements.awardAxisVariantRp(speer), 1)
 	assert.equal(speer.rp.ge, 1)
 
-	const totalWar = rules.setup(1605, "Campaign", {})
+	const totalWar = rules.setup(1605, "Campaign", { moscow_trench_axis_rp: true })
 	totalWar.events.totaler_krieg = true
 	assert.equal(Engine.replacements.awardAxisVariantRp(totalWar), 1)
 	assert.equal(totalWar.rp.ge, 1)
@@ -53,7 +62,7 @@ test("German armaments RP is conditional on its events and the variant", () => {
 })
 
 test("German armaments RP is awarded automatically when the replacement phase begins", () => {
-	let game = rules.setup(1607, "Campaign", {})
+	let game = rules.setup(1607, "Campaign", { moscow_trench_axis_rp: true })
 	const germanArmy = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu" && Number.isInteger(game.pieces[piece.id]) && game.pieces[piece.id] > 0 && !game.reduced.includes(piece.id))
 	assert.ok(germanArmy)
 	game.reduced.push(germanArmy.id)

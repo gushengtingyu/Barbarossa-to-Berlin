@@ -98,11 +98,16 @@ test("card language is a create-game option and opening choices are visible acti
 	assert.deepEqual(opening.log, [])
 })
 
-test("all five optional rules default on and the master setting disables all of them", () => {
-	const optionNames = ["allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]
-	const enabled = rules.setup(8, "Campaign", {})
-	assert.equal(enabled.options.disable_optional_rules, false)
-	for (const name of optionNames) assert.equal(enabled.options[name], true, name)
+test("four optional rules default on, AX +2 RP requires selection, and the master setting disables all", () => {
+	const defaultOptionNames = ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]
+	const optionNames = [...defaultOptionNames, "moscow_trench_axis_rp"]
+	const defaults = rules.setup(8, "Campaign", {})
+	assert.equal(defaults.options.disable_optional_rules, false)
+	for (const name of defaultOptionNames) assert.equal(defaults.options[name], true, name)
+	assert.equal(defaults.options.moscow_trench_axis_rp, false)
+
+	const ax2Enabled = rules.setup(8, "Campaign", { moscow_trench_axis_rp: "true" })
+	for (const name of optionNames) assert.equal(ax2Enabled.options[name], true, name)
 
 	const disabled = rules.setup(8, "Campaign", {
 		disable_optional_rules: "true",

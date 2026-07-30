@@ -60,11 +60,14 @@ test("language and card-art options are independent and use one authoritative ca
 		card_language: "EN",
 		disable_optional_rules: false,
 		allied_2_24_exclusive_1941: true,
-		moscow_trench_axis_rp: true,
+		moscow_trench_axis_rp: false,
 		no_invasions_before_summer_42: true,
 		sunny_italy: true,
 		time_of_mud: true,
 	})
+	const enabledAx2 = State.normalizeOptions({ moscow_trench_axis_rp: "true" })
+	assert.equal(enabledAx2.moscow_trench_axis_rp, true)
+	for (const name of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "sunny_italy", "time_of_mud"]) assert.equal(enabledAx2[name], true, name)
 	const disabled = State.normalizeOptions({
 		disable_optional_rules: "true",
 		allied_2_24_exclusive_1941: true,
