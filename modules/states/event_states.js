@@ -249,6 +249,7 @@ function register(registerState) {
 	})
 
 	registerState("event_reinforcement_lcu", {
+		inactive: { "zh-CN": "部署增援单位", en: "to deploy reinforcement units" },
 		prompt(result, game, role, { data }) {
 			const reinforcement = game.reinforcement
 			const label = reinforcement?.labels_zh?.[reinforcement.index] || "增援单位"
@@ -256,14 +257,17 @@ function register(registerState) {
 			if (reinforcement?.placement_type === "desert") result.prompt("events.reinforcement.deploy_desert", { unit })
 			else if (reinforcement?.type === "converted_invasion" || reinforcement?.type === "western") result.prompt("events.reinforcement.deploy_western", { unit })
 			else result.prompt("events.reinforcement.deploy_standard", { unit })
-			result.action("space", Engine.events.legalReinforcementSpaces(game, data))
+			if (!result.actionsEnabled || role !== game.active) return
+			const query = Engine.events.reinforcementPlacementQuery(game, data)
+			result.context.reinforcementPlacement = query
+			result.action("space", query.spaces)
 		},
-		space(game, role, noun, { data }) {
+		space(game, role, noun, { data }, promptResult) {
 			const side = Engine.constants.sideForRole(role)
 			const reinforcement = game.reinforcement
 			const pieceId = reinforcement.lcus[reinforcement.index]
 			const spaceId = Number(noun)
-			const placed = Engine.events.placeReinforcementLcu(game, data, pieceId, spaceId)
+			const placed = Engine.events.placeReinforcementLcu(game, data, pieceId, spaceId, promptResult?.context?.reinforcementPlacement)
 			Engine.state.log(game, "events.log.reinforcement_deployed", {
 				side: side === Engine.constants.ALLIED ? { "zh-CN": "盟军", en: "The Allies" } : { "zh-CN": "轴心国", en: "The Axis" },
 				piece: Engine.state.pieceLogRef(game, pieceId),

@@ -669,6 +669,7 @@ function confirmCombatSelection(game, data, adjacency) {
 
 function register(registerState) {
 	registerState("ops_combat", {
+		inactive: { "zh-CN": "进行战斗", en: "to conduct combat" },
 		prompt(result, game, role, { data, adjacency }) {
 			result.prompt("combat.select_attack")
 			const candidates = combatSelectionCandidates(game, data, adjacency)

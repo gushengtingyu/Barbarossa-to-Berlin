@@ -60,10 +60,14 @@ test("production workflows declare dependencies without importing the compatibil
 	}
 })
 
-test("registered state metadata contains only prompt, undo, and action handlers", () => {
+test("registered state metadata contains only prompts, inactive labels, undo, and action handlers", () => {
 	for (const [name, spec] of States.stateEntries()) {
 		for (const [key, value] of Object.entries(spec)) {
 			if (key === "undo") assert.equal(typeof value, "boolean", `${name}.${key}`)
+			else if (key === "inactive") {
+				assert.equal(typeof value["zh-CN"], "string", `${name}.${key}.zh-CN`)
+				assert.equal(typeof value.en, "string", `${name}.${key}.en`)
+			}
 			else assert.equal(typeof value, "function", `${name}.${key}`)
 		}
 	}

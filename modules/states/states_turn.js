@@ -224,6 +224,7 @@ function register(registerState) {
 	})
 
 	registerState("turn1_stalin_orders", {
+		inactive: { "zh-CN": "放置斯大林命令", en: "to place Stalin Orders" },
 		undo: true,
 		prompt(result, game, role, { data, adjacency }) {
 			const count = Math.min(game.orders.placements.length, 3)
@@ -246,6 +247,7 @@ function register(registerState) {
 	})
 
 	registerState("orders_axis", {
+		inactive: { "zh-CN": "结算轴心国命令", en: "to resolve Axis Orders" },
 		prompt(result) {
 			result.prompt("turn.orders.roll_axis")
 			result.action("continue")
@@ -267,6 +269,7 @@ function register(registerState) {
 	})
 
 	registerState("orders_allied", {
+		inactive: { "zh-CN": "结算盟军命令", en: "to resolve Allied Orders" },
 		prompt(result) {
 			result.prompt("turn.orders.roll_allied")
 			result.action("continue")
@@ -285,6 +288,7 @@ function register(registerState) {
 	})
 
 	registerState("orders_stand_fast", {
+		inactive: { "zh-CN": "放置坚守标记", en: "to place Stand Fast markers" },
 		undo: true,
 		prompt(result, game, role, { data, adjacency }) {
 			const count = Math.min(game.orders.placements.length, 3)
@@ -311,6 +315,7 @@ function register(registerState) {
 	})
 
 	registerState("axis_attrition", {
+		inactive: { "zh-CN": "结算损耗", en: "to resolve attrition" },
 		prompt(result) {
 			result.prompt("turn.attrition.axis")
 			result.action("apply_attrition")
@@ -330,6 +335,7 @@ function register(registerState) {
 	})
 
 	registerState("allied_attrition", {
+		inactive: { "zh-CN": "结算损耗", en: "to resolve attrition" },
 		prompt(result) {
 			result.prompt("turn.attrition.allied")
 			result.action("apply_attrition")

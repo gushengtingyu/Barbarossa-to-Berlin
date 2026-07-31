@@ -95,6 +95,10 @@ test("workflow registry owns every reachable state exactly once", () => {
 	for (const [name, spec] of States.stateEntries()) {
 		assert.equal(typeof spec.prompt, "function", `${name} prompt`)
 		assert.equal(typeof spec.undo, "boolean", `${name} undo metadata`)
+		if (spec.inactive) {
+			assert.equal(typeof spec.inactive["zh-CN"], "string", `${name} Chinese inactive activity`)
+			assert.equal(typeof spec.inactive.en, "string", `${name} English inactive activity`)
+		}
 	}
 	assert.equal(CompatibilityStates.applyAction, States.applyAction)
 	assert.equal(CompatibilityStates.stateView, States.stateView)
@@ -121,6 +125,18 @@ test("state projection provides Chinese prompts and actions only to the active r
 	game.state = "allied_mulligan"
 	game.active = "Allied"
 	assert.equal(rules.view(game, "Axis").prompt, "等待 盟军 行动")
+})
+
+test("inactive state projection uses the state activity without running its prompt", () => {
+	const game = rules.setup(17, "Campaign", {})
+	game.state = "ops_activate"
+	game.active = "Axis"
+	game.action = null
+
+	assert.deepEqual(States.stateView(game, "Allied"), { prompt: "等待 轴心国：选择 OPS 激活空间" })
+	game.options.ui_locale = "en"
+	assert.deepEqual(States.stateView(game, "Allied"), { prompt: "Waiting for Axis to select OPS activations" })
+	assert.throws(() => States.stateView(game, "Axis"))
 })
 
 test("Campaign setup offers the Allied mulligan before Turn 1 when cards 2 and 24 are absent", () => {

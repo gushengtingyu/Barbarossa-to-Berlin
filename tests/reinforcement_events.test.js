@@ -69,6 +69,44 @@ function startAxisEvent(number, turn = 2) {
 	return { game, cardId }
 }
 
+function referenceReinforcementPlacementSpaces(game, unit) {
+	if (unit.placement === "desert") return Engine.reinforcements.legalDesertArmyReinforcementSpaces(game, data, Engine.map, adjacency, unit.piece_id)
+	if (unit.placement === "lcu_style") return Engine.reinforcements.legalLcuStyleReinforcementSpaces(game, data, Engine.map, adjacency, unit.piece_id)
+	return Engine.reinforcements.legalLcuReinforcementSpaces(game, data, Engine.map, adjacency, unit.piece_id)
+}
+
+function referenceCanPlaceAllUnits(game, units) {
+	const sandbox = { ...game, pieces: game.pieces.slice(), reduced: game.reduced.slice() }
+	function place(index) {
+		if (index >= units.length) return true
+		const unit = units[index]
+		const original = sandbox.pieces[unit.piece_id]
+		for (const spaceId of referenceReinforcementPlacementSpaces(sandbox, unit)) {
+			sandbox.pieces[unit.piece_id] = spaceId
+			if (place(index + 1)) return true
+			sandbox.pieces[unit.piece_id] = original
+		}
+		return false
+	}
+	return place(0)
+}
+
+function referenceLegalReinforcementSpaces(game) {
+	const reinforcement = game.reinforcement
+	const pieceId = reinforcement.lcus[reinforcement.index]
+	let candidates
+	if (reinforcement.placement_type === "desert") candidates = Engine.reinforcements.legalDesertArmyReinforcementSpaces(game, data, Engine.map, adjacency, pieceId)
+	else if (reinforcement.placement_type === "lcu_style") candidates = Engine.reinforcements.legalLcuStyleReinforcementSpaces(game, data, Engine.map, adjacency, pieceId)
+	else candidates = Engine.reinforcements.legalLcuReinforcementSpaces(game, data, Engine.map, adjacency, pieceId)
+	const remaining = reinforcement.units.slice(reinforcement.index + 1)
+	if (!remaining.length) return candidates
+	return candidates.filter((spaceId) => {
+		const sandbox = { ...game, pieces: game.pieces.slice(), reduced: game.reduced.slice() }
+		sandbox.pieces[pieceId] = spaceId
+		return referenceCanPlaceAllUnits(sandbox, remaining)
+	})
+}
+
 test("Rule 7.62 prohibits Reinforcement Event cards on the June 1941 turn", () => {
 	const { game, cardId } = prepareAlliedEvent(2, 1)
 	assert.equal(Engine.events.canPlayEvent(game, data, cardId), false)
@@ -140,6 +178,15 @@ test("Allied card 2 places four Soviet Armies in Reserve and all four Fronts leg
 	assert.equal(game.removed.allied.includes(cardId), true)
 	assert.equal(game.reinforcement_usage.allied.su, true)
 	assert.equal(Engine.events.canPlayEvent(game, data, alliedCard(24)), false)
+})
+
+test("shared reinforcement search preserves every legal first placement", () => {
+	let { game } = startEvent(2)
+	while (game.state === "event_reinforcement_lcu") {
+		const optimized = Engine.events.legalReinforcementSpaces(game, data)
+		assert.deepEqual(optimized, referenceLegalReinforcementSpaces(game))
+		game = rules.action(game, "Allied", "space", optimized[0])
+	}
 })
 
 test("Allied card 24 uses its printed three Fronts and three ordinary Soviet Armies", () => {

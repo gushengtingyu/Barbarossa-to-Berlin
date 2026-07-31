@@ -34,19 +34,19 @@ function entrenchablePieces(game, data, adjacency) {
 	return Engine.map.legalEntrenchingPieces(game, data, adjacency).filter((pieceId) => !game.action.moved.includes(pieceId))
 }
 
-function spaceHasMovementChoice(game, data, adjacency, side, spaceId) {
-	return Engine.map.friendlyPiecesInSpace(game, data, side, spaceId).some((pieceId) => {
+function spaceHasMovementChoice(game, data, adjacency, side, spaceId, context = null) {
+	return Engine.map.friendlyPiecesInSpace(game, data, side, spaceId, context).some((pieceId) => {
 		if ((game.action.moved || []).includes(pieceId)) return false
-		return Engine.map.legalMoveDestinations(game, data, adjacency, pieceId).length > 0 || Engine.map.canEntrenchAfterActivation(game, data, adjacency, pieceId, spaceId)
+		return Engine.map.hasLegalMoveDestination(game, data, adjacency, pieceId, context) || Engine.map.canEntrenchAfterActivation(game, data, adjacency, pieceId, spaceId, context)
 	})
 }
 
-function spaceHasCombatChoice(game, data, adjacency, side, spaceId) {
+function spaceHasCombatChoice(game, data, adjacency, side, spaceId, context = null) {
 	return (adjacency[spaceId] || [])
 		.filter((edge) => edge.type !== "sr")
 		.map((edge) => edge.to)
 		.some((target) => {
-			const hasTarget = Engine.map.enemyPiecesInSpace(game, data, side, target).length > 0 || (side === Engine.constants.AXIS && Engine.invasions.activeBeachhead(game, target))
+			const hasTarget = Engine.map.enemyPiecesInSpace(game, data, side, target, context).length > 0 || (side === Engine.constants.AXIS && Engine.invasions.activeBeachhead(game, target))
 			return hasTarget && Engine.combat.mayAttackSpace(game, data, side, target)
 		})
 }
@@ -251,40 +251,46 @@ function logSrMove(game, pieceId, origin, destination) {
 
 function register(registerState) {
 	registerState("ops_activate", {
+		inactive: { "zh-CN": "选择 OPS 激活空间", en: "to select OPS activations" },
 		prompt(result, game, role, { data, adjacency }) {
 			const side = Engine.constants.sideForRole(game.active)
 			result.prompt("activation.choose_space", { points: game.action?.points || 0 })
+			if (!result.actionsEnabled || role !== game.active) return
+			const context = Engine.map.createOpsSearchContext(game, data, adjacency)
+			result.context.opsSearchContext = context
 			const available = Engine.map.legalActivationSpaces(game, data, side).filter((spaceId) => {
 				if (game.action.move_spaces.includes(spaceId) || game.action.attack_spaces.includes(spaceId)) return false
-				return Engine.map.activationCost(game, data, side, spaceId, adjacency) <= game.action.points
+				return Engine.map.activationCost(game, data, side, spaceId, adjacency, context) <= game.action.points
 			})
-			const moveSpaces = available.filter((spaceId) => spaceHasMovementChoice(game, data, adjacency, side, spaceId))
-			const attackSpaces = available.filter((spaceId) => spaceHasCombatChoice(game, data, adjacency, side, spaceId))
+			const moveSpaces = available.filter((spaceId) => spaceHasMovementChoice(game, data, adjacency, side, spaceId, context))
+			const attackSpaces = available.filter((spaceId) => spaceHasCombatChoice(game, data, adjacency, side, spaceId, context))
 			if (moveSpaces.length) result.action("space", moveSpaces)
 			if (attackSpaces.length) result.action("attack", attackSpaces)
 			const paid = Object.keys(game.action.activation_cost || {}).map(Number)
 			if (paid.length) result.action("deactivate", paid)
 			result.action("done")
 		},
-		space(game, role, noun, { data, adjacency }) {
+		space(game, role, noun, { data, adjacency }, promptResult) {
 			const side = Engine.constants.sideForRole(role)
 			const spaceId = Number(noun)
-			const cost = Engine.map.activationCost(game, data, side, spaceId, adjacency)
+			const context = promptResult?.context?.opsSearchContext
+			const cost = Engine.map.activationCost(game, data, side, spaceId, adjacency, context)
 			game.action.points -= cost
 			game.action.activation_cost ||= {}
 			game.action.activation_cost[spaceId] = cost
-			Engine.map.recordActivationSupply(game, data, adjacency, side, spaceId)
+			Engine.map.recordActivationSupply(game, data, adjacency, side, spaceId, context)
 			game.action.move_spaces.push(spaceId)
 			if (game.action.points === 0) finishActivationSelection(game, role, data, adjacency)
 		},
-		attack(game, role, noun, { data, adjacency }) {
+		attack(game, role, noun, { data, adjacency }, promptResult) {
 			const side = Engine.constants.sideForRole(role)
 			const spaceId = Number(noun)
-			const cost = Engine.map.activationCost(game, data, side, spaceId, adjacency)
+			const context = promptResult?.context?.opsSearchContext
+			const cost = Engine.map.activationCost(game, data, side, spaceId, adjacency, context)
 			game.action.points -= cost
 			game.action.activation_cost ||= {}
 			game.action.activation_cost[spaceId] = cost
-			Engine.map.recordActivationSupply(game, data, adjacency, side, spaceId)
+			Engine.map.recordActivationSupply(game, data, adjacency, side, spaceId, context)
 			game.action.attack_spaces.push(spaceId)
 			if (game.action.points === 0) finishActivationSelection(game, role, data, adjacency)
 		},
@@ -298,6 +304,7 @@ function register(registerState) {
 	})
 
 	registerState("ops_move", {
+		inactive: { "zh-CN": "移动单位", en: "to move units" },
 		prompt(result, game, role, { data, adjacency }) {
 			const side = Engine.constants.sideForRole(game.active)
 			result.prompt("activation.move.units")
@@ -331,6 +338,7 @@ function register(registerState) {
 	})
 
 	registerState("ops_entrench_roll", {
+		inactive: { "zh-CN": "结算堑壕", en: "to resolve entrenchment" },
 		prompt(result, game, role, { data }) {
 			const spaces = [...new Set((game.action.entrenching || []).map((attempt) => attempt.space_id))].sort((a, b) => a - b)
 			if (spaces.length) result.prompt("activation.entrench.roll", { spaces: I18n.list(spaces.map((spaceId) => data.spaces[spaceId]?.name || `s${spaceId}`)) })
@@ -355,6 +363,7 @@ function register(registerState) {
 	})
 
 	registerState("ops_move_piece", {
+		inactive: { "zh-CN": "移动编队", en: "to move a formation" },
 		prompt(result, game, role, { data, adjacency }) {
 			const side = Engine.constants.sideForRole(game.active)
 			const move = game.action.move
@@ -390,10 +399,12 @@ function register(registerState) {
 	})
 
 	registerState("sr_piece", {
+		inactive: { "zh-CN": "选择战略调动单位", en: "to select a Strategic Redeployment unit" },
 		prompt(result, game, role, { data, adjacency }) {
 			const side = Engine.constants.sideForRole(game.active)
-			const context = Engine.map.createSrSearchContext(game, data, adjacency)
 			result.prompt("activation.sr.choose_piece", { points: game.action?.points || 0 })
+			if (!result.actionsEnabled || role !== game.active) return
+			const context = Engine.map.createSrSearchContext(game, data, adjacency)
 			const pieces = data.pieces
 				.map((piece, pieceId) => {
 					const cost = piece?.size === "lcu" ? 3 : 1
@@ -419,16 +430,20 @@ function register(registerState) {
 	})
 
 	registerState("sr_destination", {
+		inactive: { "zh-CN": "选择战略调动目的地", en: "to select a Strategic Redeployment destination" },
 		prompt(result, game, role, { data, adjacency }) {
 			result.prompt("activation.sr.destination")
-			result.action("move", [...Engine.map.legalSrPaths(game, data, adjacency, game.action.piece).keys()])
+			if (!result.actionsEnabled || role !== game.active) return
+			const paths = Engine.map.legalSrPaths(game, data, adjacency, game.action.piece)
+			result.context.srPaths = paths
+			result.action("move", [...paths.keys()])
 			result.action("pass")
 		},
-		move(game, role, noun, { data, adjacency }) {
+		move(game, role, noun, { data, adjacency }, promptResult) {
 			const pieceId = game.action.piece
 			const cost = data.pieces[pieceId]?.size === "lcu" ? 3 : 1
 			if (cost > game.action.points) throw new Error("insufficient SR points")
-			const paths = Engine.map.legalSrPaths(game, data, adjacency, pieceId)
+			const paths = promptResult?.context?.srPaths || Engine.map.legalSrPaths(game, data, adjacency, pieceId)
 			const destination = Locations.isReserve(noun) ? noun : Number(noun)
 			const origin = game.pieces[pieceId]
 			Engine.map.movePieceAlongPath(game, data, pieceId, paths.get(destination))
@@ -444,8 +459,10 @@ function register(registerState) {
 	})
 
 	registerState("sr_stalin_destination", {
+		inactive: { "zh-CN": "战略调动斯大林", en: "to redeploy Stalin" },
 		prompt(result, game, role, { data, adjacency }) {
 			result.prompt("activation.sr.stalin_destination")
+			if (!result.actionsEnabled || role !== game.active) return
 			result.action("move", Engine.stalin.legalDestinations(game, data, Engine.map, adjacency))
 			result.action("pass")
 		},
