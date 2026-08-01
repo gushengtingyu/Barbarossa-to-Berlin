@@ -879,21 +879,6 @@
 		"zh-CN": "选规",
 		"en": "Optional rules"
 	},
-	"create.rule.disable_all": {
-		"params": [],
-		"zh-CN": "关闭全部选规（AX+2RP需单独开启）",
-		"en": "Disable all optional rules (AX +2 RP requires separate selection)"
-	},
-	"create.rule.disable_all_help": {
-		"params": [],
-		"zh-CN": "四条选规默认启用；AX+2RP默认关闭，需单独勾选。勾选本项将关闭全部选规。",
-		"en": "Four optional rules are enabled by default. AX +2 RP is off unless selected separately; select this setting to disable all optional rules."
-	},
-	"create.rule.disable_all_help_label": {
-		"params": [],
-		"zh-CN": "查看关闭全部选规说明",
-		"en": "View the disable-all optional rules setting"
-	},
 	"create.rule.invasion": {
 		"params": [],
 		"zh-CN": "1942年夏季前禁止盟军入侵",

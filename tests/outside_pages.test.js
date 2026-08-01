@@ -15,31 +15,23 @@ test("create page is localized and exposes only implemented options", () => {
 	assert.match(html, /outside\.css/)
 	assert.doesNotMatch(html, /class="campaign-note"/)
 	assert.match(html, /id="Campaign"/)
-	for (const option of ["ui_locale", "card_language", "disable_optional_rules", "allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+	for (const option of ["ui_locale", "card_language", "allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
 		assert.match(html, new RegExp(`name="${option}"`), option)
 	}
-	const disableAll = html.match(/<input[^>]*name="disable_optional_rules"[^>]*>/)?.[0]
-	assert.ok(disableAll)
-	assert.doesNotMatch(disableAll, /\bchecked\b/)
-	for (const option of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
+	assert.doesNotMatch(html, /name="disable_optional_rules"|create\.rule\.disable_all/)
+	for (const option of ["allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]) {
 		const input = html.match(new RegExp(`<input[^>]*name="${option}"[^>]*>`))?.[0]
 		assert.ok(input, option)
-		assert.match(input, /\bchecked\b/, option)
-		assert.match(input, /\bdisabled\b/, option)
 		assert.match(input, /\bdata-optional-rule\b/, option)
-		assert.match(input, /\bdata-default-enabled\b/, option)
+		assert.doesNotMatch(input, /\bdata-default-enabled\b|\bchecked\b|\bdisabled\b/, option)
 	}
-	const moscowAxisRp = html.match(/<input[^>]*name="moscow_trench_axis_rp"[^>]*>/)?.[0]
-	assert.ok(moscowAxisRp)
-	assert.match(moscowAxisRp, /\bdata-optional-rule\b/)
-	assert.doesNotMatch(moscowAxisRp, /\bdata-default-enabled\b|\bchecked\b|\bdisabled\b/)
-	assert.match(html, /control\.disabled = disableOptionalRules\.checked \|\| defaultEnabled/)
+	assert.doesNotMatch(html, /disableOptionalRules|updateOptionalRules/)
 	assert.doesNotMatch(html, /name="english_cards"/)
 	assert.match(html, /class="option-help-popup"/)
 	assert.match(html, /select\[name='scenario'\]/)
 })
 
-test("create page requires AX +2 RP to be selected separately from the default optional rules", () => {
+test("create page starts with every optional rule off and lets players select each one", () => {
 	const html = read("create.html")
 	const { window } = parseHTML(`<html><body>${html}</body></html>`)
 	Object.defineProperty(window, "localStorage", {
@@ -54,36 +46,19 @@ test("create page requires AX +2 RP to be selected separately from the default o
 	assert.ok(script)
 	vm.runInContext(script, vm.createContext(window))
 
-	const disableAll = window.document.querySelector('input[name="disable_optional_rules"]')
 	const optionalRules = [...window.document.querySelectorAll("input[data-optional-rule]")]
-	const defaultRules = optionalRules.filter((control) => control.hasAttribute("data-default-enabled"))
 	const moscowAxisRp = window.document.querySelector('input[name="moscow_trench_axis_rp"]')
 	assert.equal(optionalRules.length, 5)
-	assert.equal(defaultRules.length, 4)
 	assert.equal(
-		defaultRules.every((control) => control.checked && control.disabled),
+		optionalRules.every((control) => !control.checked && !control.disabled),
 		true,
 	)
-	assert.equal(moscowAxisRp.checked, false)
-	assert.equal(moscowAxisRp.disabled, false)
 	moscowAxisRp.checked = true
 	assert.equal(moscowAxisRp.checked, true)
-
-	disableAll.checked = true
-	disableAll.dispatchEvent(new window.Event("change"))
 	assert.equal(
-		optionalRules.every((control) => !control.checked && control.disabled),
+		optionalRules.filter((control) => control !== moscowAxisRp).every((control) => !control.checked),
 		true,
 	)
-
-	disableAll.checked = false
-	disableAll.dispatchEvent(new window.Event("change"))
-	assert.equal(
-		defaultRules.every((control) => control.checked && control.disabled),
-		true,
-	)
-	assert.equal(moscowAxisRp.checked, false)
-	assert.equal(moscowAxisRp.disabled, false)
 })
 
 test("about page presents finished game information, credits, and local reference links", () => {

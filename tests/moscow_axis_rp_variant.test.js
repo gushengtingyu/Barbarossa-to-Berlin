@@ -18,7 +18,7 @@ test("Moscow and German armaments variant gives Moscow its initial Soviet trench
 	assert.equal(enabled.trench_owner[MOSCOW], "allied")
 	assert.equal(enabled.trench_kind[MOSCOW], "soviet")
 
-	const disabled = rules.setup(1602, "Campaign", { disable_optional_rules: true })
+	const disabled = rules.setup(1602, "Campaign", {})
 	assert.equal(disabled.trench[MOSCOW], undefined)
 })
 
@@ -54,7 +54,7 @@ test("German armaments RP is conditional on its events and the variant", () => {
 	assert.equal(Engine.replacements.awardAxisVariantRp(totalWar), 1)
 	assert.equal(totalWar.rp.ge, 1)
 
-	const disabled = rules.setup(1606, "Campaign", { disable_optional_rules: true })
+	const disabled = rules.setup(1606, "Campaign", {})
 	disabled.events.speer = true
 	disabled.events.totaler_krieg = true
 	assert.equal(Engine.replacements.awardAxisVariantRp(disabled), 0)

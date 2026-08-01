@@ -23,15 +23,7 @@
 <h3 class="settings-title" data-i18n="create.optional_rules">选规</h3>
 
 <p>
-	<label><input type="checkbox" value="true" name="disable_optional_rules" /> <span data-i18n="create.rule.disable_all">关闭全部选规（AX+2RP需单独开启）</span></label>
-	<span class="option-help">
-		<button type="button" class="option-help-button" aria-describedby="disable_optional_rules_help" aria-label="查看关闭全部选规说明" data-i18n-aria-label="create.rule.disable_all_help_label">?</button>
-		<span class="option-help-popup" id="disable_optional_rules_help" role="tooltip" data-i18n="create.rule.disable_all_help">四条选规默认启用；AX+2RP默认关闭，需单独勾选。勾选本项将关闭全部选规。</span>
-	</span>
-</p>
-
-<p>
-	<label><input type="checkbox" value="true" name="allied_2_24_exclusive_1941" data-optional-rule data-default-enabled checked disabled /> <span data-i18n="create.rule.reinforcement">1941年苏军增援限制</span></label>
+	<label><input type="checkbox" value="true" name="allied_2_24_exclusive_1941" data-optional-rule /> <span data-i18n="create.rule.reinforcement">1941年苏军增援限制</span></label>
 	<span class="option-help">
 		<button type="button" class="option-help-button" aria-describedby="reinforcement_rule_help" aria-label="查看苏军增援限制说明" data-i18n-aria-label="create.rule.reinforcement_help_label">?</button>
 		<span class="option-help-popup" id="reinforcement_rule_help" role="tooltip" data-i18n="create.rule.reinforcement_help">1941年内，盟军第2号与第24号苏军增援事件只能打出其中一张；另一张仍可作非事件用途使用。</span>
@@ -47,7 +39,7 @@
 </p>
 
 <p>
-	<label><input type="checkbox" value="true" name="no_invasions_before_summer_42" data-optional-rule data-default-enabled checked disabled /> <span data-i18n="create.rule.invasion">1942年夏季前禁止盟军入侵</span></label>
+	<label><input type="checkbox" value="true" name="no_invasions_before_summer_42" data-optional-rule /> <span data-i18n="create.rule.invasion">1942年夏季前禁止盟军入侵</span></label>
 	<span class="option-help">
 		<button type="button" class="option-help-button" aria-describedby="early_invasion_rule_help" aria-label="查看盟军早期入侵限制说明" data-i18n-aria-label="create.rule.invasion_help_label">?</button>
 		<span class="option-help-popup" id="early_invasion_rule_help" role="tooltip" data-i18n="create.rule.invasion_help">盟军在1942年夏季回合前不得将登陆牌作为入侵事件打出。</span>
@@ -55,7 +47,7 @@
 </p>
 
 <p>
-	<label><input type="checkbox" value="true" name="time_of_mud" data-optional-rule data-default-enabled checked disabled /> <span data-i18n="create.rule.mud">泥泞时节</span></label>
+	<label><input type="checkbox" value="true" name="time_of_mud" data-optional-rule /> <span data-i18n="create.rule.mud">泥泞时节</span></label>
 	<span class="option-help">
 		<button type="button" class="option-help-button" aria-describedby="mud_rule_help" aria-label="查看泥泞时节说明" data-i18n-aria-label="create.rule.mud_help_label">?</button>
 		<span class="option-help-popup" id="mud_rule_help" role="tooltip" data-i18n="create.rule.mud_help">1941年秋季第2与第3行动轮，德国机械化单位受到选规规定的移动与战斗限制。</span>
@@ -63,7 +55,7 @@
 </p>
 
 <p>
-	<label><input type="checkbox" value="true" name="sunny_italy" data-optional-rule data-default-enabled checked disabled /> <span data-i18n="create.rule.italy">意大利晴空</span></label>
+	<label><input type="checkbox" value="true" name="sunny_italy" data-optional-rule /> <span data-i18n="create.rule.italy">意大利晴空</span></label>
 	<span class="option-help">
 		<button type="button" class="option-help-button" aria-describedby="italy_rule_help" aria-label="查看意大利晴空说明" data-i18n-aria-label="create.rule.italy_help_label">?</button>
 		<span class="option-help-popup" id="italy_rule_help" role="tooltip" data-i18n="create.rule.italy_help">秋季与冬季回合中，那不勒斯作为补给源时只提供有限补给。</span>
@@ -111,16 +103,5 @@
 	} else {
 		document.getElementById("Campaign")?.classList.add("show")
 	}
-	const disableOptionalRules = document.querySelector("input[name='disable_optional_rules']")
-	const optionalRuleControls = document.querySelectorAll("input[data-optional-rule]")
-	const updateOptionalRules = () => {
-		for (const control of optionalRuleControls) {
-			const defaultEnabled = control.hasAttribute("data-default-enabled")
-			control.checked = !disableOptionalRules.checked && defaultEnabled
-			control.disabled = disableOptionalRules.checked || defaultEnabled
-		}
-	}
-	disableOptionalRules.addEventListener("change", updateOptionalRules)
-	updateOptionalRules()
 	applyLocale()
 </script>

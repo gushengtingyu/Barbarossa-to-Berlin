@@ -58,35 +58,16 @@ test("language and card-art options are independent and use one authoritative ca
 	assert.deepEqual(State.normalizeOptions({ card_language: "EN" }), {
 		ui_locale: "zh-CN",
 		card_language: "EN",
-		disable_optional_rules: false,
-		allied_2_24_exclusive_1941: true,
-		moscow_trench_axis_rp: false,
-		no_invasions_before_summer_42: true,
-		sunny_italy: true,
-		time_of_mud: true,
-	})
-	const enabledAx2 = State.normalizeOptions({ moscow_trench_axis_rp: "true" })
-	assert.equal(enabledAx2.moscow_trench_axis_rp, true)
-	for (const name of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "sunny_italy", "time_of_mud"]) assert.equal(enabledAx2[name], true, name)
-	const disabled = State.normalizeOptions({
-		disable_optional_rules: "true",
-		allied_2_24_exclusive_1941: true,
-		moscow_trench_axis_rp: true,
-		no_invasions_before_summer_42: true,
-		sunny_italy: true,
-		time_of_mud: true,
-	})
-	assert.deepEqual(disabled, {
-		ui_locale: "zh-CN",
-		card_language: "CN",
-		disable_optional_rules: true,
 		allied_2_24_exclusive_1941: false,
 		moscow_trench_axis_rp: false,
 		no_invasions_before_summer_42: false,
 		sunny_italy: false,
 		time_of_mud: false,
 	})
-	assert.deepEqual(State.normalizeOptions(disabled), disabled)
+	const enabledAx2 = State.normalizeOptions({ moscow_trench_axis_rp: "true" })
+	assert.equal(enabledAx2.moscow_trench_axis_rp, true)
+	for (const name of ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "sunny_italy", "time_of_mud"]) assert.equal(enabledAx2[name], false, name)
+	assert.equal(Object.hasOwn(enabledAx2, "disable_optional_rules"), false)
 	const options = State.normalizeOptions({ ui_locale: "en-US", card_language: "CN" })
 	assert.equal(options.ui_locale, "en")
 	assert.equal(options.card_language, "CN")

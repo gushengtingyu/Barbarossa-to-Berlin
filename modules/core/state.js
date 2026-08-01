@@ -101,19 +101,14 @@ function formatDie(side, raw, drm = 0, result = raw) {
 function normalizeOptions(options = {}) {
 	const flag = (name) => options[name] === true || options[name] === "true" || options[name] === 1 || options[name] === "1"
 	const cardLanguage = String(options.card_language || "").toUpperCase() === "EN" ? "EN" : "CN"
-	const defaultOptionalRuleNames = ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "sunny_italy", "time_of_mud"]
-	const disableOptionalRules = flag("disable_optional_rules")
-	const hasLegacyOptionalRuleSelection = defaultOptionalRuleNames.some((name) => Object.hasOwn(options, name))
-	const optionalRule = (name) => !disableOptionalRules && (hasLegacyOptionalRuleSelection ? flag(name) : true)
 	return {
 		ui_locale: I18n.normalizeLocale(options.ui_locale),
 		card_language: cardLanguage,
-		disable_optional_rules: disableOptionalRules,
-		allied_2_24_exclusive_1941: optionalRule("allied_2_24_exclusive_1941"),
-		moscow_trench_axis_rp: !disableOptionalRules && flag("moscow_trench_axis_rp"),
-		no_invasions_before_summer_42: optionalRule("no_invasions_before_summer_42"),
-		sunny_italy: optionalRule("sunny_italy"),
-		time_of_mud: optionalRule("time_of_mud"),
+		allied_2_24_exclusive_1941: flag("allied_2_24_exclusive_1941"),
+		moscow_trench_axis_rp: flag("moscow_trench_axis_rp"),
+		no_invasions_before_summer_42: flag("no_invasions_before_summer_42"),
+		sunny_italy: flag("sunny_italy"),
+		time_of_mud: flag("time_of_mud"),
 	}
 }
 

@@ -968,7 +968,12 @@ test("the Soviet Southwest Front uses its mechanized face and becomes the infant
 	assert.deepEqual([data.pieces[southwest].cf, data.pieces[southwest].lf, data.pieces[southwest].mf], [5, 3, 4])
 	assert.equal(data.pieces[southwest].image_full, "SU_SW Mech.jpg")
 	game.pieces[southwest] = 1
-	Engine.combat.setReduced(game, southwest, true)
+	const reduced = Engine.combat.applyStepLoss(game, data, { attackers: [southwest], defenders: [] }, southwest)
+	assert.equal(reduced.eliminated, false)
+	assert.equal(Engine.combat.isReduced(game, southwest), true)
+	assert.deepEqual([data.pieces[southwest].rcf, data.pieces[southwest].rlf, data.pieces[southwest].rmf], [3, 3, 4])
+	assert.equal(data.pieces[southwest].unit_type, "mechanized")
+	assert.equal(data.pieces[southwest].image_reduced, "SU_SW Mech-b.jpg")
 	const outcome = Engine.combat.applyStepLoss(game, data, { attackers: [southwest], defenders: [] }, southwest)
 	assert.equal(game.pieces[southwest], "removed")
 	assert.equal(game.pieces[infantry], "eliminated:allied")

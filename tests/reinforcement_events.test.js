@@ -92,7 +92,7 @@ test("optional Rule 7.62 permits only one of Allied Events 2 and 24 during 1941"
 })
 
 test("Allied Events 2 and 24 remain independent when the optional rule is disabled", () => {
-	const { game, cardId } = prepareAlliedEvent(24, 3, { disable_optional_rules: true })
+	const { game, cardId } = prepareAlliedEvent(24, 3)
 	game.events.allied_2_24_played = alliedCard(2)
 	assert.equal(game.options.allied_2_24_exclusive_1941, false)
 	assert.equal(Engine.events.canPlayEvent(game, data, cardId), true)

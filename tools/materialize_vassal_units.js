@@ -31,7 +31,7 @@ function buildUnitTables() {
 	const sourcePieces = draft.piece_slots.filter((piece) => piece.size !== "marker" || piece.entry_name === "Stalin")
 	const pieces = sourcePieces.map((piece) => {
 		const sourceImages = imagePair(piece)
-		const images = piece.gpid === 140 ? { full: "SU_SW Mech.jpg", reduced: "SU_SW.jpg" } : sourceImages
+		const images = piece.gpid === 140 ? { full: "SU_SW Mech.jpg", reduced: "SU_SW Mech-b.jpg" } : sourceImages
 		const values = piece.entry_name === "Stalin" ? {} : catalog.get(images.full)
 		if (piece.entry_name !== "Stalin" && !values) throw new Error(`missing reviewed counter values for ${images.full}`)
 		return {

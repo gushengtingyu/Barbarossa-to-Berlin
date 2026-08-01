@@ -128,9 +128,9 @@ test("CSV schema stores authored facts once and derives stable runtime fields", 
 	assert.match(germanPiece.image_reduced, /-b\.[a-z]+$/i)
 	assert.equal(data.pieces.filter(Boolean).filter((piece) => piece.traits === "non_replaceable").length, 5)
 	const southwest = data.pieces[140]
-	assert.deepEqual([southwest.cf, southwest.lf, southwest.mf, southwest.rcf, southwest.rlf, southwest.rmf], [5, 3, 4, 3, 3, 3])
+	assert.deepEqual([southwest.cf, southwest.lf, southwest.mf, southwest.rcf, southwest.rlf, southwest.rmf], [5, 3, 4, 3, 3, 4])
 	assert.equal(southwest.image_full, "SU_SW Mech.jpg")
-	assert.equal(southwest.image_reduced, "SU_SW.jpg")
+	assert.equal(southwest.image_reduced, "SU_SW Mech-b.jpg")
 	assert.equal(data.pieces[997].image_full, "SU_SW.jpg")
 	assert.deepEqual(
 		data.reinforcements[4].units.map((unit) => unit.piece_id),

@@ -22,6 +22,9 @@ test("reviewed counter catalog covers every combat counter image", () => {
 		rmf: 5,
 		non_replaceable: false,
 	})
+	const southwest = pieces.find((piece) => piece.id === 140)
+	assert.deepEqual([southwest.rcf, southwest.rlf, southwest.rmf], [3, 3, 4])
+	assert.equal(southwest.reduced_asset, "SU_SW Mech-b.jpg")
 })
 
 test("unit materializer maps initial stacks without inventing placement choices", () => {

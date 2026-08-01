@@ -21,7 +21,7 @@ id,nation,name,size,unit_type,cf,lf,mf,rcf,rlf,rmf,asset,traits,reduced_asset
 136,su,SU Leningrad Front,lcu,army,3,3,3,2,3,3,SU_Leningrad.jpg,
 137,su,SU Northwest Front,lcu,army,3,3,3,2,3,3,SU_Northwest.jpg,
 138,su,West Front,lcu,army,3,3,3,2,3,3,SU_West.jpg,
-140,su,SU Southwest Front,lcu,mechanized,5,3,4,3,3,3,SU_SW Mech.jpg,non_replaceable,SU_SW.jpg
+140,su,SU Southwest Front,lcu,mechanized,5,3,4,3,3,4,SU_SW Mech.jpg,non_replaceable,SU_SW Mech-b.jpg
 149,su,SU Central Front,lcu,army,3,3,3,2,3,3,SU_Central.jpg,
 150,su,SU Reserve Front,lcu,army,3,3,3,2,3,3,SU_Reserve.jpg,
 151,su,SU South Front,lcu,army,3,3,3,2,3,3,SU_South.jpg,

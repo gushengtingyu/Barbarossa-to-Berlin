@@ -98,29 +98,21 @@ test("card language is a create-game option and opening choices are visible acti
 	assert.deepEqual(opening.log, [])
 })
 
-test("four optional rules default on, AX +2 RP requires selection, and the master setting disables all", () => {
-	const defaultOptionNames = ["allied_2_24_exclusive_1941", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]
-	const optionNames = [...defaultOptionNames, "moscow_trench_axis_rp"]
+test("all optional rules default off and must be selected individually", () => {
+	const optionNames = ["allied_2_24_exclusive_1941", "moscow_trench_axis_rp", "no_invasions_before_summer_42", "time_of_mud", "sunny_italy"]
 	const defaults = rules.setup(8, "Campaign", {})
-	assert.equal(defaults.options.disable_optional_rules, false)
-	for (const name of defaultOptionNames) assert.equal(defaults.options[name], true, name)
-	assert.equal(defaults.options.moscow_trench_axis_rp, false)
+	assert.equal(Object.hasOwn(defaults.options, "disable_optional_rules"), false)
+	for (const name of optionNames) assert.equal(defaults.options[name], false, name)
 
-	const ax2Enabled = rules.setup(8, "Campaign", { moscow_trench_axis_rp: "true" })
-	for (const name of optionNames) assert.equal(ax2Enabled.options[name], true, name)
-
-	const disabled = rules.setup(8, "Campaign", {
-		disable_optional_rules: "true",
+	const selected = rules.setup(8, "Campaign", {
 		allied_2_24_exclusive_1941: true,
-		moscow_trench_axis_rp: true,
-		no_invasions_before_summer_42: true,
 		time_of_mud: true,
-		sunny_italy: true,
 	})
-	assert.equal(disabled.options.disable_optional_rules, true)
-	for (const name of optionNames) assert.equal(disabled.options[name], false, name)
-	assert.deepEqual(rules.static_view(disabled).options, disabled.options)
-	assert.deepEqual(rules.replay(disabled.initial_seed, disabled.scenario, disabled.options, []), disabled)
+	assert.equal(selected.options.allied_2_24_exclusive_1941, true)
+	assert.equal(selected.options.time_of_mud, true)
+	for (const name of ["moscow_trench_axis_rp", "no_invasions_before_summer_42", "sunny_italy"]) assert.equal(selected.options[name], false, name)
+	assert.deepEqual(rules.static_view(selected).options, selected.options)
+	assert.deepEqual(rules.replay(selected.initial_seed, selected.scenario, selected.options, []), selected)
 })
 
 test("setup and opening deal are deterministic", () => {
@@ -135,7 +127,7 @@ test("setup and opening deal are deterministic", () => {
 })
 
 test("Campaign setup places the six printed starting trenches", () => {
-	const game = rules.setup(1, "Campaign", { disable_optional_rules: true })
+	const game = rules.setup(1, "Campaign", {})
 	const expected = {
 		Bialystok: 1,
 		Lwow: 2,
