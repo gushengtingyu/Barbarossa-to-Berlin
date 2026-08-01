@@ -57,12 +57,14 @@ function releaseTurnTrackLcus(game, data, side, map = null) {
 
 function resolveAttrition(game, data, map, adjacency, side) {
 	const released = releaseTurnTrackLcus(game, data, side, map)
+	const context = typeof map.createSupplySearchContext === "function" ? map.createSupplySearchContext(game, data, adjacency, "attrition") : "attrition"
 	const eliminated = []
 	const eliminatedReduced = []
 	for (let pieceId = 1; pieceId < data.pieces.length; pieceId++) {
-		if (map.pieceSide(game, data, pieceId) !== side || supplyStatus(game, data, map, adjacency, pieceId, "attrition") !== "oos") continue
+		if (map.pieceSide(game, data, pieceId) !== side || supplyStatus(game, data, map, adjacency, pieceId, context) !== "oos") continue
 		if (Combat.isReduced(game, pieceId)) eliminatedReduced.push(pieceId)
 		eliminateForAttrition(game, data, pieceId, map)
+		context?.setPieceLocation?.(pieceId, game.pieces[pieceId])
 		eliminated.push(pieceId)
 	}
 	const changedControl = []
@@ -71,13 +73,15 @@ function resolveAttrition(game, data, map, adjacency, side) {
 		if (!space || space.kind !== "land" || game.control[spaceId] !== side) continue
 		if (space.name === "Malta") continue
 		if (side === ALLIED && game.events?.tito && space.nation === "yu") continue
-		const occupants = map.friendlyPiecesInSpace(game, data, side, spaceId)
-		if (occupants.some((pieceId) => supplyStatus(game, data, map, adjacency, pieceId, "attrition") !== "oos")) continue
+		const occupants = map.friendlyPiecesInSpace(game, data, side, spaceId, typeof context === "object" ? context : null)
+		if (occupants.some((pieceId) => supplyStatus(game, data, map, adjacency, pieceId, context) !== "oos")) continue
 		const controller = typeof map.controlNation === "function" ? map.controlNation(game, data, spaceId) : null
 		const nation = side === AXIS ? "ge" : ["su", "br", "cw", "us", "ff"].includes(controller) ? controller : space.nation === "su" ? "su" : "us"
-		if (map.traceSupply(game, data, adjacency, side, spaceId, nation) !== "oos") continue
-		if (side === ALLIED && game.stalin_location === spaceId && !map.friendlyPiecesInSpace(game, data, ALLIED, spaceId).length) Stalin.eliminate(game, "attrition")
+		const spaceSupply = typeof context === "object" ? context.supplyStatus(side, spaceId, nation) : map.traceSupply(game, data, adjacency, side, spaceId, nation)
+		if (spaceSupply !== "oos") continue
+		if (side === ALLIED && game.stalin_location === spaceId && !map.friendlyPiecesInSpace(game, data, ALLIED, spaceId, typeof context === "object" ? context : null).length) Stalin.eliminate(game, "attrition")
 		map.setControl(game, data, spaceId, otherSide(side))
+		context?.invalidateSupply?.()
 		changedControl.push(spaceId)
 	}
 	return { eliminated, eliminatedReduced, changedControl, released }

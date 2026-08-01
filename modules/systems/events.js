@@ -319,15 +319,17 @@ function eventOpsValue(game, data, cardId) {
 	return 0
 }
 
-function reinforcementPlacementSpaces(game, data, pieceId, placement) {
+function reinforcementPlacementSpaces(game, data, pieceId, placement, context = null) {
 	const adjacency = MapSystem.buildAdjacency(data)
-	if (placement === "desert") return Reinforcements.legalDesertArmyReinforcementSpaces(game, data, MapSystem, adjacency, pieceId)
-	if (placement === "lcu_style") return Reinforcements.legalLcuStyleReinforcementSpaces(game, data, MapSystem, adjacency, pieceId)
-	return Reinforcements.legalLcuReinforcementSpaces(game, data, MapSystem, adjacency, pieceId)
+	if (placement === "desert") return Reinforcements.legalDesertArmyReinforcementSpaces(game, data, MapSystem, adjacency, pieceId, context)
+	if (placement === "lcu_style") return Reinforcements.legalLcuStyleReinforcementSpaces(game, data, MapSystem, adjacency, pieceId, context)
+	return Reinforcements.legalLcuReinforcementSpaces(game, data, MapSystem, adjacency, pieceId, context)
 }
 
 function canPlaceAllUnits(game, data, units) {
-	return Reinforcements.canPlaceAllUnits(game, units, (sandbox, unit) => reinforcementPlacementSpaces(sandbox, data, unit.piece_id, unit.placement))
+	const adjacency = MapSystem.buildAdjacency(data)
+	const context = Reinforcements.createReinforcementSearchContext(game, data, MapSystem, adjacency)
+	return Reinforcements.canPlaceAllUnits(game, units, (sandbox, unit, search) => reinforcementPlacementSpaces(sandbox, data, unit.piece_id, unit.placement, search), context)
 }
 
 function reinforcementSpec(data, cardId) {
@@ -391,36 +393,48 @@ function canPlayReinforcement(game, data, cardId) {
 	return canPlaceAllUnits(game, data, spec.units)
 }
 
-function legalReinforcementSpaces(game, data) {
+function legalReinforcementSpaces(game, data, context = null) {
 	const reinforcement = game.reinforcement
 	const pieceId = reinforcement?.lcus?.[reinforcement.index]
 	if (!pieceId) return []
 	const adjacency = MapSystem.buildAdjacency(data)
 	if (reinforcement.type === "converted_invasion") return Invasions.legalConvertedLcuSpaces(game, data, MapSystem, adjacency, pieceId)
-	let candidates
-	if (reinforcement.placement_type === "desert") candidates = Reinforcements.legalDesertArmyReinforcementSpaces(game, data, MapSystem, adjacency, pieceId)
-	else if (reinforcement.placement_type === "lcu_style") candidates = Reinforcements.legalLcuStyleReinforcementSpaces(game, data, MapSystem, adjacency, pieceId)
-	else candidates = Reinforcements.legalLcuReinforcementSpaces(game, data, MapSystem, adjacency, pieceId)
-	const remaining = reinforcement.units.slice(reinforcement.index + 1)
-	if (!remaining.length) return candidates
-	return candidates.filter((spaceId) => {
-		const sandbox = {
-			...game,
-			pieces: game.pieces.slice(),
-			reduced: game.reduced.slice(),
-		}
-		sandbox.pieces[pieceId] = spaceId
-		return canPlaceAllUnits(sandbox, data, remaining)
+	context ||= Reinforcements.createReinforcementSearchContext(game, data, MapSystem, adjacency)
+	const units = [
+		{
+			...(reinforcement.units?.[reinforcement.index] || {}),
+			piece_id: pieceId,
+			placement: reinforcement.placement_type || reinforcement.units?.[reinforcement.index]?.placement || "standard",
+		},
+		...(reinforcement.units || []).slice(reinforcement.index + 1),
+	]
+	return Reinforcements.legalFirstUnitPlacements(
+		game,
+		units,
+		(sandbox, unit, search) => reinforcementPlacementSpaces(sandbox, data, unit.piece_id, unit.placement, search),
+		context,
+	)
+}
+
+function reinforcementPlacementQuery(game, data) {
+	const adjacency = MapSystem.buildAdjacency(data)
+	const context = Reinforcements.createReinforcementSearchContext(game, data, MapSystem, adjacency)
+	return Object.freeze({
+		context,
+		spaces: Object.freeze(legalReinforcementSpaces(game, data, context)),
 	})
 }
 
-function placeReinforcementLcu(game, data, pieceId, spaceId) {
+function placeReinforcementLcu(game, data, pieceId, spaceId, query = null) {
 	const adjacency = MapSystem.buildAdjacency(data)
 	let placed
 	if (game.reinforcement?.type === "converted_invasion") placed = Invasions.placeConvertedReinforcementLcu(game, data, MapSystem, adjacency, pieceId, spaceId)
-	else if (game.reinforcement?.placement_type === "desert") placed = Reinforcements.placeDesertArmyReinforcement(game, data, MapSystem, adjacency, pieceId, spaceId)
-	else if (game.reinforcement?.placement_type === "lcu_style") placed = Reinforcements.placeLcuStyleReinforcement(game, data, MapSystem, adjacency, pieceId, spaceId)
-	else placed = Reinforcements.placeReinforcementLcu(game, data, MapSystem, adjacency, pieceId, spaceId)
+	else {
+		const options = query ? { context: query.context, legal_spaces: query.spaces } : {}
+		if (game.reinforcement?.placement_type === "desert") placed = Reinforcements.placeDesertArmyReinforcement(game, data, MapSystem, adjacency, pieceId, spaceId, options)
+		else if (game.reinforcement?.placement_type === "lcu_style") placed = Reinforcements.placeLcuStyleReinforcement(game, data, MapSystem, adjacency, pieceId, spaceId, options)
+		else placed = Reinforcements.placeReinforcementLcu(game, data, MapSystem, adjacency, pieceId, spaceId, options)
+	}
 	const unit = game.reinforcement?.units?.[game.reinforcement.index]
 	Combat.setReduced(game, pieceId, unit?.reduced === true)
 	return {
@@ -1924,6 +1938,7 @@ module.exports = {
 	playEvent,
 	revealForeignArmiesEastAtEnd,
 	register,
+	reinforcementPlacementQuery,
 	removePartisan,
 	replaceMechanizedFront,
 	settleActionEvent,

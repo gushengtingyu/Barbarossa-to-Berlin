@@ -13,9 +13,11 @@ const runtime = Object.freeze({
 const registry = new Map()
 
 class StateResult {
-	constructor() {
+	constructor(actionsEnabled = true) {
 		this._prompt = null
+		this.actionsEnabled = actionsEnabled
 		this.actions = {}
+		this.context = Object.create(null)
 	}
 
 	prompt(key, params = {}) {
@@ -23,6 +25,7 @@ class StateResult {
 	}
 
 	action(verb, nouns) {
+		if (!this.actionsEnabled) return
 		if (typeof verb !== "string" || !verb) throw new Error("action verb must be a non-empty string")
 		if (nouns === undefined) {
 			this.actions[verb] = 1
@@ -40,8 +43,16 @@ function registerState(name, spec) {
 	if (registry.has(name)) throw new Error(`duplicate state registration: ${name}`)
 	if (!spec || typeof spec !== "object") throw new Error(`state ${name} must be an object`)
 	if (typeof spec.prompt !== "function") throw new Error(`state ${name} requires prompt`)
-	for (const [key, value] of Object.entries(spec)) if (key !== "undo" && typeof value !== "function") throw new Error(`state ${name} field ${key} must be a function`)
-	registry.set(name, Object.freeze({ undo: spec.undo !== false, ...spec }))
+	for (const [key, value] of Object.entries(spec)) {
+		if (key === "undo") continue
+		if (key === "inactive") {
+			if (!value || typeof value !== "object" || Array.isArray(value) || typeof value["zh-CN"] !== "string" || typeof value.en !== "string") throw new Error(`state ${name} inactive activity must be localized text`)
+			continue
+		}
+		if (typeof value !== "function") throw new Error(`state ${name} field ${key} must be a function`)
+	}
+	const inactive = spec.inactive ? Object.freeze({ ...spec.inactive }) : undefined
+	registry.set(name, Object.freeze({ undo: spec.undo !== false, ...spec, ...(inactive ? { inactive } : {}) }))
 }
 
 require("./states_turn.js").register(registerState, runtime)
@@ -56,9 +67,9 @@ function stateSpec(name) {
 	return spec
 }
 
-function buildStateResult(game, role) {
+function buildStateResult(game, role, actionsEnabled = true) {
 	const spec = stateSpec(game.state)
-	const result = new StateResult()
+	const result = new StateResult(actionsEnabled)
 	spec.prompt(result, game, role, runtime)
 	if (!result._prompt) throw new Error(`state ${game.state} produced an empty prompt`)
 	for (const verb of Object.keys(result.actions)) if (typeof spec[verb] !== "function") throw new Error(`state ${game.state} exposes action ${verb} without a handler`)
@@ -77,11 +88,15 @@ function availableActions(game, role, result, spec) {
 
 function stateView(game, role, options = {}) {
 	const includeActions = options.includeActions !== false
-	const { result, spec } = buildStateResult(game, role)
+	if (game.state !== "game_over" && role !== game.active) {
+		const locale = game.options?.ui_locale
+		const activeRole = game.active === "Allied" ? I18n.render(locale, "core.role.allied") : game.active === "Axis" ? I18n.render(locale, "core.role.axis") : String(game.active)
+		const activity = stateSpec(game.state).inactive
+		return { prompt: activity ? I18n.render(locale, "core.waiting_activity", { role: activeRole, activity }) : I18n.render(locale, "core.waiting", { role: activeRole }) }
+	}
+	const { result, spec } = buildStateResult(game, role, includeActions)
 	const locale = game.options?.ui_locale
-	const activeRole = game.active === "Allied" ? I18n.render(locale, "core.role.allied") : game.active === "Axis" ? I18n.render(locale, "core.role.axis") : String(game.active)
-	const prompt = game.state !== "game_over" && role !== game.active ? I18n.render(locale, "core.waiting", { role: activeRole }) : I18n.render(locale, result._prompt)
-	const view = { prompt }
+	const view = { prompt: I18n.render(locale, result._prompt) }
 	if (includeActions) {
 		const actions = availableActions(game, role, result, spec)
 		if (Object.keys(actions).length) view.actions = actions
@@ -117,7 +132,7 @@ function applyAction(game, role, verb, noun) {
 	const seedBefore = game.seed
 	const undoGroup = Reflect.get(handler, "undo_group")
 	if (spec.undo) State.pushUndo(game, typeof undoGroup === "string" ? `${game.active}:${game.state}:${undoGroup}` : null)
-	const next = handler(game, role, noun, runtime) || game
+	const next = handler(game, role, noun, runtime, result) || game
 	const changedPlayers = (activeBefore === "Allied" || activeBefore === "Axis") && (next.active === "Allied" || next.active === "Axis") && activeBefore !== next.active
 	const preserveUndo = Collaboration.consumePreserveUndo(next)
 	if (!preserveUndo && (changedPlayers || next.seed !== seedBefore)) State.clearUndo(next)

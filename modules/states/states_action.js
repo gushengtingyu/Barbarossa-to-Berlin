@@ -173,6 +173,7 @@ function playSrCard(game, role, noun, { data }) {
 
 function register(registerState) {
 	registerState("action_select", {
+		inactive: { "zh-CN": "选择行动", en: "to choose an action" },
 		prompt(result, game, role, { data }) {
 			const side = Engine.constants.sideForRole(game.active)
 			const cardIds = game.hands[side].slice()

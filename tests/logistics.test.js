@@ -74,6 +74,41 @@ test("attrition state logs clickable unit and control details", () => {
 	)
 })
 
+test("attrition request context is byte-equivalent to the uncached reference path", () => {
+	const referenceMap = { ...Engine.map, createSupplySearchContext: undefined }
+
+	for (const side of ["axis", "allied"]) {
+		const source = Engine.setup.createInitialState(data, "Campaign", 76, {})
+		const otherSide = side === "axis" ? "allied" : "axis"
+		const nation = side === "axis" ? "ge" : "su"
+		const pieces = data.pieces
+			.filter((piece) => piece?.nation === nation && piece.size === "scu")
+			.slice(0, 2)
+			.map((piece) => piece.id)
+		const spaces = data.spaces
+			.filter((space) => space?.kind === "land" && !space.supply && space.name !== "Malta")
+			.slice(0, 2)
+			.map((space) => space.id)
+		source.turn = 6
+		source.pieces.fill(0)
+		source.reduced = [pieces[0]]
+		source.control = data.spaces.map((space) => (space?.kind === "land" ? otherSide : null))
+		for (let index = 0; index < pieces.length; index++) {
+			source.pieces[pieces[index]] = spaces[index]
+			source.control[spaces[index]] = side
+			source.control_nation[spaces[index]] = nation
+		}
+		const optimized = JSON.parse(JSON.stringify(source))
+		const reference = JSON.parse(JSON.stringify(source))
+		const optimizedResult = Engine.logistics.resolveAttrition(optimized, data, Engine.map, adjacency, side)
+		const referenceResult = Engine.logistics.resolveAttrition(reference, data, referenceMap, adjacency, side)
+		assert.deepEqual(optimizedResult.eliminated, pieces)
+		assert.deepEqual(optimizedResult.changedControl, spaces)
+		assert.deepEqual(optimizedResult, referenceResult)
+		assert.deepEqual(optimized, reference)
+	}
+})
+
 test("a delayed OOS LCU enters the Eliminated Box exactly three turns later", () => {
 	const game = Engine.setup.createInitialState(data, "Campaign", 1, {})
 	const pieceId = data.pieces.find((piece) => piece?.nation === "ge" && piece.size === "lcu").id

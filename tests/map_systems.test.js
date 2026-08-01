@@ -31,6 +31,36 @@ test("movement uses the unit allowance and never traverses Sea SR nodes", () => 
 		)
 })
 
+test("shared OPS search context preserves activation costs and movement eligibility", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 31, {})
+	game.turn = 5
+	game.action = {
+		mode: "ops",
+		points: 5,
+		move_spaces: [],
+		attack_spaces: [],
+		activation_cost: {},
+		activation_supply: {},
+		moved: [],
+		entrenching: [],
+	}
+	for (const side of ["axis", "allied"]) {
+		const context = Engine.map.createOpsSearchContext(game, data, adjacency)
+		for (const spaceId of Engine.map.legalActivationSpaces(game, data, side)) {
+			assert.equal(
+				Engine.map.activationCost(game, data, side, spaceId, adjacency, context),
+				Engine.map.activationCost(game, data, side, spaceId, adjacency),
+				`${side} activation cost at ${data.spaces[spaceId].name}`,
+			)
+		}
+		for (const piece of data.pieces.filter(Boolean)) {
+			if (Engine.map.pieceSide(game, data, piece.id) !== side) continue
+			const expected = Engine.map.legalMoveDestinations(game, data, adjacency, piece.id).length > 0
+			assert.equal(Engine.map.hasLegalMoveDestination(game, data, adjacency, piece.id, context), expected, piece.name)
+		}
+	}
+})
+
 test("Rule 10.1 charges one MP across regular and river connections, permits overstack transit, and rejects Sea SR shortcuts", () => {
 	const localData = {
 		spaces: [null, { id: 1, name: "Origin", kind: "land", nation: "fr" }, { id: 2, name: "Crossing", kind: "land", nation: "fr" }, { id: 3, name: "Destination", kind: "land", nation: "fr" }],
@@ -893,8 +923,11 @@ test("shared SR search context preserves legal-destination results", () => {
 	game.turn = 5
 	const context = Engine.map.createSrSearchContext(game, data, adjacency)
 	for (const piece of data.pieces.filter(Boolean)) {
-		const expected = Engine.map.legalSrPaths(game, data, adjacency, piece.id).size > 0
-		assert.equal(Engine.map.hasLegalSrDestination(game, data, adjacency, piece.id, context), expected, piece.name)
+		const expected = Engine.map.legalSrPaths(game, data, adjacency, piece.id)
+		assert.equal(Engine.map.hasLegalSrDestination(game, data, adjacency, piece.id, context), expected.size > 0, piece.name)
+		if (typeof game.pieces[piece.id] === "string" && game.pieces[piece.id].startsWith("reserve:")) {
+			assert.deepEqual(Engine.map.legalSrPaths(game, data, adjacency, piece.id, context), expected, piece.name)
+		}
 	}
 })
 
@@ -1060,6 +1093,24 @@ test("Rule 13.1 blocks supply through an empty enemy-controlled land space", () 
 	assert.equal(Engine.map.traceSupply(game, localData, localAdjacency, "axis", 1, "ge"), "oos")
 	game.control[2] = "axis"
 	assert.equal(Engine.map.traceSupply(game, localData, localAdjacency, "axis", 1, "ge"), "full")
+})
+
+test("request-scoped supply context caches paths, updates occupancy, and invalidates explicitly", () => {
+	const game = Engine.setup.createInitialState(data, "Campaign", 75, {})
+	const memel = space("Memel")
+	const pieceId = Engine.map.friendlyPiecesInSpace(game, data, "axis", memel)[0]
+	const context = Engine.map.createSupplySearchContext(game, data, adjacency, "attrition")
+
+	assert.ok(context.piecesInSpace(memel).includes(pieceId))
+	assert.equal(context.supplyStatus("axis", memel, data.pieces[pieceId].nation), "full")
+	context.setPieceLocation(pieceId, "eliminated:axis")
+	assert.equal(context.piecesInSpace(memel).includes(pieceId), false)
+
+	game.control = data.spaces.map((entry) => (entry?.kind === "land" ? "allied" : null))
+	game.control[memel] = "axis"
+	assert.equal(context.supplyStatus("axis", memel, data.pieces[pieceId].nation), "full")
+	context.invalidateSupply()
+	assert.equal(context.supplyStatus("axis", memel, data.pieces[pieceId].nation), "oos")
 })
 
 test("Rule 13.1 exposes current OOS immediately while preserving the activation-time supply snapshot", () => {

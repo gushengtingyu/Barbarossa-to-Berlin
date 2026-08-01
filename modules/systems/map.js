@@ -64,6 +64,10 @@ function piecesInSpace(game, spaceId) {
 	return result
 }
 
+function indexedPiecesInSpace(game, spaceId, context = null) {
+	return context?.piecesInSpace ? context.piecesInSpace(spaceId) : piecesInSpace(game, spaceId)
+}
+
 function isCombatUnit(piece) {
 	return piece?.size === "scu" || piece?.size === "lcu"
 }
@@ -73,12 +77,12 @@ function pieceSide(game, data, pieceId) {
 	return isCombatUnit(piece) ? Neutrals.effectivePieceSide(game, piece) : null
 }
 
-function friendlyPiecesInSpace(game, data, side, spaceId) {
-	return piecesInSpace(game, spaceId).filter((pieceId) => pieceSide(game, data, pieceId) === side)
+function friendlyPiecesInSpace(game, data, side, spaceId, context = null) {
+	return indexedPiecesInSpace(game, spaceId, context).filter((pieceId) => pieceSide(game, data, pieceId) === side)
 }
 
-function enemyPiecesInSpace(game, data, side, spaceId) {
-	return piecesInSpace(game, spaceId).filter((pieceId) => {
+function enemyPiecesInSpace(game, data, side, spaceId, context = null) {
+	return indexedPiecesInSpace(game, spaceId, context).filter((pieceId) => {
 		const effectiveSide = pieceSide(game, data, pieceId)
 		return effectiveSide && effectiveSide !== "neutral" && effectiveSide !== side
 	})
@@ -277,8 +281,8 @@ function axisLcuUsesCaucasusSupply(game, data, adjacency, pieceId) {
 	return suppliedThroughGateway
 }
 
-function activationCost(game, data, side, spaceId, adjacency = null) {
-	const pieceIds = friendlyPiecesInSpace(game, data, side, spaceId)
+function activationCost(game, data, side, spaceId, adjacency = null, context = null) {
+	const pieceIds = friendlyPiecesInSpace(game, data, side, spaceId, context)
 	if (!pieceIds.length) return 0
 	let cost
 	if (adjacency) {
@@ -286,7 +290,10 @@ function activationCost(game, data, side, spaceId, adjacency = null) {
 		const statuses = new Map(
 			pieceIds.map((pieceId) => {
 				const piece = data.pieces[pieceId]
-				if (!statusByNation.has(piece.nation)) statusByNation.set(piece.nation, traceSupply(game, data, adjacency, side, spaceId, piece.nation))
+				if (!statusByNation.has(piece.nation)) {
+					const status = context?.supplyStatus ? context.supplyStatus(side, spaceId, piece.nation) : traceSupply(game, data, adjacency, side, spaceId, piece.nation)
+					statusByNation.set(piece.nation, status)
+				}
 				return [pieceId, statusByNation.get(piece.nation)]
 			}),
 		)
@@ -297,7 +304,12 @@ function activationCost(game, data, side, spaceId, adjacency = null) {
 		for (const pieceId of pieceIds) {
 			const piece = data.pieces[pieceId]
 			if (hasTrait(piece, "panzer_armee_afrika") && data.spaces[spaceId]?.nation !== "ly" && statuses.get(pieceId) !== "full") cost++
-			if (side === AXIS && statuses.get(pieceId) !== "oos" && axisLcuUsesCaucasusSupply(game, data, adjacency, pieceId)) cost++
+			if (side === AXIS && statuses.get(pieceId) !== "oos") {
+				const caucasusSupply = context?.axisLcuUsesCaucasusSupply
+					? context.axisLcuUsesCaucasusSupply(pieceId)
+					: axisLcuUsesCaucasusSupply(game, data, adjacency, pieceId)
+				if (caucasusSupply) cost++
+			}
 		}
 	}
 	if (cost === null || cost === undefined) {
@@ -307,35 +319,48 @@ function activationCost(game, data, side, spaceId, adjacency = null) {
 	return Math.min(5, Math.max(1, cost))
 }
 
-function activationSupplyStatus(game, data, adjacency, pieceId) {
+function activationSupplyStatus(game, data, adjacency, pieceId, context = null) {
 	const recorded = game.action?.activation_supply?.[pieceId]
 	if (recorded) return recorded
+	if (context?.supplyStatus) {
+		const piece = data.pieces[pieceId]
+		const spaceId = game.pieces[pieceId]
+		if (!piece || !Number.isInteger(spaceId) || spaceId <= 0) return "oos"
+		return context.supplyStatus(pieceSide(game, data, pieceId), spaceId, piece.nation)
+	}
 	return pieceSupplyStatus(game, data, adjacency, pieceId)
 }
 
-function recordActivationSupply(game, data, adjacency, side, spaceId) {
+function recordActivationSupply(game, data, adjacency, side, spaceId, context = null) {
 	game.action ||= {}
 	game.action.activation_supply ||= {}
 	const statusByNation = new Map()
-	for (const pieceId of friendlyPiecesInSpace(game, data, side, spaceId)) {
+	for (const pieceId of friendlyPiecesInSpace(game, data, side, spaceId, context)) {
 		const piece = data.pieces[pieceId]
-		if (!statusByNation.has(piece.nation)) statusByNation.set(piece.nation, traceSupply(game, data, adjacency, side, spaceId, piece.nation))
+		if (!statusByNation.has(piece.nation)) {
+			const status = context?.supplyStatus ? context.supplyStatus(side, spaceId, piece.nation) : traceSupply(game, data, adjacency, side, spaceId, piece.nation)
+			statusByNation.set(piece.nation, status)
+		}
 		game.action.activation_supply[pieceId] = statusByNation.get(piece.nation)
 	}
 	return game.action.activation_supply
 }
 
 function legalActivationSpaces(game, data, side) {
-	const result = []
 	const blocked = new Set(game.event?.blocked_activation_spaces || [])
-	for (let spaceId = 1; spaceId < data.spaces.length; spaceId++) if (!blocked.has(spaceId) && friendlyPiecesInSpace(game, data, side, spaceId).length) result.push(spaceId)
-	return result
+	const result = new Set()
+	for (let pieceId = 1; pieceId < game.pieces.length; pieceId++) {
+		const spaceId = game.pieces[pieceId]
+		if (!Number.isInteger(spaceId) || spaceId <= 0 || !data.spaces[spaceId] || blocked.has(spaceId)) continue
+		if (pieceSide(game, data, pieceId) === side) result.add(spaceId)
+	}
+	return [...result].sort((a, b) => a - b)
 }
 
-function canStackFormation(game, data, pieceIds, destination) {
+function canStackFormation(game, data, pieceIds, destination, context = null) {
 	const movingIds = [...new Set(pieceIds)].filter((pieceId) => data.pieces[pieceId])
 	const moving = new Set(movingIds)
-	const occupants = piecesInSpace(game, destination).filter((pieceId) => !moving.has(pieceId))
+	const occupants = indexedPiecesInSpace(game, destination, context).filter((pieceId) => !moving.has(pieceId))
 	return isLegalStack(data, occupants.concat(movingIds))
 }
 
@@ -354,22 +379,22 @@ function canStackAfterFormationLeaves(game, data, stoppingIds, leavingIds, desti
 	return isLegalStack(data, occupants.concat(stoppingIds))
 }
 
-function canStack(game, data, pieceId, destination) {
-	return canStackFormation(game, data, [pieceId], destination)
+function canStack(game, data, pieceId, destination, context = null) {
+	return canStackFormation(game, data, [pieceId], destination, context)
 }
 
-function isMechanizedInSupply(game, data, adjacency, pieceId, destination = game.pieces[pieceId]) {
+function isMechanizedInSupply(game, data, adjacency, pieceId, destination = game.pieces[pieceId], context = null) {
 	const piece = data.pieces[pieceId]
 	const allowance = Number(game.reduced.includes(pieceId) ? piece?.rmf : piece?.mf) || 0
 	const winter42German = Weather.isWinter42(game) && piece?.nation === "ge" && data.spaces[destination]?.nation === "su"
-	return allowance >= 4 && activationSupplyStatus(game, data, adjacency, pieceId) !== "oos" && !winter42German
+	return allowance >= 4 && activationSupplyStatus(game, data, adjacency, pieceId, context) !== "oos" && !winter42German
 }
 
-function mayEndMovement(game, data, adjacency, pieceId, destination) {
+function mayEndMovement(game, data, adjacency, pieceId, destination, context = null) {
 	const piece = data.pieces[pieceId]
 	if (piece?.nation === "su" && game.events?.tito && data.spaces[destination]?.nation === "yu") return false
 	if (!game.action?.attack_spaces?.includes(destination)) return true
-	return isMechanizedInSupply(game, data, adjacency, pieceId, destination)
+	return isMechanizedInSupply(game, data, adjacency, pieceId, destination, context)
 }
 
 function sovietTrenchCount(game, data) {
@@ -382,14 +407,14 @@ function sovietTrenchCount(game, data) {
 		}).length
 }
 
-function canEntrenchAtActivation(game, data, adjacency, pieceId, activationSpaceId = null) {
+function canEntrenchAtActivation(game, data, adjacency, pieceId, activationSpaceId = null, context = null) {
 	const piece = data.pieces[pieceId]
 	const spaceId = game.pieces[pieceId]
 	const space = data.spaces[spaceId]
 	if (!piece || piece.nation !== "su" || piece.size !== "lcu" || !space) return false
 	const activated = game.action?.move_spaces?.includes(spaceId) || activationSpaceId === spaceId
 	if (game.turn <= 2 || game.action?.moved?.includes(pieceId) || !activated) return false
-	if (activationSupplyStatus(game, data, adjacency, pieceId) === "oos") return false
+	if (activationSupplyStatus(game, data, adjacency, pieceId, context) === "oos") return false
 	if (game.action?.entrenching?.some((attempt) => attempt.space_id === spaceId)) return false
 	const level = Number(game.trench?.[spaceId]) || 0
 	if (level >= 2 || (level === 1 && game.turn < 8)) return false
@@ -401,8 +426,8 @@ function canEntrench(game, data, adjacency, pieceId) {
 	return canEntrenchAtActivation(game, data, adjacency, pieceId)
 }
 
-function canEntrenchAfterActivation(game, data, adjacency, pieceId, spaceId) {
-	return game.pieces[pieceId] === spaceId && canEntrenchAtActivation(game, data, adjacency, pieceId, spaceId)
+function canEntrenchAfterActivation(game, data, adjacency, pieceId, spaceId, context = null) {
+	return game.pieces[pieceId] === spaceId && canEntrenchAtActivation(game, data, adjacency, pieceId, spaceId, context)
 }
 
 function legalEntrenchingPieces(game, data, adjacency) {
@@ -435,20 +460,20 @@ function resolveEntrenchAttempt(game, data, attempt) {
 	}
 }
 
-function movementAllowance(game, data, adjacency, pieceId) {
+function movementAllowance(game, data, adjacency, pieceId, context = null) {
 	const piece = data.pieces[pieceId]
 	let value = Number(game.reduced.includes(pieceId) ? piece?.rmf : piece?.mf) || 0
-	if (activationSupplyStatus(game, data, adjacency, pieceId) === "oos" && value >= 3) value = 2
+	if (activationSupplyStatus(game, data, adjacency, pieceId, context) === "oos" && value >= 3) value = 2
 	if (game.options.time_of_mud && game.turn === 3 && [2, 3].includes(game.action_round) && piece.nation === "ge" && piece.unit_type === "mechanized" && data.spaces[game.pieces[pieceId]]?.nation === "su") value = Math.min(value, 3)
 	return value
 }
 
-function legalMovePaths(game, data, adjacency, pieceId) {
+function searchMovePaths(game, data, adjacency, pieceId, context, stopAfterFirst) {
 	const piece = data.pieces[pieceId]
 	const side = pieceSide(game, data, pieceId)
 	const from = game.pieces[pieceId]
 	if (!piece || !side || side === "neutral" || !Number.isInteger(from) || from <= 0) return new Map()
-	const allowance = movementAllowance(game, data, adjacency, pieceId)
+	const allowance = movementAllowance(game, data, adjacency, pieceId, context)
 	const paths = new Map()
 	const queue = [{ space: from, path: [], spent: 0 }]
 	const visited = new Map([[from, 0]])
@@ -457,10 +482,13 @@ function legalMovePaths(game, data, adjacency, pieceId) {
 		for (const edge of adjacency[current.space] || []) {
 			if (edge.type === "sr" || data.spaces[edge.to]?.kind !== "land") continue
 			const spent = current.spent + 1
-			if (spent > allowance || enemyPiecesInSpace(game, data, side, edge.to).length) continue
+			if (spent > allowance || enemyPiecesInSpace(game, data, side, edge.to, context).length) continue
 			if (!Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
 			const path = current.path.concat(edge.to)
-			if (edge.to !== from && !paths.has(edge.to) && canStack(game, data, pieceId, edge.to) && mayEndMovement(game, data, adjacency, pieceId, edge.to)) paths.set(edge.to, path)
+			if (edge.to !== from && !paths.has(edge.to) && canStack(game, data, pieceId, edge.to, context) && mayEndMovement(game, data, adjacency, pieceId, edge.to, context)) {
+				paths.set(edge.to, path)
+				if (stopAfterFirst) return paths
+			}
 			if (visited.has(edge.to) && visited.get(edge.to) <= spent) continue
 			visited.set(edge.to, spent)
 			queue.push({ space: edge.to, path, spent })
@@ -469,8 +497,16 @@ function legalMovePaths(game, data, adjacency, pieceId) {
 	return paths
 }
 
-function legalMoveDestinations(game, data, adjacency, pieceId) {
-	return [...legalMovePaths(game, data, adjacency, pieceId).keys()]
+function legalMovePaths(game, data, adjacency, pieceId, context = null) {
+	return searchMovePaths(game, data, adjacency, pieceId, context, false)
+}
+
+function legalMoveDestinations(game, data, adjacency, pieceId, context = null) {
+	return [...legalMovePaths(game, data, adjacency, pieceId, context).keys()]
+}
+
+function hasLegalMoveDestination(game, data, adjacency, pieceId, context = null) {
+	return searchMovePaths(game, data, adjacency, pieceId, context, true).size > 0
 }
 
 function canEndFormationMovement(game, data, adjacency, stoppingIds, destination, leavingIds = []) {
@@ -598,20 +634,24 @@ function recordSrReserveEntry(game, data, pieceId, origin, destination) {
 	return true
 }
 
-function legalReserveEntrySpaces(game, data, adjacency, pieceId) {
+function legalReserveEntrySpaces(game, data, adjacency, pieceId, context = null) {
 	const piece = data.pieces[pieceId]
 	const side = pieceSide(game, data, pieceId)
 	if (!piece || piece.size !== "scu" || !isReserveLocation(game.pieces[pieceId], side)) return []
-	const result = []
-	for (let spaceId = 1; spaceId < data.spaces.length; spaceId++) {
-		const space = data.spaces[spaceId]
-		const neutralHome = ["tu", "sw"].includes(piece.nation) && space?.nation === piece.nation && Neutrals.controller(game, piece.nation) === side
-		const activeBeach = space?.kind === "beach" && Invasions.usableBeachhead(game, spaceId, piece.nation)
-		if (!space || (!activeBeach && space.kind !== "land") || (!neutralHome && game.control[spaceId] !== side) || !reserveEntrySpace(game, data, piece, space) || !reserveEntryAvailable(game, piece, space)) continue
-		if (!canStack(game, data, pieceId, spaceId)) continue
-		if (traceSupply(game, data, adjacency, side, spaceId, piece.nation) === "full") result.push(spaceId)
+	const build = () => {
+		const result = []
+		for (let spaceId = 1; spaceId < data.spaces.length; spaceId++) {
+			const space = data.spaces[spaceId]
+			const neutralHome = ["tu", "sw"].includes(piece.nation) && space?.nation === piece.nation && Neutrals.controller(game, piece.nation) === side
+			const activeBeach = space?.kind === "beach" && Invasions.usableBeachhead(game, spaceId, piece.nation)
+			if (!space || (!activeBeach && space.kind !== "land") || (!neutralHome && game.control[spaceId] !== side) || !reserveEntrySpace(game, data, piece, space) || !reserveEntryAvailable(game, piece, space)) continue
+			if (!canStack(game, data, pieceId, spaceId, context)) continue
+			const status = context?.supplyStatus ? context.supplyStatus(side, spaceId, piece.nation) : traceSupply(game, data, adjacency, side, spaceId, piece.nation)
+			if (status === "full") result.push(spaceId)
+		}
+		return result
 	}
-	return result
+	return context?.reserveEntrySpaces ? context.reserveEntrySpaces(`${side}:${piece.nation}`, build).slice() : build()
 }
 
 function axisPanzerScusInNorthAfrica(game, data) {
@@ -633,17 +673,19 @@ function axisVichySrAccess(game, space, side) {
 }
 
 function createSrSearchContext(game, data, adjacency) {
-	const supply = new Map()
+	const search = createSupplySearchContext(game, data, adjacency, "sr")
 	const partisans = new Set(game.partisans || [])
+	const reserveEntries = new Map()
 	const moscow = data.spaces.find((space) => space?.name === "Moscow")?.id
 	let northAfricaPanzerScus = null
 	return Object.freeze({
 		moscow,
 		partisans,
-		supplyStatus(side, spaceId, nation) {
-			const key = `${side}:${nation || ""}:${spaceId}`
-			if (!supply.has(key)) supply.set(key, traceSupply(game, data, adjacency, side, spaceId, nation))
-			return supply.get(key)
+		piecesInSpace: search.piecesInSpace,
+		supplyStatus: search.supplyStatus,
+		reserveEntrySpaces(key, build) {
+			if (!reserveEntries.has(key)) reserveEntries.set(key, build())
+			return reserveEntries.get(key)
 		},
 		axisPanzerScusInNorthAfrica() {
 			if (northAfricaPanzerScus === null) northAfricaPanzerScus = axisPanzerScusInNorthAfrica(game, data)
@@ -659,12 +701,12 @@ function searchSrPaths(game, data, adjacency, pieceId, context, stopAfterFirst) 
 	const side = pieceSide(game, data, pieceId)
 	if (!["allied", "axis"].includes(side)) return new Map()
 	if (side === AXIS && game.events?.operation_strangle && Number.isInteger(from) && data.spaces[from]?.nation === "fr") return new Map()
+	context ||= createSrSearchContext(game, data, adjacency)
 	if (isReserveLocation(from, side)) {
-		const entries = legalReserveEntrySpaces(game, data, adjacency, pieceId)
+		const entries = legalReserveEntrySpaces(game, data, adjacency, pieceId, context)
 		return new Map((stopAfterFirst ? entries.slice(0, 1) : entries).map((spaceId) => [spaceId, [spaceId]]))
 	}
 	if (!Number.isInteger(from) || from <= 0) return new Map()
-	context ||= createSrSearchContext(game, data, adjacency)
 	const originSupply = context.supplyStatus(side, from, piece.nation)
 	if (originSupply === "oos") return new Map()
 	if (side === AXIS && game.turn <= 4 && data.spaces[from]?.nation === "su") return new Map()
@@ -700,11 +742,11 @@ function searchSrPaths(game, data, adjacency, pieceId, context, stopAfterFirst) 
 			if (next.kind === "beach" && !activeBeach) continue
 			if (next.kind === "land" && !neutralHome && !vichyAccess && game.control[edge.to] !== side) continue
 			if (next.kind === "land" && !Restrictions.mayEnter(game, data, adjacency, pieceId, edge.to)) continue
-			if (leavingSea && !canStack(game, data, pieceId, edge.to)) continue
+			if (leavingSea && !canStack(game, data, pieceId, edge.to, context)) continue
 			const path = current.path.concat(edge.to)
 			const usedSea = current.usedSea || leavingSea || directSea
 			const legalVichyDestination = vichyAccess === "destination"
-			if ((next.kind === "land" || activeBeach) && edge.to !== from && canStack(game, data, pieceId, edge.to) && (legalVichyDestination || (vichyAccess !== "transit" && context.supplyStatus(side, edge.to, piece.nation) !== "oos"))) {
+			if ((next.kind === "land" || activeBeach) && edge.to !== from && canStack(game, data, pieceId, edge.to, context) && (legalVichyDestination || (vichyAccess !== "transit" && context.supplyStatus(side, edge.to, piece.nation) !== "oos"))) {
 				const seaPanzerBlocked = usedSea && piece.nation === "ge" && piece.size === "scu" && piece.unit_type === "mechanized" && ["tn", "ly"].includes(next.nation) && context.axisPanzerScusInNorthAfrica() >= 2
 				if (!seaPanzerBlocked && !paths.has(edge.to)) {
 					paths.set(edge.to, path)
@@ -823,9 +865,63 @@ function pieceSupplyStatus(game, data, adjacency, pieceId, context = null, space
 	const piece = data.pieces[pieceId]
 	if (!piece || !Number.isInteger(spaceId) || spaceId <= 0) return "oos"
 	const side = pieceSide(game, data, pieceId)
-	const status = traceSupply(game, data, adjacency, side, spaceId, piece.nation)
-	if (status === "oos" && side === AXIS && ["defense", "attrition"].includes(context) && game.events?.luftwaffe_supply_turn === game.turn && game.events?.luftwaffe_supply_space === spaceId) return "limited"
+	const status = context?.supplyStatus ? context.supplyStatus(side, spaceId, piece.nation) : traceSupply(game, data, adjacency, side, spaceId, piece.nation)
+	const mode = typeof context === "string" ? context : context?.mode
+	if (status === "oos" && side === AXIS && ["defense", "attrition"].includes(mode) && game.events?.luftwaffe_supply_turn === game.turn && game.events?.luftwaffe_supply_space === spaceId) return "limited"
 	return status
+}
+
+function createSupplySearchContext(game, data, adjacency, mode = null) {
+	const supply = new Map()
+	const piecesBySpace = new Map()
+	const pieceLocations = game.pieces.slice()
+	for (let pieceId = 1; pieceId < pieceLocations.length; pieceId++) {
+		const spaceId = pieceLocations[pieceId]
+		if (!Number.isInteger(spaceId) || spaceId <= 0) continue
+		if (!piecesBySpace.has(spaceId)) piecesBySpace.set(spaceId, new Set())
+		piecesBySpace.get(spaceId).add(pieceId)
+	}
+	return Object.freeze({
+		mode,
+		piecesInSpace(spaceId) {
+			const pieces = piecesBySpace.get(spaceId)
+			return pieces ? [...pieces] : []
+		},
+		setPieceLocation(pieceId, spaceId) {
+			const prior = pieceLocations[pieceId]
+			if (Number.isInteger(prior) && prior > 0) {
+				const pieces = piecesBySpace.get(prior)
+				pieces?.delete(pieceId)
+				if (pieces?.size === 0) piecesBySpace.delete(prior)
+			}
+			pieceLocations[pieceId] = spaceId
+			if (Number.isInteger(spaceId) && spaceId > 0) {
+				if (!piecesBySpace.has(spaceId)) piecesBySpace.set(spaceId, new Set())
+				piecesBySpace.get(spaceId).add(pieceId)
+			}
+		},
+		supplyStatus(side, spaceId, nation) {
+			const key = `${side}:${nation || ""}:${spaceId}`
+			if (!supply.has(key)) supply.set(key, traceSupply(game, data, adjacency, side, spaceId, nation))
+			return supply.get(key)
+		},
+		invalidateSupply() {
+			supply.clear()
+		},
+	})
+}
+
+function createOpsSearchContext(game, data, adjacency) {
+	const search = createSupplySearchContext(game, data, adjacency, "ops")
+	const caucasusSupply = new Map()
+	return Object.freeze({
+		piecesInSpace: search.piecesInSpace,
+		supplyStatus: search.supplyStatus,
+		axisLcuUsesCaucasusSupply(pieceId) {
+			if (!caucasusSupply.has(pieceId)) caucasusSupply.set(pieceId, axisLcuUsesCaucasusSupply(game, data, adjacency, pieceId))
+			return caucasusSupply.get(pieceId)
+		},
+	})
 }
 
 module.exports = {
@@ -840,6 +936,8 @@ module.exports = {
 	canEntrenchAfterActivation,
 	canStack,
 	canStackFormation,
+	createOpsSearchContext,
+	createSupplySearchContext,
 	createSrSearchContext,
 	controlledBy,
 	enterSpace,
@@ -847,6 +945,7 @@ module.exports = {
 	enemyPiecesInSpace,
 	friendlyPiecesInSpace,
 	effectiveControl,
+	hasLegalMoveDestination,
 	isFortIntactForSide,
 	isMechanizedInSupply,
 	hasLegalSrDestination,

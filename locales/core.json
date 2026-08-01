@@ -14,6 +14,11 @@
 		"zh-CN": "等待 {role} 行动",
 		"en": "Waiting for {role}"
 	},
+	"core.waiting_activity": {
+		"params": ["role", "activity"],
+		"zh-CN": "等待 {role}：{activity}",
+		"en": "Waiting for {role} {activity}"
+	},
 	"core.game_over": {
 		"params": [],
 		"zh-CN": "游戏结束。",

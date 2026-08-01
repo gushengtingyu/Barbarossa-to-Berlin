@@ -844,6 +844,14 @@
 		"zh-CN": "等待 {role} 行动",
 		"en": "Waiting for {role}"
 	},
+	"core.waiting_activity": {
+		"params": [
+			"role",
+			"activity"
+		],
+		"zh-CN": "等待 {role}：{activity}",
+		"en": "Waiting for {role} {activity}"
+	},
 	"create.campaign_description": {
 		"params": [],
 		"zh-CN": "：轴心国与盟军进行18回合对局，从巴巴罗萨行动开始，直到柏林战役或提前达成自动胜利。",
