@@ -289,6 +289,8 @@ test("map attributes cover every space and preserve combined terrain symbols", (
 	assert.equal(data.spaces[89].urban, false)
 	assert.equal(data.spaces[98].name, "Budapest")
 	assert.equal(data.spaces[98].urban, true)
+	assert.equal(data.spaces[180].name, "Hellfire Pass")
+	assert.equal(data.spaces[180].nation, "ly")
 	assert.equal(data.spaces[27].terrain, "mountain")
 	assert.equal(data.spaces[30].terrain, "forest")
 })

@@ -176,7 +176,7 @@ id,name,x,y,w,h,kind,nation,side,terrain,urban,vp,fort,supply,port,resource,capi
 177,Amman,2038,1977,58,56,land,jo,allied,desert,false,,false,,false,,false,,
 178,Baghdad,2463,1890,58,57,land,iq,allied,clear,false,,false,,false,,false,,
 179,Mersa Matruh,1627,2033,57,57,land,eg,allied,desert,false,,false,,false,,false,,
-180,Helltire Pass,1483,2007,59,58,land,eg,allied,mountain,false,,false,,false,,false,,
+180,Hellfire Pass,1483,2007,59,58,land,ly,allied,mountain,false,,false,,false,,false,,
 181,Amara,2588,1961,59,58,land,iq,allied,clear,false,,false,,false,,false,,
 182,Sidi Suleiman,1500,2083,58,58,land,eg,allied,desert,false,,false,,false,,false,,
 183,Samawa,2505,2011,58,58,land,iq,allied,clear,false,,false,,false,,false,,

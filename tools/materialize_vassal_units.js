@@ -58,10 +58,7 @@ function buildUnitTables() {
 		reduced_asset: "",
 	})
 	const runtimePieceIds = new Set(pieces.filter((piece) => piece.size !== "marker").map((piece) => piece.id))
-	const aliases = new Map([
-		["hellfirepass", "helltirepass"],
-		["palmero", "palermo"],
-	])
+	const aliases = new Map([["palmero", "palermo"]])
 	const spacesByName = new Map(data.spaces.filter(Boolean).map((space) => [normalizeName(space.name), space.id]))
 	const setup = []
 	for (const source of draft.setup) {

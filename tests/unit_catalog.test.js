@@ -47,5 +47,9 @@ test("unit materializer maps initial stacks without inventing placement choices"
 		setup.some((row) => row.location === "setup_choice:turkey"),
 		true,
 	)
+	assert.deepEqual(
+		setup.find((row) => row.piece_id === 223),
+		{ piece_id: 223, space_id: 180, location: "", reduced: false },
+	)
 	assert.equal(setup.filter((row) => row.space_id).length > 50, true)
 })
