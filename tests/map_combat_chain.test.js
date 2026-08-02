@@ -1012,10 +1012,14 @@ test("Rally exposes deterministic entrenchment actions and read-only public engi
 	assert.equal(game.destroyed_forts.includes(moscow), false)
 	game = rules.action(game, "Allied", "entrench", front)
 	assert.equal(game.action.moved.includes(front), true)
+	assert.equal(game.state, "ops_move")
+	assert.equal(rules.view(game, "Allied").actions.done, 1)
+	game = rules.action(game, "Allied", "done")
 	assert.equal(game.state, "ops_entrench_roll")
-	game.action.after_entrench = "combat"
 	game = rules.action(game, "Allied", "roll")
-	assert.equal(game.state, "ops_combat")
+	assert.equal(game.state, "action_select")
+	assert.equal(game.active, "Axis")
+	assert.equal(game.action, null)
 	assert.ok(rules.view(game, "Allied").log.some((entry) => new RegExp(`s${moscow}掘壕检定：W[1-6]`).test(entry)))
 })
 

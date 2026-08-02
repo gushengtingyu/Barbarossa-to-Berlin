@@ -98,15 +98,7 @@ function deactivateSpace(game, data, adjacency, side, spaceId) {
 function finishMovementIfExhausted(game, role, data, adjacency) {
 	const side = Engine.constants.sideForRole(role)
 	pruneResolvedMoveSpaces(game, data, adjacency, side)
-	if (hasMovementChoice(game, data, adjacency, side)) {
-		game.state = "ops_move"
-		return
-	}
-	if (game.action.entrenching?.length) {
-		game.action.after_entrench = game.action.attack_spaces.length ? "combat" : "finish"
-		game.state = "ops_entrench_roll"
-	} else if (game.action.attack_spaces.length) game.state = "ops_combat"
-	else Engine.turn.finishAction(game, side)
+	game.state = "ops_move"
 }
 
 function resolveEntrenchAtSpace(game, role, data, spaceId) {

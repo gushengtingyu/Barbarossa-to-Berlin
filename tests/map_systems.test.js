@@ -544,7 +544,7 @@ test("a movement group selects, moves, and stops multiple units together", () =>
 	assert.equal(game.log.filter((entry) => entry.key === "activation.log.move_group").length, 2)
 })
 
-test("a completed move activation removes its marker before the combat step", () => {
+test("a completed move activation waits for Done before the combat step", () => {
 	let game = rules.setup(20, "Campaign", {})
 	const memel = space("Memel")
 	const berlin = space("Berlin")
@@ -577,7 +577,52 @@ test("a completed move activation removes its marker before the combat step", ()
 	game = rules.action(game, "Axis", "move", destination)
 	game = rules.action(game, "Axis", "stop")
 	assert.deepEqual(game.action.move_spaces, [])
+	assert.equal(game.state, "ops_move")
+	assert.equal(rules.view(game, "Axis").actions.done, 1)
+	game = rules.action(game, "Axis", "done")
 	assert.equal(game.state, "ops_combat")
+})
+
+test("the final mover waits for Done after exhausting its movement allowance", () => {
+	let game = rules.setup(20, "Campaign", {})
+	const memel = space("Memel")
+	const konigsberg = space("Konigsberg")
+	const mover = data.pieces.find((piece) => piece?.name === "GE 1FJ Army").id
+	game.pieces.fill(0)
+	game.pieces[mover] = memel
+	game.control = data.spaces.map((entry) => (entry?.kind === "land" ? "axis" : null))
+	game.active = "Axis"
+	game.phase = "action"
+	game.turn = 2
+	game.action_round = 1
+	game.state = "ops_move"
+	game.action = {
+		mode: "ops",
+		points: 0,
+		move_spaces: [memel],
+		attack_spaces: [],
+		activation_supply: { [mover]: "full" },
+		moved: [],
+		sr_moved: [],
+		attacked: [],
+		defended: [],
+		used_pieces: [],
+		entrenching: [],
+		piece: null,
+	}
+
+	game = rules.action(game, "Axis", "piece", mover)
+	assert.ok(rules.view(game, "Axis").actions.move.includes(konigsberg))
+	game = rules.action(game, "Axis", "move", konigsberg)
+
+	assert.equal(game.state, "ops_move")
+	assert.deepEqual(game.action.move_spaces, [])
+	assert.equal(rules.view(game, "Axis").actions.piece, undefined)
+	assert.equal(rules.view(game, "Axis").actions.done, 1)
+
+	game = rules.action(game, "Axis", "done")
+	assert.equal(game.action, null)
+	assert.equal(game.active, "Allied")
 })
 
 test("a slower unit automatically drops from a moving group while faster units continue", () => {
